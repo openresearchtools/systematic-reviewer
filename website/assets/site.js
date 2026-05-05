@@ -94,7 +94,7 @@
     footer.setAttribute("aria-label", "Site footer");
     footer.innerHTML = [
       '<div class="shell footer__inner">',
-      '  <small>&copy; 2026 <a href="https://openresearchtools.com" target="_blank" rel="noopener">OpenResearchTools</a></small>',
+      '  <small>&copy; 2026 Rutkauskas L.</small>',
       '  <div class="footer__actions">',
       '    <div class="footer__policy overlay-host" data-overlay-host>',
       '      <a class="btn overlay-trigger" href="#privacy-policy-overlay" aria-expanded="false" aria-controls="privacy-policy-overlay">Cookie &amp; Privacy Policy</a>',

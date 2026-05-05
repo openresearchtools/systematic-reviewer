@@ -42,7 +42,7 @@ var PDF_MODE_OPTIONS = {
 
 var OPENRESEARCHTOOLS_MODEL_EXAMPLES = {
 	session_chat: {
-		note: "Example local agent models converted by OpenResearchTools:",
+		note: "Example local agent models:",
 		links: [
 			{
 				label: "openresearchtools/Qwen3.6-35B-A3B-GGUF",
@@ -68,7 +68,7 @@ var OPENRESEARCHTOOLS_MODEL_EXAMPLES = {
 		],
 	},
 	pdf_vlm: {
-		note: "Example PDF/VLM model converted by OpenResearchTools:",
+		note: "Example PDF/VLM model:",
 		links: [
 			{
 				label: "openresearchtools/Qwen3.5-4B-Instruct-GGUF",
@@ -77,7 +77,7 @@ var OPENRESEARCHTOOLS_MODEL_EXAMPLES = {
 		],
 	},
 	embeddings: {
-		note: "Example embeddings model converted by OpenResearchTools:",
+		note: "Example embeddings model:",
 		links: [
 			{
 				label: "openresearchtools/Qwen3-Embedding-8B-GGUF",
@@ -3186,7 +3186,7 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 				"OpenAlex is an open scholarly metadata index covering works, authors, sources, institutions, topics, funders, and related research metadata.",
 				"Systematic Reviewer uses OpenAlex in Harvest to search scholarly records, collect candidate studies, and add metadata-backed items into the project workflow.",
 				"An API key is optional for the UI itself, but adding a free OpenAlex key is recommended for normal project harvesting because it identifies the app's requests and gives access to OpenAlex's higher authenticated rate limits.",
-				"Systematic Reviewer and OpenResearchTools are not affiliated with OpenAlex. Check the OpenAlex documentation linked below for account, authentication, and rate-limit details.",
+				"Systematic Reviewer is not affiliated with OpenAlex. Check the OpenAlex documentation linked below for account, authentication, and rate-limit details.",
 			]);
 		},
 
@@ -3327,7 +3327,7 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 			}
 			children.push(this._node("span", {
 				className: "sr-pref-hint-block",
-				textContent: "Note: neither Systematic Reviewer nor OpenResearchTools is affiliated with LM Studio, Hugging Face, the Qwen team, upstream model providers, or runtime providers. These are just example models.",
+				textContent: "Note: Systematic Reviewer is not affiliated with LM Studio, Hugging Face, the Qwen team, upstream model providers, or runtime providers. These are just example models.",
 			}));
 				return this._node("span", {
 					className: "sr-pref-hint-content",

@@ -26,7 +26,7 @@ Use the local or hosted AI runtimes that fit your environment, including, but no
 
 Systematic Reviewer - Research Preview is licensed under the GNU Affero General Public License v3.0 or later. The licence is there to keep the software open, inspectable, and available to the research community.
 
-The project is currently solo-developed by Dr Rutkauskas and is looking for collaborators and funders who can help take it further. Teams can review the code, adapt it to their own environment, and contribute improvements under the same terms. OpenResearchTools is especially interested in collaborators who care about transparent, reproducible, and openly governed automated analysis.
+The project is currently solo-developed by Dr Rutkauskas and is looking for collaborators and funders who can help take it further. Teams can review the code, adapt it to their own environment, and contribute improvements under the same terms. Collaborators interested in transparent, reproducible, and openly governed automated analysis are especially welcome.
 
 ## Download, Install, And Manual
 
@@ -55,7 +55,7 @@ This project is largely developed with the help of AI coding agents, with best e
 
 ## Third-Party Notice
 
-Systematic Reviewer - Research Preview is an independent third-party project by [OpenResearchTools](https://openresearchtools.com), developed by Dr Rutkauskas. It is developed as an extension for Zotero and can work with external AI and agent tools, but it is not affiliated with, sponsored by, or endorsed by Zotero, Codex, LM Studio, Ollama, or any other third-party software referenced on this site.
+Systematic Reviewer - Research Preview is an independent third-party project developed by Dr Rutkauskas. It is developed as an extension for Zotero and can work with external AI and agent tools, but it is not affiliated with, sponsored by, or endorsed by Zotero, Codex, LM Studio, Ollama, or any other third-party software referenced on this site.
 
 ## License
 
