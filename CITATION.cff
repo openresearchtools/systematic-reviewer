@@ -5,7 +5,7 @@ type: software
 version: "Research Preview; replace with the version used"
 date-released: "2026-04-07"
 license: "AGPL-3.0-or-later"
-doi: "10.5281/zenodo.20044491"
+doi: "10.5281/zenodo.20044490"
 authors:
   - family-names: "Rutkauskas"
     given-names: "L."
@@ -18,7 +18,7 @@ preferred-citation:
   title: "Systematic Reviewer"
   version: "Research Preview; replace with the version used"
   date-released: "2026-04-07"
-  doi: "10.5281/zenodo.20044491"
+  doi: "10.5281/zenodo.20044490"
   url: "https://systematicreviewer.com"
   publisher:
     name: "Zenodo"

@@ -106,8 +106,8 @@ var SystematicReviewerProjectStorage = {
 	_systematicReviewerSoftwareCitationDefinition() {
 		return {
 			title: "Systematic Reviewer",
-			doi: "10.5281/zenodo.20044491",
-			doiURL: "https://doi.org/10.5281/zenodo.20044491",
+			doi: "10.5281/zenodo.20044490",
+			doiURL: "https://doi.org/10.5281/zenodo.20044490",
 			url: "https://systematicreviewer.com",
 		};
 	},
