@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Extraction | Systematic Reviewer - Research Preview Manual</title>
     <meta name="description" content="Create templates and run data extraction.">
-    <link rel="canonical" href="https://systematicreviewer.com/manual/extraction.html">
-    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="canonical" href="https://systematicreviewer.com/manual/extraction/">
+    <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../assets/styles.css">
   </head>
   <body>
     <header class="banner">
       <div class="shell banner__inner">
         <div class="banner__actions">
-          <a class="banner-link" href="../index.html">Systematic Reviewer</a>
+          <a class="banner-link" href="/">Systematic Reviewer</a>
           
         </div>
       </div>
     </header>
     <main class="manual-shell">
       <div class="manual-layout">
-        <nav class="manual-nav" aria-label="Manual navigation" data-manual-nav data-current="extraction.html"><noscript><a href="install.html">Manual start</a></noscript></nav>
+        <nav class="manual-nav" aria-label="Manual navigation" data-manual-nav data-current="extraction/"><noscript><a href="/manual/install/">Manual start</a></noscript></nav>
         <article class="manual-article">
           <header>
             <h1>Extraction</h1>
@@ -28,7 +28,7 @@
           </header>
 
           <figure class="manual-screenshot">
-            <img src="../assets/manual/extraction/extraction-overview.webp" width="2274" height="1980" loading="lazy" alt="Extraction tab showing template selection, field cards, scope settings, text source, model preset, and Run extraction button.">
+            <img src="../../assets/manual/extraction/extraction-overview.webp" width="2274" height="1980" loading="lazy" alt="Extraction tab showing template selection, field cards, scope settings, text source, model preset, and Run extraction button.">
             <figcaption>The left side manages the template and fields. The right side chooses the run scope, text source, model preset, and run options.</figcaption>
           </figure>
 
@@ -43,13 +43,13 @@
           </div>
 
           <figure class="manual-screenshot">
-            <img src="../assets/manual/extraction/extraction-field-details.webp" width="2274" height="1980" loading="lazy" alt="Extraction field details showing field keys, types, guidance, and example JSON values.">
+            <img src="../../assets/manual/extraction/extraction-field-details.webp" width="2274" height="1980" loading="lazy" alt="Extraction field details showing field keys, types, guidance, and example JSON values.">
             <figcaption>Good extraction fields are specific, answerable, and explain what evidence should be used.</figcaption>
           </figure>
 
           <h2>Run controls</h2>
           <p>Choose the record scope, text source, model preset, and whether to skip rows with existing values. The model preset can use the default extraction model, inherit an agent model, or use a saved extraction preset from Settings. The selected model is recorded with the extraction output.</p>
-          <p>Configure extraction-capable models in <a href="settings.html#runtime-models">Settings: Runtime and model presets</a> before running extraction across a project scope.</p>
+          <p>Configure extraction-capable models in <a href="/manual/settings/#runtime-models">Settings: Runtime and model presets</a> before running extraction across a project scope.</p>
           <ul>
             <li><strong>Scope</strong> chooses which rows to extract from.</li>
             <li><strong>Text source</strong> chooses what text the model sees, such as title and abstract or full text when available.</li>
@@ -61,7 +61,7 @@
           <h2>Edit the template</h2>
           <p>The template editor lets you revise the system prompt, format instructions, and fields. Use concise field guidance and include examples when the expected answer shape could be ambiguous.</p>
           <figure class="manual-screenshot">
-            <img src="../assets/manual/extraction/extraction-template-editor.webp" width="2274" height="1980" loading="lazy" alt="Extraction template editor modal with template name, system prompt, format instructions, field settings, and save buttons.">
+            <img src="../../assets/manual/extraction/extraction-template-editor.webp" width="2274" height="1980" loading="lazy" alt="Extraction template editor modal with template name, system prompt, format instructions, field settings, and save buttons.">
             <figcaption>The template editor is where you define what the extraction model should return and how each field should be interpreted.</figcaption>
           </figure>
 
@@ -69,10 +69,10 @@
           <p>Extraction results become project columns that can be viewed in Screening, used by the agent, exported, and included in reports. Open Jobs to check progress or errors for long extraction runs.</p>
 
           <div class="manual-callout"><p>For reliable extraction, make each field answerable from the supplied document and avoid asking one field to do several unrelated jobs.</p></div>
-          <div class="manual-next"><a href="screening.html">Next: Screening</a></div>
+          <div class="manual-next"><a href="/manual/screening/">Next: Screening</a></div>
         </article>
       </div>
     </main>
-    <script src="../assets/site.js"></script>
+    <script src="../../assets/site.js"></script>
   </body>
 </html>

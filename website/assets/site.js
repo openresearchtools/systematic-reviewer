@@ -1,21 +1,22 @@
 (function () {
   var manualLinks = [
-    ["install.html", "Install"],
-    ["projects.html", "Projects"],
-    ["writer.html", "Writer"],
-    ["agent.html", "Agent"],
-    ["harvest.html", "Harvest"],
-    ["embeddings.html", "Embeddings"],
-    ["semantic-search.html", "Semantic Search"],
-    ["extraction.html", "Extraction"],
-    ["screening.html", "Screening"],
-    ["settings.html", "Settings"],
-    ["jobs.html", "Jobs"],
-    ["troubleshooting.html", "Troubleshooting"],
+    ["/manual/install/", "Install"],
+    ["/manual/projects/", "Projects"],
+    ["/manual/writer/", "Writer"],
+    ["/manual/agent/", "Agent"],
+    ["/manual/harvest/", "Harvest"],
+    ["/manual/embeddings/", "Embeddings"],
+    ["/manual/semantic-search/", "Semantic Search"],
+    ["/manual/extraction/", "Extraction"],
+    ["/manual/screening/", "Screening"],
+    ["/manual/settings/", "Settings"],
+    ["/manual/jobs/", "Jobs"],
+    ["/manual/troubleshooting/", "Troubleshooting"],
   ];
 
   Array.prototype.slice.call(document.querySelectorAll("[data-manual-nav]")).forEach(function (nav) {
     var current = String(nav.getAttribute("data-current") || "").trim();
+    var pathname = location.pathname.replace(/\/index\.html$/, "/");
     nav.replaceChildren();
     var title = document.createElement("span");
     title.className = "manual-nav__title";
@@ -27,7 +28,7 @@
       var link = document.createElement("a");
       link.href = href;
       link.textContent = label;
-      if (href === current || href.replace(/\.html$/, "") === current) {
+      if (href === current || pathname === href) {
         link.setAttribute("aria-current", "page");
       }
       nav.appendChild(link);
@@ -71,8 +72,8 @@
     if (!banner || !actions) {
       return;
     }
-    if (!actions.querySelector('[href="../index.html"]')) {
-      actions.insertAdjacentHTML("afterbegin", '<a class="banner-link" href="../index.html">Systematic Reviewer</a>');
+    if (!actions.querySelector('[href="/"]')) {
+      actions.insertAdjacentHTML("afterbegin", '<a class="banner-link" href="/">Systematic Reviewer</a>');
     }
     if (!actions.querySelector('[aria-controls^="citation-overlay-"]')) {
       actions.insertAdjacentHTML("beforeend", citationOverlayHTML("manual"));
@@ -214,7 +215,7 @@
     }
 
     panels.forEach(function (panel) {
-      var source = panel.getAttribute("data-releases-src") || "assets/releases.json";
+      var source = panel.getAttribute("data-releases-src") || "/assets/releases.json";
       fetch(source, { cache: "no-store" })
         .then(function (response) {
           if (!response.ok) {
@@ -295,7 +296,7 @@
     if (!targets.length && !bibtexBlocks.length) {
       return;
     }
-    var source = location.pathname.includes("/manual/") ? "../assets/releases.json" : "assets/releases.json";
+    var source = "/assets/releases.json";
     fetch(source, { cache: "no-store" })
       .then(function (response) {
         if (!response.ok) {

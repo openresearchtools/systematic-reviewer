@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Settings | Systematic Reviewer - Research Preview Manual</title>
     <meta name="description" content="Configure Systematic Reviewer settings.">
-    <link rel="canonical" href="https://systematicreviewer.com/manual/settings.html">
-    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="canonical" href="https://systematicreviewer.com/manual/settings/">
+    <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../assets/styles.css">
   </head>
   <body>
     <header class="banner">
       <div class="shell banner__inner">
         <div class="banner__actions">
-          <a class="banner-link" href="../index.html">Systematic Reviewer</a>
+          <a class="banner-link" href="/">Systematic Reviewer</a>
           
         </div>
       </div>
     </header>
     <main class="manual-shell">
       <div class="manual-layout">
-        <nav class="manual-nav" aria-label="Manual navigation" data-manual-nav data-current="settings.html"><noscript><a href="install.html">Manual start</a></noscript></nav>
+        <nav class="manual-nav" aria-label="Manual navigation" data-manual-nav data-current="settings/"><noscript><a href="/manual/install/">Manual start</a></noscript></nav>
         <article class="manual-article">
           <header>
             <h1>Settings</h1>
@@ -28,7 +28,7 @@
           </header>
 
           <figure class="manual-screenshot">
-            <img src="../assets/manual/settings/settings-runtime-updated.webp" width="2274" height="1980" loading="lazy" alt="Settings Runtime tab showing saved API and CLI runtimes, detected runtimes, Agent Model preset, OpenCode preset, context, reasoning, and legacy Chat Completions checkbox.">
+            <img src="../../assets/manual/settings/settings-runtime-updated.webp" width="2274" height="1980" loading="lazy" alt="Settings Runtime tab showing saved API and CLI runtimes, detected runtimes, Agent Model preset, OpenCode preset, context, reasoning, and legacy Chat Completions checkbox.">
             <figcaption>Runtime settings connect Systematic Reviewer to local APIs, external APIs, CLI runtimes, and model presets.</figcaption>
           </figure>
 
@@ -63,7 +63,7 @@
           <h2 id="harvest-openalex">Harvest and OpenAlex</h2>
           <p>The Harvest settings tab stores the OpenAlex API key and points to OpenAlex documentation. OpenAlex is an open scholarly metadata index covering works, authors, sources, institutions, topics, funders, and related research metadata. Systematic Reviewer uses it in Harvest to search scholarly records, collect candidate studies, and add metadata-backed items into the project workflow.</p>
           <figure class="manual-screenshot">
-            <img src="../assets/manual/settings/settings-harvest.webp" width="2274" height="620" loading="lazy" alt="Settings Harvest tab with OpenAlex API key settings and help text.">
+            <img src="../../assets/manual/settings/settings-harvest.webp" width="2274" height="620" loading="lazy" alt="Settings Harvest tab with OpenAlex API key settings and help text.">
             <figcaption>Add OpenAlex credentials here before running serious harvest jobs.</figcaption>
           </figure>
           <p>An API key is optional for opening the UI, but recommended for normal project harvesting because it identifies requests and gives access to OpenAlex authenticated rate limits. Systematic Reviewer and <a href="https://openresearchtools.com" target="_blank" rel="noopener">OpenResearchTools</a> are not affiliated with OpenAlex; use the linked OpenAlex documentation for account, authentication, and rate-limit details.</p>
@@ -71,7 +71,7 @@
           <h2 id="projects">Projects</h2>
           <p>Projects lists plugin-managed project records. This Settings view is project-independent, so it can manage stored projects even when another project is currently open.</p>
           <figure class="manual-screenshot">
-            <img src="../assets/manual/settings/settings-projects-updated.webp" width="2274" height="1560" loading="lazy" alt="Settings Projects tab showing Demo and testing project cards with Open project, Open folder, Reconcile, Delete, and project paths.">
+            <img src="../../assets/manual/settings/settings-projects-updated.webp" width="2274" height="1560" loading="lazy" alt="Settings Projects tab showing Demo and testing project cards with Open project, Open folder, Reconcile, Delete, and project paths.">
             <figcaption>Project actions operate on plugin-managed project storage, not on unrelated Zotero collections.</figcaption>
           </figure>
           <div class="manual-function-grid">
@@ -81,14 +81,14 @@
             <section class="manual-function"><h3>Delete</h3><p>Opens a confirmation dialog. It is destructive and should be used only when you no longer need the project storage.</p></section>
           </div>
           <figure class="manual-screenshot">
-            <img src="../assets/manual/settings/settings-delete-project-confirmation.webp" width="2274" height="1980" loading="lazy" alt="Delete project confirmation modal with warning text, optional collection container checkbox, Cancel, and Delete project buttons.">
+            <img src="../../assets/manual/settings/settings-delete-project-confirmation.webp" width="2274" height="1980" loading="lazy" alt="Delete project confirmation modal with warning text, optional collection container checkbox, Cancel, and Delete project buttons.">
             <figcaption>Delete removes plugin-managed project data only after confirmation. The optional collection-container checkbox does not delete library items.</figcaption>
           </figure>
 
           <h2 id="mcp-servers">MCP servers</h2>
           <p>The built-in Systematic Reviewer MCP server can expose project tools to external MCP-compatible clients. User-added external MCP servers are third-party processes or services. They may read, write, or act according to their own behaviour and the permissions of your operating system account.</p>
           <figure class="manual-screenshot">
-            <img src="../assets/manual/settings/settings-mcp-servers.webp" width="2274" height="900" loading="lazy" alt="Settings MCP Servers tab showing built-in MCP server settings and external MCP server area.">
+            <img src="../../assets/manual/settings/settings-mcp-servers.webp" width="2274" height="900" loading="lazy" alt="Settings MCP Servers tab showing built-in MCP server settings and external MCP server area.">
             <figcaption>Enable MCP only when you understand which external client or server will connect to the project tools.</figcaption>
           </figure>
           <div class="manual-function-grid">
@@ -109,11 +109,11 @@
             <p>If you enable shell tools, prefer high-capability models with stronger prompt-security behavior and use them only in sandboxed environments. This software is provided without warranties. Nothing here is legal, security, or compliance advice. Consult your IT or security team before using any software.</p>
           </div>
           <figure class="manual-screenshot">
-            <img src="../assets/manual/settings/settings-privileged-tools-disabled.webp" width="2274" height="1400" loading="lazy" alt="Settings Privileged Tools tab with shell, browser, and developer tool groups disabled and showing current load states.">
+            <img src="../../assets/manual/settings/settings-privileged-tools-disabled.webp" width="2274" height="1400" loading="lazy" alt="Settings Privileged Tools tab with shell, browser, and developer tool groups disabled and showing current load states.">
             <figcaption>Keep privileged tools disabled unless you explicitly need them. Loading changes apply only after fully closing and reopening Zotero.</figcaption>
           </figure>
           <figure class="manual-screenshot">
-            <img src="../assets/manual/settings/settings-privileged-shell-risk-modal.webp" width="2274" height="1620" loading="lazy" alt="Privileged shell tools warning modal requiring the user to acknowledge risks before enabling and choosing restart later or restart now.">
+            <img src="../../assets/manual/settings/settings-privileged-shell-risk-modal.webp" width="2274" height="1620" loading="lazy" alt="Privileged shell tools warning modal requiring the user to acknowledge risks before enabling and choosing restart later or restart now.">
             <figcaption>Enabling a privileged tool group requires reading the warning, acknowledging the risks, and restarting Zotero.</figcaption>
           </figure>
           <div class="manual-function-grid">
@@ -134,10 +134,10 @@
             <li>Confirm third-party provider terms before sending research material to external APIs, hosted models, CLI runtimes, or MCP servers.</li>
           </ul>
 
-          <div class="manual-next"><a href="jobs.html">Next: Jobs</a></div>
+          <div class="manual-next"><a href="/manual/jobs/">Next: Jobs</a></div>
         </article>
       </div>
     </main>
-    <script src="../assets/site.js"></script>
+    <script src="../../assets/site.js"></script>
   </body>
 </html>

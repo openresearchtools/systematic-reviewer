@@ -5,8 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Page Not Found | Systematic Reviewer</title>
     <meta name="robots" content="noindex">
-    <link rel="stylesheet" href="assets/styles.css">
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/styles.css">
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+    <script>
+      (function () {
+        var match = location.pathname.match(/^\/manual\/([a-z0-9-]+)\.html$/);
+        if (match) {
+          location.replace("/manual/" + match[1] + "/" + location.search + location.hash);
+        }
+      })();
+    </script>
   </head>
   <body class="not-found-page">
     <main class="shell not-found" aria-label="Page not found">
@@ -19,7 +27,7 @@
         </header>
         <div class="card__body">
           <p>The page you requested does not exist on this site.</p>
-          <p><a class="btn" href="index.html">Return to the homepage</a></p>
+          <p><a class="btn" href="/">Return to the homepage</a></p>
         </div>
       </div>
     </main>
