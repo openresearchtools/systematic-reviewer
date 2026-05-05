@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Screening | Systematic Reviewer - Research Preview Manual</title>
+    <meta name="description" content="Use the Screening grid and screening modals.">
+    <link rel="canonical" href="https://systematicreviewer.com/manual/screening.html">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/styles.css">
+  </head>
+  <body>
+    <header class="banner">
+      <div class="shell banner__inner">
+        <div class="banner__actions">
+          <a class="banner-link" href="../index.html">Systematic Reviewer</a>
+          
+        </div>
+      </div>
+    </header>
+    <main class="manual-shell">
+      <div class="manual-layout">
+        <nav class="manual-nav" aria-label="Manual navigation" data-manual-nav data-current="screening.html"><noscript><a href="install.html">Manual start</a></noscript></nav>
+        <article class="manual-article">
+          <header>
+            <h1>Screening</h1>
+            <p class="manual-lede">Screening is the spreadsheet-like project table for citations, titles, abstracts, decisions, manual columns, extraction columns, generated scores, and review notes.</p>
+          </header>
+
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-grid-overview.webp" width="2274" height="1980" loading="lazy" alt="Screening tab showing scope dropdown, toolbar buttons, row grid, pagination, row count, and zoom control.">
+            <figcaption>The Screening grid is designed for large projects. Use scope, pagination, columns, and zoom to keep the current task manageable.</figcaption>
+          </figure>
+
+          <h2>Grid controls</h2>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Scope dropdown</h3><p>Choose the current set of records, such as Pending, Included, Excluded, or another project scope.</p></section>
+            <section class="manual-function"><h3>Edit</h3><p>Turns editable cells on. In editing mode, click inside an editable cell to change manual notes, comments, decisions, or project columns.</p></section>
+            <section class="manual-function"><h3>Collapse</h3><p>Reduces tall row content so you can scan more records at once. Expand again when you need more detail.</p></section>
+            <section class="manual-function"><h3>Show Columns</h3><p>Choose visible columns and reorder them. This is the main way to shape the grid for a task.</p></section>
+            <section class="manual-function"><h3>Create Column</h3><p>Adds a project-specific manual column, such as notes, tags, reviewer judgement, or a custom extraction target.</p></section>
+            <section class="manual-function"><h3>Value Templates</h3><p>Manages reusable values for columns where reviewers repeatedly choose from the same options.</p></section>
+            <section class="manual-function"><h3>Decisions / Filters</h3><p>Opens bulk movement and filtering tools for scoped review decisions.</p></section>
+            <section class="manual-function"><h3>Descriptives</h3><p>Summarizes selected columns and scopes. Include item keys only when they are useful and the output will stay readable.</p></section>
+            <section class="manual-function"><h3>Full Text</h3><p>Queues full-text related work or exclusions for the current scope.</p></section>
+            <section class="manual-function"><h3>Export</h3><p>Exports screening data to CSV for the current view or selected project columns.</p></section>
+            <section class="manual-function"><h3>Refresh</h3><p>Reloads the grid after jobs, imports, extraction, or other workflows change the project data.</p></section>
+            <section class="manual-function"><h3>Rows, Page, Zoom</h3><p>Use pagination and zoom to work comfortably with very large projects. These controls do not change the underlying records.</p></section>
+          </div>
+
+          <h2>Actions column</h2>
+          <p>The Actions column puts common record actions beside the row you are reviewing. Use it when you want to move a single record, open its Zotero item, or open the available full-text/Markdown attachment without leaving the grid.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-actions-column.webp" width="2248" height="2204" loading="lazy" alt="Screening grid focused on the Actions column, showing Move to dropdowns, Open item buttons, and Open Full-Text buttons.">
+            <figcaption>The Actions column is row-specific. Check the row before using Move to, Open item, or Open Full-Text.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Move to</h3><p>Moves that row to another project scope, such as Pending, Included, Excluded, or Excluded FT. Use it for one-record decisions.</p></section>
+            <section class="manual-function"><h3>Open item</h3><p>Opens the Zotero item behind the row so you can inspect its Zotero metadata, attachments, notes, and library context.</p></section>
+            <section class="manual-function"><h3>Open Full-Text</h3><p>Opens the best available full-text or converted Markdown attachment for that row. Use it when screening needs more than title and abstract.</p></section>
+          </div>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-actions-context-menu.webp" width="2498" height="2204" loading="lazy" alt="Screening grid with the Actions column secondary-click menu open, showing Scope decisions and Full text options.">
+            <figcaption>Secondary-click the Actions header or Actions area for scope-level shortcuts. These are not row edits; they open tools that can affect a whole selected scope.</figcaption>
+          </figure>
+
+          <h2>Sort, resize, and edit</h2>
+          <p>Click a column header to sort by that column when sorting is available. Drag vertical grid dividers to resize columns. When editing is enabled, editable cells open from a click anywhere in the cell.</p>
+          <p>Alternating row colour helps scanning; the grid lines mark column boundaries and keep wide tables readable.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-column-header-context-menu.webp" width="2274" height="1980" loading="lazy" alt="Screening grid with a column header context menu showing Sort ascending, Sort descending, Create decision, and Create filter.">
+            <figcaption>Secondary-click a column header for quick sorting, filter creation, or decision setup based on that column.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Sort ascending/descending</h3><p>Sorts the current grid by the clicked column. For citation sorting, the app uses cached citation text where available.</p></section>
+            <section class="manual-function"><h3>Create decision</h3><p>Starts a decision action using the selected column as the basis for a rule. Review the rule before moving records.</p></section>
+            <section class="manual-function"><h3>Create filter</h3><p>Opens a filter rule for the selected column so you can narrow the current scope before acting.</p></section>
+            <section class="manual-function"><h3>Edit mode</h3><p>When the orange Edit button is active, editable manual cells can be changed directly in the grid. Generated metadata and read-only extraction fields stay protected.</p></section>
+          </div>
+
+          <h2>Semantic score columns</h2>
+          <p>Semantic Search writes generated score columns into Screening. Scores help you prioritise records that are close to a query, but they do not replace screening criteria or reviewer judgement.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-grid-semantic-scores.webp" width="2274" height="1980" loading="lazy" alt="Screening grid in edit mode with a generated semantic score column visible near the first columns.">
+            <figcaption>Use score columns beside citation, title, abstract, extraction fields, and comments so the semantic result stays interpretable.</figcaption>
+          </figure>
+
+          <h2>Show Columns</h2>
+          <p>Open <strong>Show Columns</strong> to decide what the grid displays. Tick columns to show them, untick columns to hide them, and drag the shown-column chips to reorder the visible grid.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-show-columns-modal.webp" width="2274" height="1980" loading="lazy" alt="Show Columns modal with Default, Manual, Decisions, Extraction, Scores, and shown column order areas.">
+            <figcaption>Use Show Columns when the grid has too much information or when you want a task-specific view.</figcaption>
+          </figure>
+
+          <h2>Create Column</h2>
+          <p>Create Column adds project-managed fields. Use it for manual notes, reviewer labels, custom categories, or values that do not already exist in Zotero metadata or extraction output.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-create-column-modal.webp" width="2274" height="1980" loading="lazy" alt="Create Column modal for adding a new screening grid column.">
+            <figcaption>Choose a clear column name and type. The column then becomes available in Screening, filters, exports, and agent-readable project data.</figcaption>
+          </figure>
+
+          <h2>Decisions and filters</h2>
+          <p>Use <strong>Decisions / Filters</strong> when you need a controlled batch action. Choose a source scope, action, combine rule, target subcollection, optional reason, optional notes, and filter rules. Review the rule before confirming movement.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-decisions-filters-modal.webp" width="2274" height="1980" loading="lazy" alt="Decisions and Filters modal with scope, action, rules, reason, notes, and Move Items button.">
+            <figcaption>Batch moves are powerful. Use filters and reasons so later review decisions remain explainable.</figcaption>
+          </figure>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-scope-decisions-modal.webp" width="2498" height="2204" loading="lazy" alt="Scope decisions modal with source scope, action, target subcollection, reason, notes, and Move Scope button.">
+            <figcaption>The Scope decisions shortcut is for moving or updating an entire scope. It is useful after a deliberate filter or after a set has already been reviewed.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Scope</h3><p>Choose the source set, such as Pending, Included, or Excluded. Batch actions only apply inside that source scope.</p></section>
+            <section class="manual-function"><h3>Action</h3><p>Move matching items, create decisions, or apply the available batch operation. Read the action label before confirming.</p></section>
+            <section class="manual-function"><h3>Rules</h3><p>Add one or more column rules. Use AND when every rule must match, and OR when any rule can match.</p></section>
+            <section class="manual-function"><h3>Reason and notes</h3><p>Write a short reason for later auditability, especially when excluding or moving many records.</p></section>
+            <section class="manual-function"><h3>Actions header</h3><p>Secondary-clicking the Actions area exposes scope-oriented shortcuts, including batch movement and full-text follow-ups for the current view. Treat them like the Decisions / Filters modal: check the scope and reason first.</p></section>
+          </div>
+
+          <h2>Descriptives</h2>
+          <p>Descriptives create summaries from the selected scope and columns. For a small set of papers, include item keys when you need traceability. For large broad summaries, leave item keys out unless the question specifically needs exact supporting records.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-descriptives-modal.webp" width="2274" height="1980" loading="lazy" alt="Descriptives modal with scope, combine rules, filter rules, stats columns, include item keys, Copy Markdown, and Calculate controls.">
+            <figcaption>Use Descriptives for scoped summaries. The item-key option is useful for traceability on small or tightly filtered scopes, but can make broad summaries too large.</figcaption>
+          </figure>
+
+          <h2>Full text and exports</h2>
+          <p>Full-text tools queue retrieval or full-text related exclusions for the selected scope. Use them when you want the plugin to attempt full-text retrieval, identify records without usable full text, or move no-full-text records into a separate exclusion scope such as Excluded FT. CSV export is for taking screening data outside the plugin. Check the exported scope and visible columns before sharing results.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-full-text-modal.webp" width="2498" height="2204" loading="lazy" alt="Full text modal showing scope, Markdown ready count, PDF only count, missing full text count, missing Markdown count, retrieval status, and action buttons.">
+            <figcaption>The Full text modal shows the current full-text state for the chosen scope before you queue retrieval or move records without full text.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Attempt retrieval</h3><p>Queues full-text retrieval for records in the chosen scope. Results appear later through Jobs and project attachments.</p></section>
+            <section class="manual-function"><h3>Move no-full-text records</h3><p>Moves records without available full text into the configured target scope. Use a clear reason so the decision is auditable.</p></section>
+            <section class="manual-function"><h3>Export CSV</h3><p>Exports screening rows and selected columns. Use Show Columns first if you want a cleaner CSV.</p></section>
+          </div>
+
+          <h2>Open converted full text</h2>
+          <p>When a paper has a converted Markdown attachment, <strong>Open Full-Text</strong> opens the Zotero attachment view with the source PDF on one side and the converted Markdown on the other. Converted files stay attached to the Zotero item, so they can support Find, extraction, semantic workflows, and manual checking.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-full-text-markdown-files.webp" width="3456" height="2204" loading="lazy" alt="Zotero item list showing source PDFs and converted Markdown attachments with F and V suffixes.">
+            <figcaption>Converted Markdown attachments appear under the Zotero item beside the source PDF. Fast conversion and PDF/VLM conversion can create separate Markdown files for the same PDF.</figcaption>
+          </figure>
+          <div class="manual-screenshot-grid">
+            <figure class="manual-screenshot">
+              <img src="../assets/manual/screening/screening-fast-markdown-example.webp" width="3456" height="2204" loading="lazy" alt="Full-text viewer showing a PDF on the left and a fast converted Markdown view on the right.">
+              <figcaption>Fast conversion is useful when normal text extraction preserves enough structure for screening, search, or extraction.</figcaption>
+            </figure>
+            <figure class="manual-screenshot">
+              <img src="../assets/manual/screening/screening-pdfvlm-markdown-example.webp" width="3380" height="2204" loading="lazy" alt="Full-text viewer showing a PDF on the left and a PDF/VLM converted Markdown preview with tables preserved on the right.">
+              <figcaption>PDF/VLM conversion can preserve table-like structure and page layout better when the PDF needs vision-based understanding.</figcaption>
+            </figure>
+          </div>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-markdown-edit.webp" width="3456" height="2204" loading="lazy" alt="Full-text viewer in Markdown edit mode with the PDF on the left and editable Markdown text on the right.">
+            <figcaption>Use Edit only when the converted Markdown needs manual correction. Save writes the corrected Markdown attachment back to Zotero.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Find</h3><p>Searches inside the opened document so you can jump to a phrase, table, or section while checking full text.</p></section>
+            <section class="manual-function"><h3>Preview/Edit</h3><p>Preview shows the converted Markdown as rendered text. Edit lets you fix the Markdown attachment itself when conversion needs cleanup.</p></section>
+            <section class="manual-function"><h3>Save</h3><p>Saves manual Markdown corrections. Use this for clear conversion errors, not for changing the meaning of the source paper.</p></section>
+          </div>
+
+          <h2>Value templates</h2>
+          <p>Value Templates are reusable snippets for text-like screening fields. While editing Comments, Reason, or custom text columns, type the template trigger to insert a standard phrase consistently.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/screening/screening-value-templates-modal.webp" width="2274" height="1980" loading="lazy" alt="Value Templates modal with template text area, Close, Cancel, and Save controls.">
+            <figcaption>Value templates reduce repeated typing and help reviewers use the same wording across records.</figcaption>
+          </figure>
+
+          <div class="manual-callout"><p>For large projects, narrow the scope, hide unnecessary columns, and use pagination before asking the agent to summarize or change many records.</p></div>
+          <div class="manual-next"><a href="settings.html">Next: Settings</a></div>
+        </article>
+      </div>
+    </main>
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

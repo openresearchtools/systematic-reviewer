@@ -1,0 +1,111 @@
+name: Summarization
+description: Section-aware summary starter for systematic review projects.
+system_prompt: |
+  You write evidence-grounded summaries from one study document at a time.
+
+  Return exactly one valid JSON object and nothing else.
+  Use only the requested field keys.
+  Use only the source text and any row values explicitly passed into the selected field guidance.
+  Do not invent, guess, smooth over contradictions, or fill gaps with outside knowledge.
+  If a requested summary cannot be produced because the relevant material is missing or unclear, return null for that field.
+  Do not output markdown, prose outside JSON, XML tags, analysis text, or code fences.
+  Do not rename keys.
+
+  Every summary must stay grounded in the supplied document.
+  Keep the tone neutral, specific, and report-focused.
+  Do not fabricate sample sizes, results, or conclusions that are not in the text.
+format_instructions: |
+  Output one JSON object with exactly the requested keys.
+
+  Global combined-object example only:
+  {"summary": "This study examined the effectiveness of a community intervention, described the recruitment setting, summarized the main analytic approach, and reported the key findings and limitations.", "methods": "The authors conducted a cross-sectional survey with structured questionnaires and multivariable regression analysis.", "results": "Higher sleep quality was associated with higher physical activity, while perceived stress was negatively associated with activity levels."}
+
+  Use plain JSON strings for summary fields.
+  Use JSON null when the requested section is genuinely unavailable.
+fields:
+  - key: summary
+    label: Summary (350-500 words)
+    type: string
+    allow_null: true
+    guidance: |
+      Write a self-contained summary of the whole study in roughly 350 to 500 words.
+
+      Include, when available:
+      - what the study examined
+      - who was studied
+      - the setting
+      - the design or methods
+      - the intervention or exposure if relevant
+      - the main outcomes
+      - the key findings
+      - the most important limitation or interpretive caution
+
+      Write in normal prose, not bullets.
+      Keep the summary grounded in the article rather than adding outside interpretation.
+
+      Example valid JSON:
+      {"summary": "This study examined ..."}
+  - key: introduction
+    label: Introduction summary
+    type: string
+    allow_null: true
+    guidance: |
+      Summarize the introduction or background section only.
+
+      Focus on the problem context, rationale, gap, and research question.
+      Do not mix in methods or results unless the paper itself blurs those boundaries.
+      Keep the summary concise and section-specific.
+
+      Example valid JSON:
+      {"introduction": "The introduction frames ..."}
+  - key: methods
+    label: Methods summary
+    type: string
+    allow_null: true
+    guidance: |
+      Summarize the methods section only.
+
+      Include the study design, setting, participants, intervention or exposure, measures, data collection, and analytic approach when stated.
+      Keep this summary practical and report-like rather than overly interpretive.
+      If the paper contains both methods and protocol detail, focus on what was actually planned or done.
+
+      Example valid JSON:
+      {"methods": "The study used ..."}
+  - key: analysis
+    label: Analysis plan summary
+    type: string
+    allow_null: true
+    guidance: |
+      Summarize the analysis strategy only.
+
+      Focus on statistical models, adjustments, subgroup analyses, qualitative coding approach, handling of missing data, preregistration, or planned comparisons when these are explicitly described.
+      If the paper does not contain a distinct analysis plan or analytic strategy, return null.
+
+      Example valid JSON:
+      {"analysis": "The authors analysed ..."}
+  - key: results
+    label: Results summary
+    type: string
+    allow_null: true
+    guidance: |
+      Summarize the results section only.
+
+      Include the main findings, direction of effect, and especially important quantitative or qualitative results when clearly reported.
+      Do not add interpretation that belongs to the discussion.
+      If the text only provides a protocol or no results, return null.
+
+      Example valid JSON:
+      {"results": "The results showed ..."}
+  - key: discussion
+    label: Discussion summary
+    type: string
+    allow_null: true
+    guidance: |
+      Summarize the discussion or conclusion section only.
+
+      Focus on how the authors interpret the findings, the main implication, and any stated strengths, limitations, or future directions.
+      Do not repeat the methods in detail.
+      If no discussion-like section is present, return null.
+
+      Example valid JSON:
+      {"discussion": "The discussion argues ..."}

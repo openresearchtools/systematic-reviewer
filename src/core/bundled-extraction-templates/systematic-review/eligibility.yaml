@@ -1,0 +1,50 @@
+name: Eligibility (edit before use)
+description: Eligibility-focused extraction starter for systematic review projects.
+system_prompt: |
+  You are a meticulous evidence extraction assistant.
+  Work strictly from the supplied paper markdown.
+  Return exactly one JSON object with the requested keys.
+  Never include commentary, code fences.
+  Use null when information is missing or unclear; never invent.
+
+  ELIGIBILITY CRITERIA:
+  !!!REPLACE THIS TEXT WITH YOUR PROJECT-SPECIFIC INCLUSION AND EXCLUSION CRITERIA!!!
+format_instructions: |
+  Output rules (strict):
+    - Respond with ONE JSON object only. No Markdown, no prose, no lists.
+    - Keys must exactly match the `key` values below.
+    - Booleans: true/false (not strings). Use null only when truly undecidable.
+    - Strings: brief and evidence-based.
+  Example response:
+    {"fits_review_criteria": true, "eligibility_reason": "The article matches the stated population, design, and outcome criteria."}
+fields:
+  - key: fits_review_criteria
+    label: Fits review criteria
+    type: boolean
+    allow_null: true
+    guidance: |
+      Decide whether the supplied document fits the eligibility criteria written in the system prompt.
+
+      Return:
+      - true when the study clearly fits the stated criteria
+      - false when the study clearly does not fit the stated criteria
+      - null only when the document is too incomplete or ambiguous to decide confidently
+
+      Base the decision on the actual criteria text in the system prompt together with the supplied document.
+      Do not apply unstated assumptions.
+
+      Example valid JSON:
+      {"fits_review_criteria": true}
+  - key: eligibility_reason
+    label: Eligibility reason
+    type: string
+    allow_null: true
+    guidance: |
+      Give a short evidence-based reason for the eligibility judgement using the criteria written in the system prompt.
+
+      Mention the most decision-relevant evidence only, such as population, study design, intervention or exposure, comparator, outcomes, setting, publication type, or a clear reason for exclusion.
+      This field must still be answerable even when fits_review_criteria is not selected in the same run.
+      Keep the reason concise and grounded in the document.
+
+      Example valid JSON:
+      {"eligibility_reason": "The paper reports an intervention study in the target population and includes the required outcome measures."}

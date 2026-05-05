@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Jobs | Systematic Reviewer - Research Preview Manual</title>
+    <meta name="description" content="Track and control Systematic Reviewer jobs.">
+    <link rel="canonical" href="https://systematicreviewer.com/manual/jobs.html">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/styles.css">
+  </head>
+  <body>
+    <header class="banner">
+      <div class="shell banner__inner">
+        <div class="banner__actions">
+          <a class="banner-link" href="../index.html">Systematic Reviewer</a>
+          
+        </div>
+      </div>
+    </header>
+    <main class="manual-shell">
+      <div class="manual-layout">
+        <nav class="manual-nav" aria-label="Manual navigation" data-manual-nav data-current="jobs.html"><noscript><a href="install.html">Manual start</a></noscript></nav>
+        <article class="manual-article">
+          <header>
+            <h1>Jobs</h1>
+            <p class="manual-lede">Jobs is the place to monitor background work such as exports, conversions, harvest imports, embeddings, extraction, screening exports, and semantic search.</p>
+          </header>
+
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/jobs/jobs-overview.webp" width="2274" height="1980" loading="lazy" alt="Jobs tab showing summary badges, job list, selected job details, controls, and job logs.">
+            <figcaption>Open Jobs whenever a tab says work was queued or when you need to understand a failure.</figcaption>
+          </figure>
+
+          <h2>Read the Jobs page</h2>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Summary badges</h3><p>Counts queued, running, succeeded, partial, failed, and canceled work across projects.</p></section>
+            <section class="manual-function"><h3>Job list</h3><p>Shows recent jobs with project, kind, status, progress, and update time. Click a job to inspect it.</p></section>
+            <section class="manual-function"><h3>Selected job details</h3><p>Shows the selected job status, progress, messages, warnings, and metadata.</p></section>
+            <section class="manual-function"><h3>Logs</h3><p>Show what the job did. Read logs when a job failed, stopped early, or produced unexpected output.</p></section>
+            <section class="manual-function"><h3>Open Project</h3><p>Opens the project that owns the selected job.</p></section>
+            <section class="manual-function"><h3>Stop</h3><p>Requests a safe stop for running work. Some jobs may finish a small current step before stopping.</p></section>
+            <section class="manual-function"><h3>Continue</h3><p>Resumes supported partial jobs, such as workflows designed to continue after interruption.</p></section>
+            <section class="manual-function"><h3>Restart</h3><p>Queues the selected job again when that job type supports restart.</p></section>
+            <section class="manual-function"><h3>Refresh</h3><p>Reloads job statuses and logs after work changes in the background.</p></section>
+          </div>
+
+          <h2>Which jobs appear here</h2>
+          <p>Exports, harvest imports, merges, embeddings, semantic searches, extraction runs, PDF/VLM conversion, screening exports, and long agent workflows can all create Jobs entries. If something happens in the background, Jobs is the place to check it.</p>
+
+          <h2>When a job fails</h2>
+          <ul>
+            <li>Click the failed job and read the detail pane first.</li>
+            <li>Check whether the failure is a missing model, unavailable API, invalid setting, interrupted Zotero session, or source-data problem.</li>
+            <li>Use Continue only when the job type supports continuing from partial output.</li>
+            <li>Use Restart when you want a fresh attempt after correcting the problem.</li>
+          </ul>
+
+          <div class="manual-callout"><p>Jobs are project-aware. If you are unsure which project a job belongs to, use Open Project before making decisions from its log.</p></div>
+          <div class="manual-next"><a href="install.html">Back to manual start</a></div>
+        </article>
+      </div>
+    </main>
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

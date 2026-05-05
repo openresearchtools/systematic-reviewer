@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Systematic Reviewer</title>
+  <script>
+    try {
+      document.documentElement.dataset.theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    catch (_error) {}
+  </script>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./prefs.css">
+  <script src="./document-style-presets.js"></script>
+  <script src="./native-markdown.js"></script>
+  <script src="./table-fragmentation.js"></script>
+  <script src="./prisma-renderer.js"></script>
+  <script src="./simple-markdown.js"></script>
+  <script src="./prefs-controller.js"></script>
+</head>
+<body>
+  <div id="workflow-app" class="mw-app">
+    <div class="mw-loading">Loading workflow...</div>
+  </div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "Systematic Reviewer - Research Preview",
+  "short_name": "SR Research Preview",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f6f1",
+  "theme_color": "#0c4a6e",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

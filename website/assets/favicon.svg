@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title>Systematic Reviewer</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbf7"></stop>
+      <stop offset="100%" stop-color="#e7efe7"></stop>
+    </linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8dd8d5"></stop>
+      <stop offset="100%" stop-color="#0c5d7f"></stop>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d8efe0"></stop>
+      <stop offset="100%" stop-color="#76c9b4"></stop>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="30" fill="url(#bg)" stroke="rgba(19,34,48,0.12)"></rect>
+  <rect x="24" y="30" width="42" height="44" rx="12" fill="url(#teal)"></rect>
+  <rect x="48" y="52" width="56" height="46" rx="13" fill="url(#green)"></rect>
+  <rect x="58" y="22" width="34" height="34" rx="11" fill="#163d59"></rect>
+</svg>

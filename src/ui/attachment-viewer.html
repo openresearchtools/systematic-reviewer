@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Systematic Reviewer Attachment Viewer</title>
+  <link rel="stylesheet" href="./attachment-viewer.css">
+  <script src="./simple-markdown.js"></script>
+</head>
+<body>
+  <div id="app" class="sr-av-root" aria-live="polite">
+    <div class="sr-av-toolbar" data-role="primary-toolbar">
+      <input id="find-input" class="sr-av-find" type="search" placeholder="Find" aria-label="Find">
+      <button id="find-prev" type="button">Prev</button>
+      <button id="find-next" type="button">Next</button>
+      <button id="zoom-out" type="button" aria-label="Zoom out">-</button>
+      <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+      <button id="wrap-button" type="button">Wrap</button>
+      <button id="view-button" type="button" class="primary">View</button>
+      <button id="edit-button" type="button">Edit</button>
+      <button id="save-button" type="button">Save</button>
+      <span id="match-status" class="sr-av-match-status"></span>
+      <span id="status" class="sr-av-status ready">Loading...</span>
+    </div>
+    <div id="csv-edit-toolbar" class="sr-av-toolbar sr-av-csv-edit-toolbar" hidden>
+      <button id="add-row" type="button">Add Row</button>
+      <button id="add-column" type="button">Add Column</button>
+      <button id="delete-row" type="button">Delete Row</button>
+      <button id="delete-column" type="button">Delete Column</button>
+    </div>
+    <main id="body" class="sr-av-body">
+      <div id="viewer" class="sr-av-viewer"></div>
+      <textarea id="editor" class="sr-av-editor" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" hidden></textarea>
+      <div id="csv-grid" class="sr-av-csv-scroll" hidden></div>
+    </main>
+  </div>
+  <script type="module" src="./attachment-viewer.js"></script>
+</body>
+</html>

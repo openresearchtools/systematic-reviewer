@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Harvest | Systematic Reviewer - Research Preview Manual</title>
+    <meta name="description" content="Use Harvest and OpenAlex import tools.">
+    <link rel="canonical" href="https://systematicreviewer.com/manual/harvest.html">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/styles.css">
+  </head>
+  <body>
+    <header class="banner">
+      <div class="shell banner__inner">
+        <div class="banner__actions">
+          <a class="banner-link" href="../index.html">Systematic Reviewer</a>
+          
+        </div>
+      </div>
+    </header>
+    <main class="manual-shell">
+      <div class="manual-layout">
+        <nav class="manual-nav" aria-label="Manual navigation" data-manual-nav data-current="harvest.html"><noscript><a href="install.html">Manual start</a></noscript></nav>
+        <article class="manual-article">
+          <header>
+            <h1>Harvest</h1>
+            <p class="manual-lede">Harvest helps you build OpenAlex searches, import records, and move selected harvest sources into the review pipeline.</p>
+          </header>
+
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/harvest/harvest-overview.webp" width="2274" height="1980" loading="lazy" alt="Harvest tab showing an OpenAlex query, filters, OpenAlex credits, import buttons, and harvest sources.">
+            <figcaption>The Harvest tab combines query building, OpenAlex credits, import actions, and saved harvest sources.</figcaption>
+          </figure>
+
+          <h2>Understand the Harvest page</h2>
+          <p>For normal OpenAlex harvesting, add or review your OpenAlex API key in <a href="settings.html#harvest-openalex">Settings: Harvest and OpenAlex</a>.</p>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Query</h3><p>Enter the topic search text. Start broad enough to catch the literature, then narrow with filters instead of making the first query too restrictive.</p></section>
+            <section class="manual-function"><h3>Field and search mode</h3><p>Choose where OpenAlex should search, such as title and abstract, and whether the query should be estimated or imported.</p></section>
+            <section class="manual-function"><h3>Sort and max results</h3><p>Control the result order and upper limit. Use smaller limits while testing a query, then increase when the strategy looks right.</p></section>
+            <section class="manual-function"><h3>OpenAlex credits</h3><p>Shows available OpenAlex access information. Add an API key in Settings when you need normal harvesting and higher limits.</p></section>
+            <section class="manual-function"><h3>Import into Harvest/OpenAlex</h3><p>Runs the search and saves imported records as a harvest source inside the project.</p></section>
+            <section class="manual-function"><h3>Harvest sources</h3><p>Lists saved imports. Select a source before merging it into Pending or embedding it.</p></section>
+          </div>
+
+          <h2>Build filters</h2>
+          <p>Use filters to turn a broad topic into a reproducible search strategy. Basic filters cover common choices; advanced filters let you add raw OpenAlex clauses when the search needs something specific.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/harvest/harvest-advanced-filters.webp" width="2274" height="1980" loading="lazy" alt="Harvest advanced filters view with filter categories and an extra OpenAlex filters text area.">
+            <figcaption>Advanced filters are for exact OpenAlex filter clauses. Put one clause per line so the search remains readable.</figcaption>
+          </figure>
+
+          <h2>Run a harvest import</h2>
+          <p>Click <strong>Import into Harvest/OpenAlex</strong> when the query is ready. The app shows a confirmation prompt before importing. Imported records go into the Harvest area first, not directly into the active screening queue.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/harvest/harvest-source-import-modal.webp" width="2274" height="1980" loading="lazy" alt="Harvest source import confirmation modal asking whether to import results into the Harvest OpenAlex collection.">
+            <figcaption>The import confirmation protects the project from accidental large imports.</figcaption>
+          </figure>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/harvest/harvest-import-follow-up.webp" width="2498" height="2204" loading="lazy" alt="Import follow-up modal asking what should happen after a Harvest import, with Merge All and Embed selected.">
+            <figcaption>After an import starts, choose the follow-up action. Merge All &amp; Embed moves imported records into Pending, deduplicates exact matches into Duplicates, and queues title-and-abstract embeddings for Semantic Search.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Merge All &amp; Embed</h3><p>Use this when the import looks correct and you want the records ready for Screening and semantic workflows as soon as the import finishes.</p></section>
+            <section class="manual-function"><h3>Merge only</h3><p>Use merge without embeddings when you want records in Pending but do not yet need semantic search or semantic screening columns.</p></section>
+            <section class="manual-function"><h3>Cancel</h3><p>Stops the follow-up choice before it is queued. Imported Harvest records remain separate until you merge them later.</p></section>
+          </div>
+
+          <h2>Import from existing Zotero collections</h2>
+          <p>Use the Harvest source <strong>Import...</strong> button when records already exist in Zotero. This is useful for demo projects, hand-curated collections, previously harvested collections, or records gathered outside OpenAlex.</p>
+          <div class="manual-screenshot-grid">
+            <figure class="manual-screenshot">
+              <img src="../assets/manual/harvest/harvest-import-source-choice.webp" width="2274" height="1980" loading="lazy" alt="Harvest import prompt asking whether to import into the project from a file or a Zotero collection.">
+              <figcaption>Choose File for a local import file, or Collection when the source records are already in Zotero.</figcaption>
+            </figure>
+            <figure class="manual-screenshot">
+              <img src="../assets/manual/harvest/harvest-collection-chooser.webp" width="2274" height="1980" loading="lazy" alt="Import Collection modal listing Zotero collections, subcollections, record counts, and Include subcollections option.">
+              <figcaption>The collection chooser can include subcollections, so a parent collection can bring in a whole previous search tree without moving the original Zotero items.</figcaption>
+            </figure>
+          </div>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Search collections</h3><p>Filter by library, path, or collection name. This helps when a Zotero library has many projects or nested collections.</p></section>
+            <section class="manual-function"><h3>Include subcollections</h3><p>When checked, selected parent collections include their descendants. Leave it off if you only want directly contained items.</p></section>
+            <section class="manual-function"><h3>Continue</h3><p>Queues the import source after at least one collection is selected. The original Zotero collections stay unchanged.</p></section>
+          </div>
+
+          <h2>Merge into the review</h2>
+          <p>After import, select a Harvest source. <strong>Merge into Pending</strong> moves the relevant imported records into the screening pipeline. <strong>Merge &amp; Embed</strong> also queues embeddings for title and abstract text when an embeddings model is configured.</p>
+
+          <h2>Good harvesting habits</h2>
+          <ul>
+            <li>Use the estimate/preview workflow before importing a very large search.</li>
+            <li>Name searches clearly so later sources are understandable.</li>
+            <li>Keep each search strategy in the report Methods section or workflow log.</li>
+            <li>Use Jobs to monitor long imports, merges, and embedding handoffs.</li>
+          </ul>
+
+          <div class="manual-callout"><p>Harvest source items stay as evidence of where records came from. Merging into Pending makes them part of the active screening workflow.</p></div>
+          <div class="manual-next"><a href="embeddings.html">Next: Embeddings</a></div>
+        </article>
+      </div>
+    </main>
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

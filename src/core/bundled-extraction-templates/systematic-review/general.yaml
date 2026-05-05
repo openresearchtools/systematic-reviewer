@@ -1,0 +1,190 @@
+name: General
+description: General full-text extraction starter for systematic review projects.
+system_prompt: |
+  You are a meticulous evidence extraction assistant.
+  Work strictly from the supplied paper markdown.
+  Return exactly one JSON object with the requested keys.
+  Never include commentary, code fences.
+  Use null when information is missing or unclear; never invent.
+format_instructions: |
+  Output rules (strict):
+    - Respond with ONE JSON object only. No Markdown, no prose, no lists.
+    - Keys must exactly match the `key` values below.
+    - Use null when information is missing or uncertain.
+    - Enum fields: choose the closest option from `choices` verbatim; use null if none fit.
+    - Boolean fields: return true or false (not strings).
+    - Numbers: return numeric values (no units or words).
+    - Strings: keep them concise and evidence-based unless the field guidance explicitly asks for more detail.
+  Example response (structure only, not content):
+    {"country_code": "LY", "population": "Adults with overweight and obesity attending pharmacies and outpatient clinics", "aim": "To investigate the types, contents, purpose, action, and efficacy of weight-management medications available in local drug markets", "methods": "Cross-sectional study using questionnaires in pharmacies and outpatient settings", "primary_outcomes": "Weight, BMI, and waist-size reduction", "secondary_outcomes": "Anaemia, depression, ulcer, and gastrointestinal disorder after product use", "study_type": "observational", "sample_size": 150, "study_design": "cross_sectional"}
+fields:
+  - key: country_code
+    label: Country code
+    type: string
+    allow_null: true
+    guidance: |
+      Extract the main study location as an ISO 3166-1 alpha-2 uppercase country code.
+
+      Use the country where the study was conducted or where the sample was recruited.
+      If multiple countries are explicitly central to the same study, return a comma-separated list of alpha-2 codes in the order reported.
+      If only a city, region, school, clinic, or institution is given, infer the country only when it is explicit and unambiguous from the text.
+      If the setting is remote, multinational, or unclear and no stable country code can be assigned, return null.
+
+      Example valid JSON:
+      {"country_code": "AU,NZ"}
+  - key: population
+    label: Population
+    type: string
+    allow_null: true
+    guidance: |
+      Extract the target population with the most useful study-defining details.
+
+      Include who was studied and the notable characteristics that identify the sample, such as age group, condition, role, or recruitment setting.
+      Do not include intervention details, outcomes, or speculation.
+
+      Example valid JSON:
+      {"population": "Secondary school students aged 12 to 16 years"}
+  - key: aim
+    label: Study aim
+    type: string
+    allow_null: true
+    guidance: |
+      State the main aim, objective, or research question of the study in one concise sentence or phrase.
+
+      Prefer the authors' stated aim when available.
+      Do not include results.
+
+      Example valid JSON:
+      {"aim": "To evaluate whether the intervention improved medication adherence and depressive symptoms."}
+  - key: methods
+    label: Methods
+    type: string
+    allow_null: true
+    guidance: |
+      Summarize the main methods used in the study.
+
+      Include the broad design, key data collection methods, and any especially important analytic or qualitative approach when explicitly stated.
+      Keep this broad rather than over-detailed.
+
+      Example valid JSON:
+      {"methods": "Parallel-group randomized trial with questionnaires and clinical measurements."}
+  - key: primary_outcomes
+    label: Primary outcomes
+    type: string
+    allow_null: true
+    guidance: |
+      Extract the primary or main outcomes.
+
+      Prefer outcomes explicitly labelled primary, main, or primary endpoint.
+      If the paper clearly has one main outcome but does not use the word primary, report that outcome.
+      If no primary outcome can be identified, return null rather than guessing.
+
+      Example valid JSON:
+      {"primary_outcomes": "HbA1c and depressive symptom severity"}
+  - key: secondary_outcomes
+    label: Secondary outcomes
+    type: string
+    allow_null: true
+    guidance: |
+      Extract the secondary outcomes or other non-primary outcomes that the paper reports as planned study outcomes.
+
+      Do not simply repeat the primary outcomes.
+      If secondary outcomes are not reported or cannot be separated from other results, return null.
+
+      Example valid JSON:
+      {"secondary_outcomes": "Quality of life, diabetes distress, and medication adherence"}
+  - key: study_type
+    label: Study type
+    type: enum
+    allow_null: true
+    choices:
+      - intervention
+      - observational
+      - qualitative
+      - mixed_methods
+      - review
+      - protocol
+      - economic
+      - implementation
+      - diagnostic
+      - other
+    choice_guidance:
+      intervention: A study that actively applies or evaluates a program, treatment, policy, training, tool, or other deliberate change.
+      observational: A study that observes exposures, characteristics, or associations without assigning an intervention.
+      qualitative: A study primarily based on interviews, focus groups, ethnography, observations, or other qualitative methods.
+      mixed_methods: A study that meaningfully combines qualitative and quantitative methods.
+      review: A literature review, systematic review, scoping review, meta-analysis, or other evidence synthesis paper.
+      protocol: A protocol, methods paper, trial registration paper, or analysis plan without study results.
+      economic: A study primarily focused on costs, cost-effectiveness, or other economic analysis.
+      implementation: A study focused mainly on implementation, feasibility, acceptability, adoption, or process evaluation.
+      diagnostic: A study focused mainly on test, screening, or diagnostic accuracy.
+      other: Use only when none of the listed categories fit clearly.
+    guidance: |
+      Choose the single best overall study type.
+
+      Use the broad nature of the paper, not one isolated method.
+      If the paper is clearly a review or protocol, prefer those categories even if it discusses interventions.
+      Use other only as a last resort.
+
+      Example valid JSON:
+      {"study_type": "implementation"}
+  - key: sample_size
+    label: Sample size
+    type: number
+    allow_null: true
+    min: 0
+    guidance: |
+      Extract the total study sample size as a number.
+
+      Prefer the number actually analysed if the paper clearly distinguishes recruited, randomized, and analysed samples and one is presented as the final study sample.
+      If only arm-level counts are given and they clearly sum to the total, return the summed total.
+      Do not include percentages, households, sessions, or observations unless they are the participant count.
+      If no defensible total participant count is reported, return null.
+
+      Example valid JSON:
+      {"sample_size": 95}
+  - key: study_design
+    label: Study design
+    type: enum
+    allow_null: true
+    choices:
+      - rct
+      - cluster_rct
+      - crossover
+      - non_randomized
+      - pre_post
+      - cohort
+      - case_control
+      - cross_sectional
+      - qualitative
+      - mixed_methods
+      - systematic_review
+      - scoping_review
+      - narrative_review
+      - protocol
+      - other
+    choice_guidance:
+      rct: Individually randomized controlled trial.
+      cluster_rct: Randomization occurs at the cluster level such as schools, clinics, or communities.
+      crossover: Participants receive multiple conditions or sequences over time.
+      non_randomized: An intervention study without random allocation.
+      pre_post: One group measured before and after with no separate control group.
+      cohort: Prospective or retrospective cohort design.
+      case_control: Case-control design.
+      cross_sectional: Cross-sectional observational design.
+      qualitative: Qualitative design such as interviews or focus groups.
+      mixed_methods: Explicit mixed-methods design.
+      systematic_review: Systematic review or meta-analysis.
+      scoping_review: Scoping review.
+      narrative_review: Narrative or non-systematic review.
+      protocol: Protocol or analysis plan paper.
+      other: Use only when no listed design fits.
+    guidance: |
+      Choose the most specific overall study design that is explicitly supported by the text.
+
+      Prefer the concrete design over the broader study type.
+      If the paper reports a process evaluation inside a randomized trial, choose the trial design if that is the main study.
+      If the design is unclear, return null rather than guessing.
+
+      Example valid JSON:
+      {"study_design": "cluster_rct"}

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Agent and Chat | Systematic Reviewer - Research Preview Manual</title>
+    <meta name="description" content="Use chat, models, Explore, Find, and AutoDrive.">
+    <link rel="canonical" href="https://systematicreviewer.com/manual/agent.html">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/styles.css">
+  </head>
+  <body>
+    <header class="banner">
+      <div class="shell banner__inner">
+        <div class="banner__actions">
+          <a class="banner-link" href="../index.html">Systematic Reviewer</a>
+          
+        </div>
+      </div>
+    </header>
+    <main class="manual-shell">
+      <div class="manual-layout">
+        <nav class="manual-nav" aria-label="Manual navigation" data-manual-nav data-current="agent.html"><noscript><a href="install.html">Manual start</a></noscript></nav>
+        <article class="manual-article">
+          <header>
+            <h1>Agent and Chat</h1>
+            <p class="manual-lede">The chat panel lets you ask the project agent to inspect the collection, run tools, edit the report, prepare extraction templates, and guide review work.</p>
+          </header>
+
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/agent/agent-chat-tool-calls.webp" width="2274" height="1980" loading="lazy" alt="Writer tab with chat panel showing a user request, tool calls, and tool outputs.">
+            <figcaption>The chat panel sits beside the report. Tool calls appear in the conversation so you can see when the agent reads project data or edits files.</figcaption>
+          </figure>
+
+          <h2>Chat controls</h2>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Session dropdown</h3><p>Reopen a previous conversation for the current project. Use separate sessions for separate tasks, such as report editing, screening help, or reviewer AutoDrive.</p></section>
+            <section class="manual-function"><h3>New Session</h3><p>Starts a fresh conversation without deleting older sessions. This is useful when the previous chat context is no longer relevant.</p></section>
+            <section class="manual-function"><h3>Message box</h3><p>Type the outcome you want. Clear, concrete requests work best: update a section, create a template, inspect a scope, or summarize evidence.</p></section>
+            <section class="manual-function"><h3>Model</h3><p>Opens the model chooser for this session. The selection is session-scoped, so changing it here does not rewrite all project settings.</p></section>
+            <section class="manual-function"><h3>Token indicator</h3><p>Shows how much of the working context is being used. If it gets high, start a new session or ask for a shorter focused task.</p></section>
+            <section class="manual-function"><h3>Send and Stop</h3><p>Send submits your message. Stop asks the current chat or AutoDrive run to stop, including tool-using runs.</p></section>
+          </div>
+
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/agent/agent-session-selector.webp" width="2274" height="1980" loading="lazy" alt="Agent session selector dropdown showing a normal project session and an AutoDrive reviewer session.">
+            <figcaption>The session selector keeps normal chat, project work, and AutoDrive reviewer sessions separate without deleting earlier conversations.</figcaption>
+          </figure>
+
+          <h2>Choose a model</h2>
+          <p>The model modal shows the current chat model and, where supported, compatible model or reasoning choices. CLI runtimes depend on the CLI configuration or catalog. API runtimes depend on the model presets saved in Settings.</p>
+          <p>Before using chat or AutoDrive seriously, configure the Agent model and any extra chat presets in <a href="settings.html#runtime-models">Settings: Runtime and model presets</a>.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/agent/agent-model-chooser.webp" width="2274" height="1980" loading="lazy" alt="Change model popover showing chat model, OpenCode model, reasoning selector, and Save button.">
+            <figcaption>Use the Model button when a task needs a different model, a smaller context, or a different reasoning setting.</figcaption>
+          </figure>
+
+          <h2>Tool calls and tool results</h2>
+          <p>When the agent needs data, it calls tools. Tool cards show arguments and results. The app controls which tools are available at each step. Broad namespaces are loaded only when the agent searches for them, so the model does not receive every project tool at once.</p>
+          <p>If a tool call fails or uses the wrong shape, the bridge returns the problem to the model so it can try the correct call. You should see the correction as another tool call or a short explanation.</p>
+          <div class="manual-callout"><p>If the agent repeatedly fails the same tool call, keeps trying the wrong action, or seems stuck in an unhelpful context, the quickest fix is usually to click <strong>New Session</strong> and ask the task again in a fresh chat.</p></div>
+
+          <h2>Ask for project work</h2>
+          <ul>
+            <li>For report writing, ask the agent to edit a named section or to draft a new section with citations.</li>
+            <li>For evidence checking, ask it to find supporting papers or inspect a screening/extraction scope.</li>
+            <li>For extraction, ask it to build or improve a template before running extraction.</li>
+            <li>For screening, ask it to summarize a scope or suggest criteria before applying batch decisions.</li>
+          </ul>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/agent/agent-demo-metadata-session.webp" width="2274" height="1980" loading="lazy" alt="Agent chat session showing completed project work, tool calls, and report updates beside the Writer preview.">
+            <figcaption>A normal project-work session shows the report next to the tool calls and final summary, so you can inspect both the change and the explanation.</figcaption>
+          </figure>
+
+          <h2>Explore and Find</h2>
+          <p><strong>Explore</strong> is for synthesis, patterns, and higher-level project interpretation. <strong>Find</strong> is for locating specific text, evidence, arguments, or documents. Use Find when you need traceable snippets; use Explore when you need a structured overview.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/agent/agent-find-results.webp" width="2274" height="1980" loading="lazy" alt="Agent chat showing Find Arguments results with matching records, snippets, Open buttons, Copy buttons, Longer excerpt buttons, and Load more.">
+            <figcaption>Find results return traceable snippets from project documents. Open jumps back to the source context, Copy copies the result, and Longer excerpt expands the surrounding text.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Keyword Find</h3><p>Searches converted project text for exact terms and phrases. Use it when you know the wording you need.</p></section>
+            <section class="manual-function"><h3>Semantic Find</h3><p>Uses full-text embeddings when they exist. Use it when you know the meaning you want but not the exact wording.</p></section>
+            <section class="manual-function"><h3>Open</h3><p>Opens the source result so you can inspect the supporting document or passage instead of trusting the snippet alone.</p></section>
+            <section class="manual-function"><h3>Copy and excerpt</h3><p>Copy saves the visible result text. Longer excerpt requests more surrounding text when the short snippet is not enough.</p></section>
+          </div>
+
+          <h2>AutoDrive and reviewer mode</h2>
+          <p>AutoDrive runs a guided multi-step workflow. Reviewer mode adds review checkpoints where the system explains the next move and asks for approval before continuing. This is useful for longer workflows where you want the agent to proceed but still keep human control over important changes.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/agent/agent-autodrive-reviewer.webp" width="2274" height="1980" loading="lazy" alt="AutoDrive reviewer session showing reviewer instructions, decision markers, reviewer summary, and next prompt text.">
+            <figcaption>Reviewer mode records what was checked, whether to continue or stop, and what instruction should go back to the main AutoDrive agent.</figcaption>
+          </figure>
+
+          <h2>Common checks</h2>
+          <ul>
+            <li>Stop the run if the agent begins working on the wrong project goal.</li>
+            <li>Use one concrete request per message when the task involves tools or report edits.</li>
+            <li>When the agent edits REPORT.md, inspect Writer Preview or Raw before exporting.</li>
+            <li>For external APIs, hosted models, CLI runtimes, or MCP servers, confirm that provider terms allow your research use case.</li>
+          </ul>
+
+          <div class="manual-next"><a href="harvest.html">Next: Harvest</a></div>
+        </article>
+      </div>
+    </main>
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

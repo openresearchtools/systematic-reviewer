@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Extraction | Systematic Reviewer - Research Preview Manual</title>
+    <meta name="description" content="Create templates and run data extraction.">
+    <link rel="canonical" href="https://systematicreviewer.com/manual/extraction.html">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/styles.css">
+  </head>
+  <body>
+    <header class="banner">
+      <div class="shell banner__inner">
+        <div class="banner__actions">
+          <a class="banner-link" href="../index.html">Systematic Reviewer</a>
+          
+        </div>
+      </div>
+    </header>
+    <main class="manual-shell">
+      <div class="manual-layout">
+        <nav class="manual-nav" aria-label="Manual navigation" data-manual-nav data-current="extraction.html"><noscript><a href="install.html">Manual start</a></noscript></nav>
+        <article class="manual-article">
+          <header>
+            <h1>Extraction</h1>
+            <p class="manual-lede">Extraction uses a template to ask a model for structured values from project records or full text.</p>
+          </header>
+
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/extraction/extraction-overview.webp" width="2274" height="1980" loading="lazy" alt="Extraction tab showing template selection, field cards, scope settings, text source, model preset, and Run extraction button.">
+            <figcaption>The left side manages the template and fields. The right side chooses the run scope, text source, model preset, and run options.</figcaption>
+          </figure>
+
+          <h2>Template controls</h2>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Template dropdown</h3><p>Choose the extraction template. A template defines the fields the model will fill.</p></section>
+            <section class="manual-function"><h3>Add template (upload)</h3><p>Imports a template file into the project. Use this when reusing a template from another project.</p></section>
+            <section class="manual-function"><h3>Edit template</h3><p>Opens the template editor for the selected template. Use this before running when field instructions need correction.</p></section>
+            <section class="manual-function"><h3>New template</h3><p>Creates a fresh template for a new extraction plan.</p></section>
+            <section class="manual-function"><h3>Hide</h3><p>Temporarily hides a field from the next run without deleting it from the template.</p></section>
+            <section class="manual-function"><h3>Field details</h3><p>Shows each field name, type, key, null handling, guidance, and example output.</p></section>
+          </div>
+
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/extraction/extraction-field-details.webp" width="2274" height="1980" loading="lazy" alt="Extraction field details showing field keys, types, guidance, and example JSON values.">
+            <figcaption>Good extraction fields are specific, answerable, and explain what evidence should be used.</figcaption>
+          </figure>
+
+          <h2>Run controls</h2>
+          <p>Choose the record scope, text source, model preset, and whether to skip rows with existing values. The model preset can use the default extraction model, inherit an agent model, or use a saved extraction preset from Settings. The selected model is recorded with the extraction output.</p>
+          <p>Configure extraction-capable models in <a href="settings.html#runtime-models">Settings: Runtime and model presets</a> before running extraction across a project scope.</p>
+          <ul>
+            <li><strong>Scope</strong> chooses which rows to extract from.</li>
+            <li><strong>Text source</strong> chooses what text the model sees, such as title and abstract or full text when available.</li>
+            <li><strong>Model preset</strong> chooses the runtime/model used for extraction.</li>
+            <li><strong>Skip rows with existing values</strong> prevents overwriting completed rows unless you intentionally rerun them.</li>
+            <li><strong>Run extraction</strong> queues the extraction job.</li>
+          </ul>
+
+          <h2>Edit the template</h2>
+          <p>The template editor lets you revise the system prompt, format instructions, and fields. Use concise field guidance and include examples when the expected answer shape could be ambiguous.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/extraction/extraction-template-editor.webp" width="2274" height="1980" loading="lazy" alt="Extraction template editor modal with template name, system prompt, format instructions, field settings, and save buttons.">
+            <figcaption>The template editor is where you define what the extraction model should return and how each field should be interpreted.</figcaption>
+          </figure>
+
+          <h2>Review outputs</h2>
+          <p>Extraction results become project columns that can be viewed in Screening, used by the agent, exported, and included in reports. Open Jobs to check progress or errors for long extraction runs.</p>
+
+          <div class="manual-callout"><p>For reliable extraction, make each field answerable from the supplied document and avoid asking one field to do several unrelated jobs.</p></div>
+          <div class="manual-next"><a href="screening.html">Next: Screening</a></div>
+        </article>
+      </div>
+    </main>
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

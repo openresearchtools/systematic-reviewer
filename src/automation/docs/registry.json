@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "shared": [
+    {
+      "id": "core_rules",
+      "title": "Systematic Reviewer Automation Rules",
+      "path": "automation/docs/shared/core-rules.md"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "systematic_review_full",
+      "title": "Systematic Review Full Workflow",
+      "path": "automation/docs/workflows/systematic-review-full.md"
+    },
+    {
+      "id": "custom_analysis",
+      "title": "Custom Analysis Workflow",
+      "path": "automation/docs/workflows/custom-analysis.md"
+    }
+  ],
+  "stages": [
+    {
+      "id": "search_strategy",
+      "title": "Search Strategy",
+      "path": "automation/docs/stages/search-strategy.md"
+    },
+    {
+      "id": "harvest",
+      "title": "Harvest",
+      "path": "automation/docs/stages/harvest.md"
+    },
+    {
+      "id": "evidence_search",
+      "title": "Evidence Search",
+      "path": "automation/docs/stages/evidence-search.md"
+    },
+    {
+      "id": "screening",
+      "title": "Screening",
+      "path": "automation/docs/stages/screening.md"
+    },
+    {
+      "id": "full_text_retrieval",
+      "title": "Full-Text Retrieval",
+      "path": "automation/docs/stages/full-text-retrieval.md"
+    },
+    {
+      "id": "full_text_screening",
+      "title": "Full-Text Screening",
+      "path": "automation/docs/stages/full-text-screening.md"
+    },
+    {
+      "id": "extraction",
+      "title": "Extraction",
+      "path": "automation/docs/stages/extraction.md"
+    },
+    {
+      "id": "explore_synthesis",
+      "title": "Explore Synthesis",
+      "path": "automation/docs/stages/explore-synthesis.md"
+    },
+    {
+      "id": "prisma",
+      "title": "PRISMA",
+      "path": "automation/docs/stages/prisma.md"
+    },
+    {
+      "id": "report_writing",
+      "title": "Report Writing",
+      "path": "automation/docs/stages/report-writing.md"
+    }
+  ],
+  "actions": [
+    {
+      "id": "ask_user",
+      "title": "Ask User",
+      "path": "automation/docs/actions/ask-user.md"
+    },
+    {
+      "id": "harvest_query",
+      "title": "Harvest Query",
+      "path": "automation/docs/actions/harvest-query.md"
+    },
+    {
+      "id": "embeddings_run",
+      "title": "Embeddings Run",
+      "path": "automation/docs/actions/embeddings-run.md"
+    },
+    {
+      "id": "semantic_search",
+      "title": "Semantic Search",
+      "path": "automation/docs/actions/semantic-search.md"
+    },
+    {
+      "id": "full_text_retrieval",
+      "title": "Full-Text Retrieval",
+      "path": "automation/docs/actions/full-text-retrieval.md"
+    },
+    {
+      "id": "markdown_conversion",
+      "title": "Markdown Conversion",
+      "path": "automation/docs/actions/markdown-conversion.md"
+    },
+    {
+      "id": "screening_bulk",
+      "title": "Screening Bulk",
+      "path": "automation/docs/actions/screening-bulk.md"
+    },
+    {
+      "id": "screening_update",
+      "title": "Screening Update",
+      "path": "automation/docs/actions/screening-update.md"
+    },
+    {
+      "id": "extraction_run",
+      "title": "Extraction Run",
+      "path": "automation/docs/actions/extraction-run.md"
+    },
+    {
+      "id": "extraction_template",
+      "title": "Extraction Template",
+      "path": "automation/docs/actions/extraction-template.md"
+    },
+    {
+      "id": "explore_synthesis",
+      "title": "Explore Synthesis",
+      "path": "automation/docs/actions/explore-synthesis.md"
+    },
+    {
+      "id": "stage_completion",
+      "title": "Stage Completion",
+      "path": "automation/docs/actions/stage-completion.md"
+    },
+    {
+      "id": "report_patch",
+      "title": "Report Patch",
+      "path": "automation/docs/actions/report-patch.md"
+    }
+  ]
+}

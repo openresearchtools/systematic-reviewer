@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Troubleshooting | Systematic Reviewer - Research Preview Manual</title>
+    <meta name="description" content="Troubleshoot Systematic Reviewer - Research Preview issues and report bugs.">
+    <link rel="canonical" href="https://systematicreviewer.com/manual/troubleshooting.html">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/styles.css">
+  </head>
+  <body>
+    <header class="banner"><div class="shell banner__inner"><div class="banner__actions"><a class="banner-link" href="../index.html">Systematic Reviewer</a></div></div></header>
+    <main class="manual-shell">
+      <div class="manual-layout">
+        <nav class="manual-nav" aria-label="Manual navigation" data-manual-nav data-current="troubleshooting.html"><noscript><a href="install.html">Manual start</a></noscript></nav>
+        <article class="manual-article">
+          <header>
+            <h1>Troubleshooting</h1>
+            <p class="manual-lede">Systematic Reviewer - Research Preview is still a preview build. If a small error blocks a project, first capture the symptom, the project action you were trying, and any visible error text.</p>
+          </header>
+
+          <h2>Report a bug</h2>
+          <p>Open an issue on GitHub with the Zotero version, operating system, Systematic Reviewer version, what you clicked, what you expected, and the exact error message if one appeared.</p>
+          <div class="manual-callout manual-callout--warning"><p><strong>Response time.</strong> Systematic Reviewer is currently developed by solo researcher Dr Rutkauskas and is not a primary job, so there may be delays in resolving issues. If speed is important and you are comfortable using local development tools, the fastest route may be to ask a coding agent to inspect the XPI and fix the specific issue using the guidance below.</p></div>
+          <p><a class="btn" href="https://github.com/openresearchtools/systematic-reviewer/issues" target="_blank" rel="noopener">Submit a GitHub issue</a></p>
+
+          <h2>Use a coding agent to inspect a local XPI</h2>
+          <p>If you already use a coding agent such as Codex, OpenCode, Claude Code, or another local development assistant, you can ask it to inspect the installed XPI and fix a specific blocking issue. The prompt below gives the agent the important constraints so it does not treat the plugin like a Node web app.</p>
+          <div class="code-block">
+            <div class="code-block__header">
+              <span>Copyable repair prompt</span>
+              <button class="code-block__copy" type="button" data-copy-target="troubleshooting-agent-prompt">Copy</button>
+            </div>
+            <pre class="prompt-box"><code id="troubleshooting-agent-prompt">You are helping fix Systematic Reviewer, a third-party Zotero plugin. Zotero runs on Mozilla/Gecko. The plugin code runs inside Zotero/Mozilla APIs, not Node, and the plugin must not gain new external dependencies unless the user explicitly asks.
+
+The .xpi file is a renamed .zip archive. Unzip the XPI or open the source tree, inspect the actual code, and fix this specific issue:
+
+[Describe the exact symptom, error text, and the action that triggered it.]
+
+Important constraints:
+- Do not invent a new architecture. Fix the specific error.
+- Do not assume browser/Electron/Node behaviour where Zotero/Mozilla APIs are required.
+- The Writer save/edit/DOM controller code is fragile. Do not touch Writer controller, save, editor, raw, preview, or mode-switching logic unless the bug truly requires it. If those areas are touched, expect regressions and test mode switching carefully.
+- REPORT.md is the canonical source of truth for the report. Editor and Raw modes must write back to REPORT.md.
+- If this is on Windows, first inspect whether the error comes from UNIX-like assumptions in paths, process execution, file URLs, or shell commands.
+- Keep changes narrow, build the XPI, and explain exactly what changed and how it was tested.</code></pre>
+          </div>
+
+          <h2>Before changing code</h2>
+          <ul>
+            <li>If the agent consistently fails tool calls, repeats the same mistake, or seems stuck, start a new chat session and ask the task again before trying deeper fixes.</li>
+            <li>Restart Zotero and try the same action once more.</li>
+            <li>Check Jobs if the action was an export, conversion, harvest, embedding, extraction, or semantic-search run.</li>
+            <li>Copy the exact error message. Screenshots are useful when the problem is visual or modal-related.</li>
+            <li>Do not delete project files unless you are sure they are no longer needed.</li>
+          </ul>
+
+          <h2>Research-preview expectations</h2>
+          <p>Preview builds are intended to make new workflows available early. They may still contain platform-specific bugs, especially outside the macOS Zotero environment where most testing has happened so far.</p>
+
+          <div class="manual-next"><a href="install.html">Back to install</a></div>
+        </article>
+      </div>
+    </main>
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Writer | Systematic Reviewer - Research Preview Manual</title>
+    <meta name="description" content="Use the Writer tab in Systematic Reviewer.">
+    <link rel="canonical" href="https://systematicreviewer.com/manual/writer.html">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/styles.css">
+  </head>
+  <body>
+    <header class="banner">
+      <div class="shell banner__inner">
+        <div class="banner__actions">
+          <a class="banner-link" href="../index.html">Systematic Reviewer</a>
+          
+        </div>
+      </div>
+    </header>
+    <main class="manual-shell">
+      <div class="manual-layout">
+        <nav class="manual-nav" aria-label="Manual navigation" data-manual-nav data-current="writer.html"><noscript><a href="install.html">Manual start</a></noscript></nav>
+        <article class="manual-article">
+          <header>
+            <h1>Writer</h1>
+            <p class="manual-lede">Writer is the project report workspace. It opens REPORT.md and lets you preview, edit, cite, export, inspect logs, and restore previous versions without leaving Zotero.</p>
+          </header>
+
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/writer/writer-preview-report-chat.webp" width="2274" height="1980" loading="lazy" alt="Writer tab showing the report preview, chat panel, mode buttons, export controls, and zoom control.">
+            <figcaption>The Writer tab has the report on the left, the project chat on the right, and the main Writer controls along the bottom.</figcaption>
+          </figure>
+
+          <h2>Use the Writer toolbar</h2>
+          <p>The lower toolbar controls the report document itself. Use these buttons when you are working with REPORT.md rather than screening rows or project settings.</p>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Preview</h3><p>Shows the formatted report with page layout, citations, references, tables, page breaks, and PRISMA diagrams. Use this before export.</p></section>
+            <section class="manual-function"><h3>Editor</h3><p>Edits the report in a page-like writing view. Use this for normal report writing, headings, citation tokens, tables, and layout markers.</p></section>
+            <section class="manual-function"><h3>Raw</h3><p>Shows the underlying Markdown. Use Raw when you need exact syntax control, such as checking table syntax, citation tokens, or page-layout comments.</p></section>
+            <section class="manual-function"><h3>Properties</h3><p>Opens document settings for font, page margins, page numbers, citation style, bibliography behaviour, and dark/light page display.</p></section>
+            <section class="manual-function"><h3>Save</h3><p>Writes the current report changes to REPORT.md. Save before exporting or before running an agent request that should see your latest edits.</p></section>
+            <section class="manual-function"><h3>Export</h3><p>Queues PDF, DOCX, or Markdown export. Export work is handled in Jobs so long exports do not block the Zotero window.</p></section>
+            <section class="manual-function"><h3>Log</h3><p>Opens the workflow log attached to the project. Use it to inspect background notes, agent actions, and job messages.</p></section>
+            <section class="manual-function"><h3>Rollback</h3><p>Opens saved report snapshots so you can compare and restore an earlier REPORT.md version when needed.</p></section>
+          </div>
+
+          <h2>Preview, Editor, and Raw</h2>
+          <p>Preview is for reading the final shape of the report. Editor is for ordinary writing. Raw is for exact Markdown. You can move between the three modes while keeping the same underlying REPORT.md content.</p>
+          <div class="manual-screenshot-grid">
+            <figure class="manual-screenshot">
+              <img src="../assets/manual/writer/writer-editor-mode.webp" width="2274" height="1980" loading="lazy" alt="Writer Editor mode with the report page editable in the Zotero window.">
+              <figcaption>Editor mode is the main place for changing the report text while still seeing the page-like report surface.</figcaption>
+            </figure>
+            <figure class="manual-screenshot">
+              <img src="../assets/manual/writer/writer-raw-mode.webp" width="2274" height="1980" loading="lazy" alt="Writer Raw mode showing Markdown source for the report.">
+              <figcaption>Raw mode is useful when you need to inspect the exact Markdown saved in REPORT.md.</figcaption>
+            </figure>
+          </div>
+
+          <h2>Document properties</h2>
+          <p>Open <strong>Properties</strong> when you need to change report-wide formatting rather than individual text. This includes the citation style, bibliography options, page numbering, page size, margins, font choices, and the preview/editor page colour used on screen.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/writer/writer-document-properties.webp" width="2274" height="1980" loading="lazy" alt="Document properties modal with report title, citation style, page settings, margin settings, font settings, and page-number options.">
+            <figcaption>Document properties affect how the report is displayed and exported. They are project report settings, not Zotero library metadata.</figcaption>
+          </figure>
+
+          <h2>Citations, headings, and report elements</h2>
+          <p>Citation-aware editing uses Zotero item keys inside Markdown citation tokens. The Writer context menu can help work with headings and report elements such as PRISMA blocks, generated tables, and inserted database tables.</p>
+          <p>Use headings consistently. The report title page can use a top-level title, while report sections should use normal section headings so the table of contents stays focused on the body of the report.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/writer/writer-editor-secondary-click-menu.webp" width="2274" height="1980" loading="lazy" alt="Writer Editor mode with the secondary-click context menu open, showing citation, edit, insert, heading, format, and layout actions.">
+            <figcaption>Secondary-click inside Editor mode to open Writer actions near the text you are working on.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Insert/Edit Citation</h3><p>Opens the citation picker for the selected location. Use it to add a Zotero-backed citation token or adjust an existing citation.</p></section>
+            <section class="manual-function"><h3>Edit</h3><p>Shows editing actions for the selected report object, such as editing a selected citation or supported structured block.</p></section>
+            <section class="manual-function"><h3>Insert</h3><p>Adds report elements at the cursor, including generated or structured content supported by the Writer.</p></section>
+            <section class="manual-function"><h3>Heading</h3><p>Changes the selected paragraph into a heading level or returns it to normal paragraph text. Use headings for report structure.</p></section>
+            <section class="manual-function"><h3>Format</h3><p>Applies text formatting to the current selection when supported by the editor.</p></section>
+            <section class="manual-function"><h3>Layout</h3><p>Inserts report layout markers such as page breaks and landscape sections. Put a wide table title immediately above the table inside the same layout section.</p></section>
+          </div>
+
+          <h2>Insert citations</h2>
+          <p>Use the citation picker when you want a report claim to cite project records. Search by author, year, title, or citation text, add the relevant records, then insert the citation. Use prefix, locator, and suffix only when the citation needs that detail.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/writer/writer-citation-picker.webp" width="2274" height="1980" loading="lazy" alt="Add Citation modal with search box, paper results, selected item area, prefix locator suffix fields, and Insert Citation button.">
+            <figcaption>The citation picker writes citation tokens into REPORT.md so preview, DOCX, and PDF export can render them through Zotero citation data.</figcaption>
+          </figure>
+          <h2>Insert structured content</h2>
+          <p>Writer supports plain Markdown content and project-generated content. Use the report tools and agent tools to insert PRISMA diagrams, database table snapshots, extraction summaries, images, and synthesis tables. Inserted database tables become report content, so you can read and edit them like the rest of REPORT.md.</p>
+          <h3>Edit a PRISMA diagram</h3>
+          <p>PRISMA blocks are report content. Insert or generate the PRISMA block, then secondary-click the diagram in Editor mode to open the PRISMA actions. Use the PRISMA editor when you need to adjust labels, hide or show parts of the diagram, or review the counts before export.</p>
+          <div class="manual-screenshot-grid">
+            <figure class="manual-screenshot">
+              <img src="../assets/manual/writer/writer-prisma-block.webp" width="3082" height="2202" loading="lazy" alt="Writer report page showing an inserted PRISMA diagram.">
+              <figcaption>An inserted PRISMA diagram appears inside the report like other structured report content.</figcaption>
+            </figure>
+            <figure class="manual-screenshot">
+              <img src="../assets/manual/writer/writer-prisma-secondary-click.webp" width="746" height="854" loading="lazy" alt="Secondary-click menu over a PRISMA block showing PRISMA editing actions.">
+              <figcaption>Secondary-click the PRISMA block to open the PRISMA-specific editing actions.</figcaption>
+            </figure>
+          </div>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/writer/prisma-editor-modal.webp" width="3082" height="2202" loading="lazy" alt="PRISMA editor modal for adjusting the diagram inside Systematic Reviewer.">
+            <figcaption>The PRISMA editor lets you review and adjust the diagram before saving the report or exporting it.</figcaption>
+          </figure>
+
+          <h2>Export the report</h2>
+          <p>Click <strong>Export</strong>, choose the format, then confirm. PDF is for final page-layout output. DOCX is for Word or LibreOffice workflows. Markdown export is useful for plain-text archiving or moving the report elsewhere.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/writer/writer-export-report.webp" width="2274" height="1980" loading="lazy" alt="Export report modal with output format selection and Export button.">
+            <figcaption>Exports are queued as background jobs. Open Jobs if you want to watch progress or inspect an error.</figcaption>
+          </figure>
+          <h3>DOCX citation mode</h3>
+          <p>When exporting DOCX, choose whether citations should stay linked to Zotero or become plain document text. Linked citations are useful when you will keep editing the document on the Zotero setup that created the project, or on another machine that has access to the same Zotero library items. Unlinked citations are better for sending the file to someone else, submitting a final document, or archiving a stable copy.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/writer/writer-docx-linked-unlinked-export.webp" width="2248" height="2204" loading="lazy" alt="Export report modal with DOCX selected and Citation mode set to Linked citations.">
+            <figcaption>Linked DOCX export stores Zotero-compatible citation data in the document. Unlinked DOCX export writes normal text citations and bibliography entries that do not depend on Zotero.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Linked citations</h3><p>Exports active Zotero citation data using bookmark-style citation storage for compatibility between Zotero-supported word processors. Use this when the document will continue to be edited with Zotero available and the same library items are accessible.</p></section>
+            <section class="manual-function"><h3>Unlinked citations</h3><p>Exports citations and bibliography as ordinary text. Use this for sharing with readers who do not have the same Zotero library, for submission copies, and for long-term archive copies.</p></section>
+            <section class="manual-function"><h3>Before sharing</h3><p>If the recipient is not expected to refresh Zotero citations, export an unlinked DOCX or make a final unlinked copy from the word processor.</p></section>
+          </div>
+          <h3>When editing inside a word processor</h3>
+          <p>Systematic Reviewer uses bookmark-compatible linked citations for export because they can move between Zotero-supported word processors. After opening the DOCX and continuing work inside one word processor, use Zotero's document preferences to switch to the normal citation storage for that processor unless you specifically need cross-processor bookmark compatibility.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/writer/writer-zotero-document-preferences-bookmarks.webp" width="1536" height="1792" loading="lazy" alt="Zotero Document Preferences modal with Advanced Options showing Store citation as bookmarks.">
+            <figcaption>For normal Word editing, Zotero recommends fields unless you need to collaborate with LibreOffice users. Bookmarks can be shared between Word and LibreOffice, but are easier to damage if edited directly and cannot be inserted into footnotes.</figcaption>
+          </figure>
+          <p>In practice: export linked DOCX when you need an editable Zotero-connected handoff, then untick <strong>Store citation as bookmarks</strong> inside Zotero's word processor document preferences when you settle into normal Word editing. Keep a separate unlinked copy for submission, review circulation, or archival storage. See Zotero's own <a href="https://www.zotero.org/support/word_processor_plugin_usage">word processor documentation</a> for the field-versus-bookmark recommendation.</p>
+
+          <h2>Log and rollback</h2>
+          <p><strong>Log</strong> opens the workflow log for the project. <strong>Rollback</strong> is for restoring an earlier report snapshot after checking the difference. Use rollback carefully: it is meant for recovering the report, not for editing a small phrase.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/writer/writer-workflow-log.webp" width="2274" height="1980" loading="lazy" alt="Workflow log modal showing project log text and controls to close or copy the log.">
+            <figcaption>The workflow log is a plain record of project activity. It helps explain what happened before a report changed or a job failed.</figcaption>
+          </figure>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/writer/writer-rollback-diff-scrolled.webp" width="2274" height="1980" loading="lazy" alt="Rollback report modal scrolled to a side-by-side diff with removed and added lines highlighted.">
+            <figcaption>Rollback shows the current report beside a saved snapshot. Red and green diff lines show exactly what would change before you restore a version.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Choose snapshot</h3><p>Select the saved report version you want to inspect. Snapshots are meant for recovery after agent or manual edits.</p></section>
+            <section class="manual-function"><h3>Read the diff</h3><p>Scroll the comparison and check the changed lines. Do not restore only because the timestamp looks right.</p></section>
+            <section class="manual-function"><h3>Restore This Version</h3><p>Replaces the current REPORT.md with the selected snapshot. Use it only after checking that the diff matches what you want.</p></section>
+          </div>
+
+          <h2>Common checks</h2>
+          <ul>
+            <li>Before export, switch to Preview and scan the pages, references, tables, and PRISMA blocks.</li>
+            <li>Before asking the agent to edit the report, save your current manual changes.</li>
+            <li>For wide tables, place the table title directly above the table and use the report's existing page-break and landscape markers.</li>
+            <li>If an export is slow or fails, open Jobs and inspect the export job log.</li>
+          </ul>
+
+          <div class="manual-next"><a href="agent.html">Next: Agent and chat</a></div>
+        </article>
+      </div>
+    </main>
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

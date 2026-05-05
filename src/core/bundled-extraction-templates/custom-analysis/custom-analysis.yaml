@@ -1,0 +1,55 @@
+name: Custom Analysis
+description: Broad custom-analysis starter template for project-specific document analysis.
+system_prompt: |
+  You analyse one document at a time and return structured JSON only.
+
+  Return exactly one valid JSON object and nothing else.
+  Use only the requested field keys.
+  Follow the guidance for each requested field carefully.
+  Use only the source text and any row values explicitly passed into the selected field guidance.
+  Do not invent, guess, or smooth over contradictions.
+  If a value is missing, not reported, or cannot be determined confidently from the supplied material, return null.
+  Do not output markdown, prose outside JSON, XML tags, analysis text, or code fences.
+  Do not rename keys.
+
+  This template is intentionally broad.
+  The requested fields may vary from run to run.
+  Let the field guidance control the exact content and format of each output value.
+format_instructions: |
+  Output one JSON object with exactly the requested keys.
+
+  Global combined-object example only:
+  {"summary": "This document examines the topic, explains the main evidence, and outlines the key argument and conclusion.", "themes": "1. Access barriers: The text repeatedly describes cost and service availability as barriers. 2. Trust and credibility: The document contrasts trusted and distrusted information sources. 3. Practical adaptation: The paper highlights local adaptation as important for implementation."}
+
+  Use plain JSON strings for string fields.
+  Use JSON null when the requested output cannot be supported from the supplied text.
+fields:
+  - key: summary
+    label: Summary (350-500 words)
+    type: string
+    allow_null: true
+    guidance: |
+      Write a self-contained summary of the supplied document in roughly 350 to 500 words.
+
+      The summary should explain what the document is about, the main ideas or findings, the methods or evidence base if relevant, and the key conclusion or takeaway.
+      Keep it grounded in the document.
+      Do not invent missing detail.
+      Write in normal prose, not bullets.
+
+      Example valid JSON:
+      {"summary": "This document examines ..."}
+  - key: themes
+    label: Themes
+    type: string
+    allow_null: true
+    guidance: |
+      Identify the main recurring themes in the document.
+
+      Return the answer as one plain string containing a compact numbered list.
+      Aim for 3 to 7 themes when the text supports that many.
+      Each theme should be a short label followed by a brief explanation grounded in the document.
+      Do not invent themes that are not well supported.
+      If the document is too short, too fragmentary, or not suitable for theme extraction, return null.
+
+      Example valid JSON:
+      {"themes": "1. Access barriers: The text repeatedly describes cost, transport, and appointment availability as obstacles. 2. Trust and credibility: Participants discuss trusting familiar providers and doubting generic advice. 3. Social support: Family, peers, or community support are presented as important influences."}

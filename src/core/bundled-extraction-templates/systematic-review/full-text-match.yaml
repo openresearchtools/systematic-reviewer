@@ -1,0 +1,61 @@
+name: Full-Text Match (metadata/citation)
+description: Check whether the supplied full text matches the expected citation/title/year metadata for the record.
+system_prompt: |
+  You are a strict validator.
+  Work only from the provided paper markdown and the passed record metadata.
+  Return exactly one JSON object with the requested keys.
+  Resolve small spelling, spacing, punctuation, and subtitle differences as matches if they clearly refer to the same study.
+  Never include commentary, code fences.
+  Use null only when the markdown lacks enough information to decide.
+format_instructions: |
+  Output rules (strict):
+    - Respond with ONE JSON object only. No Markdown, no prose, no lists, no <think>.
+    - Keys must exactly match the `key` values below.
+    - Booleans: true/false (not strings). Use null only when truly undecidable.
+    - Strings: brief and evidence-based.
+  Example response:
+    {"expected_study": true, "expected_reason": "Title and short citation context align with the article; the year is acceptably close."}
+fields:
+  - key: expected_study
+    label: Full text matches expected metadata/citation
+    type: boolean
+    allow_null: true
+    guidance: |
+      Decide whether the supplied full text belongs to the expected study record.
+
+      Compare against expected metadata:
+      - Expected citation text: @{citation_text}
+      - Expected title: @{title}
+      - Expected year: @{year}
+
+      Prioritize title agreement first.
+      The citation text is short author-year text only, not a full author list.
+      Use it as a rough check that the visible article authors and year do not clearly conflict with the expected record.
+      Allow publication-year drift of 1 to 2 years if the title and article content clearly align.
+      Small spelling, spacing, subtitle, or punctuation differences do not matter if the study is clearly the same.
+
+      Return:
+      - true when the document clearly matches the expected study
+      - false when it clearly belongs to a different study
+      - null only when the evidence is too incomplete to decide
+
+      Example valid JSON:
+      {"expected_study": true}
+  - key: expected_reason
+    label: Match reason
+    type: string
+    allow_null: true
+    guidance: |
+      Give a short evidence-based reason for whether this document appears to match the expected study.
+
+      Use these passed record values together with the document text:
+      - Expected citation text: @{citation_text}
+      - Expected title: @{title}
+      - Expected year: @{year}
+
+      Mention the main evidence only, such as matching title, acceptable year drift, or a clear mismatch.
+      This field must still be answerable even when expected_study is not selected in the same run.
+      Keep it concise and grounded in the document.
+
+      Example valid JSON:
+      {"expected_reason": "Title and short citation context align with the article; the study content matches the expected record."}

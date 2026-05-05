@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Settings | Systematic Reviewer - Research Preview Manual</title>
+    <meta name="description" content="Configure Systematic Reviewer settings.">
+    <link rel="canonical" href="https://systematicreviewer.com/manual/settings.html">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/styles.css">
+  </head>
+  <body>
+    <header class="banner">
+      <div class="shell banner__inner">
+        <div class="banner__actions">
+          <a class="banner-link" href="../index.html">Systematic Reviewer</a>
+          
+        </div>
+      </div>
+    </header>
+    <main class="manual-shell">
+      <div class="manual-layout">
+        <nav class="manual-nav" aria-label="Manual navigation" data-manual-nav data-current="settings.html"><noscript><a href="install.html">Manual start</a></noscript></nav>
+        <article class="manual-article">
+          <header>
+            <h1>Settings</h1>
+            <p class="manual-lede">Settings controls runtimes, model roles, OpenAlex, stored projects, MCP servers, privileged tools, and editor/preview appearance.</p>
+          </header>
+
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/settings/settings-runtime-updated.webp" width="2274" height="1980" loading="lazy" alt="Settings Runtime tab showing saved API and CLI runtimes, detected runtimes, Agent Model preset, OpenCode preset, context, reasoning, and legacy Chat Completions checkbox.">
+            <figcaption>Runtime settings connect Systematic Reviewer to local APIs, external APIs, CLI runtimes, and model presets.</figcaption>
+          </figure>
+
+          <h2 id="runtime-models">Runtime and model presets</h2>
+          <p>Runtime settings decide which model backends the project can use. Scan only detects runtimes that are already installed or reachable; it does not install models or create accounts for you.</p>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Scan local runtimes</h3><p>Looks for common local APIs and installed CLI runtimes. Run it after installing or updating a runtime, then use + or the role buttons to save only what you want the plugin to use.</p></section>
+            <section class="manual-function"><h3>Add runtime</h3><p>Adds an API endpoint manually. Use the base URL your provider gives you, usually ending in <code>/v1</code>, plus an API key only when required.</p></section>
+            <section class="manual-function"><h3>Saved Responses runtimes</h3><p>Stores API base URLs and optional API keys for providers that expose a Responses-compatible endpoint. New API runtimes default to Responses.</p></section>
+            <section class="manual-function"><h3>Saved CLI runtimes</h3><p>Stores trusted installed CLIs, such as Codex or OpenCode, for model-backed chat and extraction through the plugin bridge.</p></section>
+            <section class="manual-function"><h3>Agent model</h3><p>The default model for chat and agent workflows. Additional agent presets can be selected from the chat Model modal.</p></section>
+            <section class="manual-function"><h3>Data extraction model</h3><p>The default model for extraction jobs. It can be separate from the chat model or inherit an agent model preset.</p></section>
+            <section class="manual-function"><h3>PDF/VLM model</h3><p>The model used for page-image or vision-language conversion when the PDF mode needs vision. Fast PDF does not need this model.</p></section>
+            <section class="manual-function"><h3>Embeddings model</h3><p>The model used by the Embeddings tab. It uses the embeddings endpoint rather than the chat/extraction route.</p></section>
+            <section class="manual-function"><h3>Legacy Chat Completions checkbox</h3><p>Use only for a specific API model when the provider says that model is exposed through Chat Completions or is not available through Responses. This applies to that model preset, not the whole runtime.</p></section>
+            <section class="manual-function"><h3>Reasoning</h3><p>Default sends no reasoning field. Explicit values depend on provider and model support. If you are unsure, leave it on Default.</p></section>
+            <section class="manual-function"><h3>State mode</h3><p>Stateless resends the managed chat context and lets the app control truncation. Stateful asks the server to keep the chain. Local runtime testing usually works best with Stateless, and CLI runtimes are stateless only.</p></section>
+            <section class="manual-function"><h3>Context window assumption</h3><p>Set the real loaded context length for the model. The app uses it for token budgeting and sliding-window truncation, so an incorrect value can make long chats or automations fail.</p></section>
+            <section class="manual-function"><h3>Independent resources</h3><p>Choose Yes only when that model does not compete with other configured models for the same GPU, CPU, memory, or runtime queue.</p></section>
+            <section class="manual-function"><h3>Parallel requests</h3><p>Controls how many jobs the runtime can handle at once. Keep it low unless you know the runtime and hardware can run multiple requests reliably.</p></section>
+          </div>
+          <h3>Suggested local model examples</h3>
+          <p>The help overlays list example GGUF conversions that may be useful with runtimes supporting llama.cpp-based engines and compatible API endpoints. These are examples only; Systematic Reviewer and <a href="https://openresearchtools.com" target="_blank" rel="noopener">OpenResearchTools</a> are not affiliated with model providers, Qwen, or LM Studio.</p>
+          <ul>
+            <li>Agent examples: <a href="https://huggingface.co/openresearchtools/Qwen3.6-35B-A3B-GGUF" target="_blank" rel="noopener"><code>openresearchtools/Qwen3.6-35B-A3B-GGUF</code></a>, <a href="https://huggingface.co/openresearchtools/Qwen3.6-27B-GGUF" target="_blank" rel="noopener"><code>openresearchtools/Qwen3.6-27B-GGUF</code></a>.</li>
+            <li>Extraction examples: <a href="https://huggingface.co/openresearchtools/Qwen3.6-27B-instruct-GGUF" target="_blank" rel="noopener"><code>openresearchtools/Qwen3.6-27B-instruct-GGUF</code></a>, <a href="https://huggingface.co/openresearchtools/Qwen3.6-35B-A3B-Instruct-GGUF" target="_blank" rel="noopener"><code>openresearchtools/Qwen3.6-35B-A3B-Instruct-GGUF</code></a>.</li>
+            <li>Embeddings example: <a href="https://huggingface.co/openresearchtools/Qwen3-Embedding-8B-GGUF" target="_blank" rel="noopener"><code>openresearchtools/Qwen3-Embedding-8B-GGUF</code></a>, exposed through an embeddings endpoint such as <code>/v1/embeddings</code>.</li>
+            <li>PDF/VLM example: <a href="https://huggingface.co/openresearchtools/Qwen3.5-4B-Instruct-GGUF" target="_blank" rel="noopener"><code>openresearchtools/Qwen3.5-4B-Instruct-GGUF</code></a>, used only when the chosen PDF mode needs a vision model.</li>
+          </ul>
+          <div class="manual-callout"><p>If you use external APIs, hosted providers, or CLI runtimes, especially subscription-based services, confirm that the provider terms allow use from external applications and permit the intended review, automation, and data-extraction workflows.</p></div>
+
+          <h2 id="harvest-openalex">Harvest and OpenAlex</h2>
+          <p>The Harvest settings tab stores the OpenAlex API key and points to OpenAlex documentation. OpenAlex is an open scholarly metadata index covering works, authors, sources, institutions, topics, funders, and related research metadata. Systematic Reviewer uses it in Harvest to search scholarly records, collect candidate studies, and add metadata-backed items into the project workflow.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/settings/settings-harvest.webp" width="2274" height="620" loading="lazy" alt="Settings Harvest tab with OpenAlex API key settings and help text.">
+            <figcaption>Add OpenAlex credentials here before running serious harvest jobs.</figcaption>
+          </figure>
+          <p>An API key is optional for opening the UI, but recommended for normal project harvesting because it identifies requests and gives access to OpenAlex authenticated rate limits. Systematic Reviewer and <a href="https://openresearchtools.com" target="_blank" rel="noopener">OpenResearchTools</a> are not affiliated with OpenAlex; use the linked OpenAlex documentation for account, authentication, and rate-limit details.</p>
+
+          <h2 id="projects">Projects</h2>
+          <p>Projects lists plugin-managed project records. This Settings view is project-independent, so it can manage stored projects even when another project is currently open.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/settings/settings-projects-updated.webp" width="2274" height="1560" loading="lazy" alt="Settings Projects tab showing Demo and testing project cards with Open project, Open folder, Reconcile, Delete, and project paths.">
+            <figcaption>Project actions operate on plugin-managed project storage, not on unrelated Zotero collections.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Open project</h3><p>Opens that stored project in the project workspace. It is disabled if the linked Zotero collection is missing.</p></section>
+            <section class="manual-function"><h3>Open folder</h3><p>Reveals the project folder on disk, including the database, settings, report, log, snapshots, outputs, templates, and project-managed files.</p></section>
+            <section class="manual-function"><h3>Reconcile</h3><p>Queues a background job to repair and refresh stored project links, Zotero project artifacts, and workflow files from project metadata. Track progress in Jobs.</p></section>
+            <section class="manual-function"><h3>Delete</h3><p>Opens a confirmation dialog. It is destructive and should be used only when you no longer need the project storage.</p></section>
+          </div>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/settings/settings-delete-project-confirmation.webp" width="2274" height="1980" loading="lazy" alt="Delete project confirmation modal with warning text, optional collection container checkbox, Cancel, and Delete project buttons.">
+            <figcaption>Delete removes plugin-managed project data only after confirmation. The optional collection-container checkbox does not delete library items.</figcaption>
+          </figure>
+
+          <h2 id="mcp-servers">MCP servers</h2>
+          <p>The built-in Systematic Reviewer MCP server can expose project tools to external MCP-compatible clients. User-added external MCP servers are third-party processes or services. They may read, write, or act according to their own behaviour and the permissions of your operating system account.</p>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/settings/settings-mcp-servers.webp" width="2274" height="900" loading="lazy" alt="Settings MCP Servers tab showing built-in MCP server settings and external MCP server area.">
+            <figcaption>Enable MCP only when you understand which external client or server will connect to the project tools.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Built-in MCP server</h3><p>Starts Systematic Reviewer's own optional endpoint so trusted local agent clients can connect to the Zotero project environment.</p></section>
+            <section class="manual-function"><h3>MCP API key</h3><p>Leave blank for local callers without bearer authentication, or set a key to require <code>Authorization: Bearer &lt;key&gt;</code>.</p></section>
+            <section class="manual-function"><h3>Copy endpoint / MCP JSON</h3><p>Copies connection details for an MCP client. Save settings first so the current endpoint is accurate.</p></section>
+            <section class="manual-function"><h3>External MCP connectors</h3><p>User-added third-party MCP servers may provide tools, resources, or prompts. Depending on the server, they may read or write files, run commands, access local services, call remote APIs, or send data outside the machine.</p></section>
+          </div>
+
+          <h2 id="privileged-tools">Privileged tools</h2>
+          <p>Shell, browser, and developer tools are restart-gated. Enabling a privileged tool group shows a warning and requires a Zotero restart before that tool surface is loaded. Disable them when you do not need them.</p>
+          <div class="manual-callout manual-callout--warning">
+            <p><strong>Privileged shell tools warning.</strong> These tools are not recommended on systems that own or can access secure data. Shell commands default to running from the currently bound project workspace, but that does not itself contain the agent to the project.</p>
+            <p>An agent can still write scripts, execute them, call globally installed tools such as Python, shells, package managers, or other binaries, and direct those tools to act outside the workspace.</p>
+            <p>In practice, enabling shell tools grants the agent whatever system-wide access your user account and operating-system sandbox allow. Privileged shell tools can also be vulnerable to prompt injection or unsafe instruction-following.</p>
+            <p>The shell namespace is not available to the MCP server. In Systematic Reviewer, privileged shell access is intended for the in-app session agent when loaded at startup.</p>
+            <p>Shell commands default to the currently bound project workspace, and when developer tools are also enabled the localhost developer testing surface mirrors the same allowed tool set so you can test what the app agent can actually use. That workspace default is only a starting location, not a full safety boundary.</p>
+            <p>If you enable shell tools, prefer high-capability models with stronger prompt-security behavior and use them only in sandboxed environments. This software is provided without warranties. Nothing here is legal, security, or compliance advice. Consult your IT or security team before using any software.</p>
+          </div>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/settings/settings-privileged-tools-disabled.webp" width="2274" height="1400" loading="lazy" alt="Settings Privileged Tools tab with shell, browser, and developer tool groups disabled and showing current load states.">
+            <figcaption>Keep privileged tools disabled unless you explicitly need them. Loading changes apply only after fully closing and reopening Zotero.</figcaption>
+          </figure>
+          <figure class="manual-screenshot">
+            <img src="../assets/manual/settings/settings-privileged-shell-risk-modal.webp" width="2274" height="1620" loading="lazy" alt="Privileged shell tools warning modal requiring the user to acknowledge risks before enabling and choosing restart later or restart now.">
+            <figcaption>Enabling a privileged tool group requires reading the warning, acknowledging the risks, and restarting Zotero.</figcaption>
+          </figure>
+          <div class="manual-function-grid">
+            <section class="manual-function"><h3>Privileged shell tools</h3><p>Let the in-app agent run local shell commands with your OS user privileges. Commands start from the current project workspace, but that is not a full safety boundary.</p></section>
+            <section class="manual-function"><h3>Privileged browser tools</h3><p>Let the in-app agent open live webpages, read documentation, follow links, and save webpage evidence into the current project using Zotero-native save flows.</p></section>
+            <section class="manual-function"><h3>Developer tools</h3><p>Unlock localhost developer inspection and the dev-only testing surface. If shell or browser tools are also enabled, the developer surface mirrors the same allowed tool set.</p></section>
+            <section class="manual-function"><h3>Restart now / later</h3><p>Tool bundles are loaded only at app startup. Restart now applies immediately; restart later saves the preference for the next full Zotero restart.</p></section>
+          </div>
+
+          <h2 id="editor-preview-page-colour">Editor/Preview page colour</h2>
+          <p>When Zotero is in dark mode, the Editor/Preview page setting can switch the on-screen Writer page between a light page and a dark page. This is a display preference for editing and previewing; exports keep their export formatting.</p>
+
+          <h2>Common checks</h2>
+          <ul>
+            <li>Click Save after changing settings that are meant to persist.</li>
+            <li>Run Scan local runtimes after installing or updating a local runtime.</li>
+            <li>Use the help question marks for model, runtime, MCP, and privileged tool warnings before enabling advanced features.</li>
+            <li>Confirm third-party provider terms before sending research material to external APIs, hosted models, CLI runtimes, or MCP servers.</li>
+          </ul>
+
+          <div class="manual-next"><a href="jobs.html">Next: Jobs</a></div>
+        </article>
+      </div>
+    </main>
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

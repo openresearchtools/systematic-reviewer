@@ -1,0 +1,154 @@
+name: Interventions
+description: Intervention-focused extraction starter for systematic review projects.
+system_prompt: |
+  You are a meticulous evidence screening assistant.
+  Work strictly from the supplied paper markdown.
+  Return exactly one JSON object with the requested keys.
+  Never include commentary, code fences, or <think> sections (ignore any <think> the model produces).
+  Use null when information is missing or unclear; never invent.
+  Treat the provided markdown as the full paper text. If there is leading metadata or front matter, focus on the main body that follows.
+
+  These are intervention-focused extractions.
+  Focus on what was done, who delivered it, the core components, where it happened, and who or what the intervention was trying to change.
+  Qualitative evaluations of a clearly defined intervention, pre-post studies, pilots, feasibility studies, implementation studies, and non-randomized evaluations still count as intervention studies.
+format_instructions: |
+  Output rules (strict):
+    - Respond with ONE JSON object only. No Markdown, no prose, no lists, no <think>.
+    - Keys must exactly match the `key` values below.
+    - Use null when information is missing or uncertain.
+    - Boolean fields: return true or false (not strings).
+    - Numbers: return numeric values (no units or words).
+    - Strings: keep them evidence-based. For verbatim intervention fields, keep wording as close to the paper as possible.
+  Example response:
+    {"intervention_study": true, "intervention_aim": "To improve medication adherence and depressive symptoms.", "intervention_verbatim": "Participants attended six weekly peer-led workshops covering digital literacy, goal-setting, and mutual support. Materials included a workbook and online forum access.", "intervention_sources": "Smith et al. 2018 protocol", "intervention_n": 48, "control_n": 47, "target_actors": "Adults with type 2 diabetes", "target_behaviours": "Medication adherence and glucose self-monitoring", "intervention_setting": "Primary care clinics"}
+fields:
+  - key: intervention_study
+    label: Intervention study
+    type: boolean
+    allow_null: true
+    guidance: |
+      Decide whether this study evaluates an intervention.
+
+      What counts as an intervention:
+      - An active program, component, policy, trial, pilot, service, tool, or deliberate change designed to influence participants or outcomes.
+      - Randomized trials, non-randomized evaluations, pre-post studies, pilots, feasibility studies, implementation studies, process evaluations, and qualitative evaluations of a clearly defined intervention.
+      - Training, counselling, coaching, peer-support programs, digital interventions, community programs, school programs, service redesigns, and policy implementations can all count when they are actively evaluated.
+
+      What does not count:
+      - Purely observational, correlational, forecasting, descriptive, or survey-only studies with no tested action.
+      - Review papers, protocols, or qualitative-only descriptions with no intervention being evaluated.
+
+      Return:
+      - true if the study evaluates an intervention
+      - false if it clearly does not
+      - null only when the document is too incomplete to decide
+
+      Example valid JSON:
+      {"intervention_study": true}
+  - key: intervention_aim
+    label: Intervention aim
+    type: string
+    allow_null: true
+    guidance: |
+      State the aim of the intervention itself, not the general study aim unless they are effectively the same.
+
+      Focus on what the intervention was intended to change, improve, prevent, increase, reduce, or support.
+      Keep the answer concise and evidence-based.
+
+      Example valid JSON:
+      {"intervention_aim": "To increase physical activity through school-based peer support."}
+  - key: intervention_verbatim
+    label: Intervention description (verbatim)
+    type: string
+    allow_null: true
+    guidance: |
+      Extract the intervention description as close to the paper wording as possible.
+
+      Focus on the intervention itself, not the study in general.
+      Your job is to extract everything about the intervention and its components.
+      Do not summarize, paraphrase, infer, or compress.
+      Include intervention details from anywhere in the paper: abstract, methods, tables, figure captions, appendices, supplements, and named programme descriptions.
+      Cover all components, activities, delivery, materials, timing, setting, facilitators, dose, tailoring, digital elements, and any other intervention details no matter how small they look.
+      If tables describe the intervention, rewrite each table entry into sentences while preserving the original wording and detail as closely as possible.
+      If the intervention is described in multiple places, combine the extracted verbatim material into one string in source order separated by " || ".
+      If no intervention description exists anywhere, return null.
+
+      Example valid JSON:
+      {"intervention_verbatim": "Participants attended six weekly peer-led workshops covering digital literacy, goal-setting, and mutual support. Materials included a workbook and online forum access. || Fidelity checklists were completed at each session."}
+  - key: intervention_sources
+    label: Intervention sources
+    type: string
+    allow_null: true
+    guidance: |
+      Extract any named source, manual, programme, protocol, guideline, prior trial, website, or citation that the paper says it used to build or describe the intervention.
+
+      This field is about where the intervention description came from or what it references.
+      If the intervention is explicitly adapted from another source, include that.
+      If nothing is referenced as the intervention source, return null.
+
+      Example valid JSON:
+      {"intervention_sources": "Intervention Guide <link to website or link to doi if it's provided in references> if there is no link provided, fallback to explanation where to find it.; Adapted from Smith et al. 2018"}
+  - key: intervention_n
+    label: Intervention group sample size
+    type: number
+    allow_null: true
+    min: 0
+    guidance: |
+      Extract the sample size for the intervention group or groups.
+
+      Use the clearly reported group count that corresponds to the intervention arm.
+      If there are multiple intervention arms and the paper reports a combined intervention total rather than one number per arm, return the combined intervention total.
+      If the paper does not provide a defensible intervention-group count, return null.
+
+      Example valid JSON:
+      {"intervention_n": 48}
+  - key: control_n
+    label: Control group sample size
+    type: number
+    allow_null: true
+    min: 0
+    guidance: |
+      Extract the sample size for the control, comparison, or usual-care group.
+
+      Use the clearly reported group count that corresponds to the non-intervention comparator.
+      If there is no control group, return null.
+      If multiple comparator groups are present and only a combined comparator total is reported, return that combined comparator total.
+
+      Example valid JSON:
+      {"control_n": 47}
+  - key: target_actors
+    label: Target actors
+    type: string
+    allow_null: true
+    guidance: |
+      Identify who the intervention is aimed at changing, training, supporting, or mobilizing.
+
+      This can be participants, patients, students, parents, teachers, clinicians, organizations, or communities.
+      Return the actors in plain language.
+
+      Example valid JSON:
+      {"target_actors": "Primary care clinicians"}
+  - key: target_behaviours
+    label: Target behaviours
+    type: string
+    allow_null: true
+    guidance: |
+      Extract the main behaviors, practices, or actions that the intervention is trying to change.
+
+      If the target is not behavioral and the paper instead targets knowledge, attitudes, service delivery, or system processes, state that clearly.
+      If no specific target behavior is stated, return null.
+
+      Example valid JSON:
+      {"target_behaviours": "Medication adherence and glucose self-monitoring"}
+  - key: intervention_setting
+    label: Intervention setting
+    type: string
+    allow_null: true
+    guidance: |
+      Extract where the intervention was delivered.
+
+      This can be a school, hospital, primary care clinic, home, workplace, community site, online environment, or mixed setting.
+      Keep the answer concise and setting-focused.
+
+      Example valid JSON:
+      {"intervention_setting": "Online with telephone follow-up"}

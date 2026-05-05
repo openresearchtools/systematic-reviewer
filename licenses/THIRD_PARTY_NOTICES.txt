@@ -1,0 +1,287 @@
+Systematic Reviewer Third-Party Notices
+Copyright (C) 2026 Rutkauskas L.
+Last reviewed: 2026-04-24
+
+This notices file describes the third-party software, documentation, services, datasets, and reporting materials referenced by or integrated with the Systematic Reviewer add-on for Zotero reference manager.
+
+Bundled full-text third-party licenses are consolidated in `licenses/LICENSES.txt`.
+
+General statement
+
+Systematic Reviewer is independent software by Rutkauskas L.
+It is not affiliated with, sponsored by, or endorsed by the Corporation for Digital Scholarship, Zotero, Zotero Connectors, Zotero MCP, Mozilla, BrowserOS, SQLite, OpenAI, Codex, Microsoft, LibreOffice, Docling, OpenAlex, OurResearch, Impactstory, opencode-ai, the PRISMA authors/maintainers, the University of Western Australia, or any other upstream project, service, standard, organization, or maintainer referenced below.
+The references below are included to describe how the Systematic Reviewer plugin uses, depends on, interoperates with, or was informed by external software, services, standards, and reference materials while running inside the Zotero-hosted plugin environment.
+
+1. Zotero host application
+
+Systematic Reviewer is a Zotero add-on and depends on a user-installed Zotero runtime for plugin loading, item APIs, collection APIs, reader integration, application-hosted browser/platform services, and citation/style infrastructure.
+
+Upstream project:
+https://github.com/zotero/zotero
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: Zotero [COPYING]`)
+
+Notice:
+Zotero is Copyright 2018 Corporation for Digital Scholarship, Vienna, Virginia, USA, and Copyright 2006-2017 Roy Rosenzweig Center for History and New Media, George Mason University, Fairfax, Virginia, USA.
+The Zotero name is a registered trademark of the Corporation for Digital Scholarship.
+Systematic Reviewer uses citation, bibliography, style-selection, item lookup, URI generation, item-to-CSL conversion, and other native functions exposed by the installed Zotero runtime.
+
+Packaging status:
+Zotero itself is not redistributed by this repository. Systematic Reviewer runs inside a separate Zotero installation supplied by the user.
+
+2. Zotero citation and bibliography functions
+
+Zotero documentation states that Zotero uses Citation Style Language (CSL) styles and the citeproc-js CSL processor for creating citations and bibliographies.
+
+Systematic Reviewer uses those capabilities through the installed Zotero runtime for citation preview, bibliography rendering, citation text generation, style selection, locale-sensitive rendering, and CSL JSON item conversion.
+
+Upstream references:
+https://www.zotero.org/support/dev/citation_styles
+https://www.zotero.org/support/dev/source_code
+https://citationstyles.org/
+
+Packaging status:
+This repository does not provide a separate runtime copy of citeproc-js, CSL styles, or CSL locale files. Those capabilities are consumed from the installed Zotero runtime.
+
+3. Zotero-compatible editable citation document conventions
+
+Systematic Reviewer's linked-citation DOCX export intentionally writes document structures designed to interoperate with Zotero-managed editable citation workflows. This includes Zotero-style bookmark naming, custom document properties, citation field payloads, bibliography field payloads, and CSL citation metadata references to `https://github.com/citation-style-language/schema/raw/master/csl-citation.json`.
+
+This notices entry describes compatibility conventions and Zotero-hosted runtime behavior used by the plugin. Some user-facing workflow patterns and document behaviors in Systematic Reviewer are intentionally close to native Zotero behavior so that the plugin works naturally inside Zotero and remains compatible with Zotero-managed citation editing workflows.
+
+Systematic Reviewer remains separate independent software and is not affiliated with, sponsored by, or endorsed by the Corporation for Digital Scholarship, Microsoft, The Document Foundation, or any other project referenced in this notices file.
+
+4. Mozilla platform APIs exposed through Zotero
+
+Systematic Reviewer uses Mozilla platform interfaces exposed through Zotero, including XUL/XHTML integration points, `ChromeUtils`, `Services`, `IOUtils`, `nsIFile`, stream interfaces, ZIP writer APIs, browser/browser-window capabilities, page loading, screenshots, DOM and message-manager access, and save/export flows.
+
+Official license text:
+`licenses/LICENSES.txt` (`BEGIN: Mozilla Public License 2.0 [LICENSE]`)
+
+Packaging status:
+Mozilla platform code is not redistributed separately by this repository. These interfaces are consumed from the installed Zotero runtime, including for privileged browsing, temporary-file handling, binary reads/writes, DOCX ZIP packaging, page capture, and browser-backed export workflows.
+
+5. BrowserOS browser-agent lineage
+
+Systematic Reviewer used the BrowserOS repository as a reference point for converting browser automation capabilities into agent-native structured browser tools. The implementation in this repository is separate Zotero-native JavaScript code.
+
+Upstream project:
+https://github.com/browseros-ai/BrowserOS
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: BrowserOS [LICENSE]`)
+
+Notice:
+BrowserOS is acknowledged here for design lineage around browser-agent tool organization, action surfaces, and agent-facing browser automation patterns.
+
+Packaging status:
+Systematic Reviewer does not bundle, execute, or redistribute BrowserOS.
+
+6. Zotero Connectors snapshot and webpage-saving lineage
+
+Systematic Reviewer used the Zotero Connectors repository as a reference point for snapshotting and saving web pages, including snapshot attachment workflow behavior. The implementation in this repository uses Zotero-native APIs from the installed Zotero runtime.
+
+Upstream project:
+https://github.com/zotero/zotero-connectors
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: Zotero Connectors [COPYING]`)
+
+Notice:
+Zotero Connectors is acknowledged here for design lineage around web-page snapshotting and saving workflows.
+
+Packaging status:
+Systematic Reviewer does not redistribute Zotero Connectors as part of this repository.
+
+7. SQLite storage substrate
+
+Systematic Reviewer uses plugin-managed project SQLite databases and vector/storage tables through Zotero's database connection and runtime.
+
+Upstream license information:
+https://sqlite.org/src/doc/trunk/LICENSE.md
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: SQLite Public Domain / Blessing [LICENSE]`)
+
+Notice:
+SQLite is acknowledged here as the storage substrate used through the host/runtime for local project data, full-text chunks, embeddings, and related plugin-managed tables.
+
+Packaging status:
+SQLite is consumed through the installed Zotero/runtime environment and is not vendored separately by this repository.
+
+8. PDF.js resources loaded through Zotero
+
+Systematic Reviewer loads PDF-related reader resources from Zotero under `resource://zotero/reader/pdf/`, including the worker and supporting assets used by the Zotero reader.
+
+Upstream project:
+https://github.com/mozilla/pdf.js
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: PDF.js [LICENSE]`)
+
+Packaging status:
+Systematic Reviewer does not vendor a separate PDF.js copy in this repository for runtime use; it interoperates with the PDF.js material shipped inside Zotero.
+
+9. Office Open XML / DOCX standards basis
+
+Systematic Reviewer generates `.docx` exports by writing Office Open XML package parts and document XML directly.
+
+Standards references:
+https://ecma-international.org/publications-and-standards/standards/ecma-376/
+https://learn.microsoft.com/en-us/openspecs/dev_center/ms-devcentlp/1c24c7c8-28b0-4ce1-a47d-95fe1ff504bc
+https://learn.microsoft.com/en-us/openspecs/dev_center/ms-devcentlp/03347966-f8ff-4d53-a05e-63419d4132e2
+
+Notice:
+Ecma International describes ECMA-376 as defining Office Open XML vocabularies, document representation, and packaging requirements, and identifies ISO/IEC 29500 as the related international standard.
+Microsoft's Open Specification Promise lists Office Open XML 1.0 - Ecma-376 and Office Open XML ISO/IEC 29500 editions as covered specifications.
+Microsoft's Open Specification Promise FAQ states that implementers do not need to sign anything and do not need to make any mention of or reference to Microsoft in order to implement covered specifications.
+Patent-related coverage under the Open Specification Promise is separate from copyright in the standards documents themselves.
+
+Packaging status:
+This repository does not redistribute the ECMA-376 or ISO/IEC 29500 standards texts, and does not redistribute Microsoft Office code. This notice is included for standards and interoperability transparency.
+
+10. Docling VLM PDF conversion lineage
+
+Systematic Reviewer's PDF VLM conversion path includes prompting, PDF page rasterization, image scaling/upscaling, and page-by-page vision-model preparation patterns implemented in this repository with reference to Docling's VLM PDF conversion approach.
+
+Upstream project:
+https://github.com/docling-project/docling
+
+Upstream documentation:
+https://docling-project.github.io/docling/usage/vision_models/
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: Docling [LICENSE]`)
+
+Notice:
+Systematic Reviewer does not ship or execute Docling as a runtime dependency. The implementation in this repository is separate Zotero-native JavaScript code, but Docling is acknowledged here for design lineage around PDF VLM prompting, page-image preparation, and scaling/upscaling behavior.
+
+Packaging status:
+Systematic Reviewer does not vendor a separate Docling runtime in this repository. This notice is included for attribution and transparency around similar PDF-to-markdown VLM preparation logic.
+
+11. OpenAlex API, documentation, and data
+
+Systematic Reviewer integrates OpenAlex for Harvest and literature retrieval workflows.
+
+Service:
+https://openalex.org/
+
+Documentation:
+https://developers.openalex.org
+
+Bundled full-text license entries:
+`licenses/LICENSES.txt` (`BEGIN: OpenAlex API Documentation [LICENSE]`)
+`licenses/LICENSES.txt` (`BEGIN: OpenAlex Data CC0 1.0 [LICENSE]`)
+
+Notice:
+OpenAlex documentation states that the complete OpenAlex dataset is available under CC0 1.0 Universal.
+OpenAlex documentation also requests citation of:
+Priem, J., Piwowar, H., & Orr, R. (2022). OpenAlex: A fully-open index of scholarly works, authors, venues, institutions, and concepts. ArXiv. https://arxiv.org/abs/2205.01833
+
+Operational note:
+API usage, rate limits, authentication, and pricing are controlled by OpenAlex and may change over time. Review current OpenAlex documentation and terms before deployment.
+
+12. OpenAlex GUI harvest UI lineage
+
+Systematic Reviewer used the `openalex-gui` repository as a reference point when designing Harvest UI functionality around the OpenAlex API for semantic and Boolean searches and for retrieving publication metadata. The implementation in this repository is separate code.
+
+Upstream project:
+https://github.com/ourresearch/openalex-gui
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: OpenAlex GUI [LICENSE]`)
+
+Notice:
+The upstream `openalex-gui` repository is MIT-licensed. Systematic Reviewer acknowledges that repository here for UI lineage and attribution around Harvest/OpenAlex search behavior.
+
+Packaging status:
+Systematic Reviewer does not redistribute the upstream `openalex-gui` application as part of this repository. The Harvest UI in this repository is a separate Plugin-native implementation.
+
+13. Zotero MCP full-text search lineage
+
+Systematic Reviewer used the Zotero MCP repository as a reference point for full-text search workflows, including full-text access, chunk retrieval, and agent-facing search result behavior used by `/Find` and Find Arguments.
+
+Upstream project:
+https://github.com/54yyyu/zotero-mcp
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: Zotero MCP [LICENSE]`)
+
+Notice:
+The implementation in this repository is separate Zotero-native JavaScript code backed by Systematic Reviewer's project storage and tool catalog. Zotero MCP is acknowledged here for design lineage around exposing Zotero/library full-text search to agent workflows.
+
+Packaging status:
+Systematic Reviewer does not bundle or execute Zotero MCP.
+
+14. OpenAI Codex lineage
+
+Systematic Reviewer used the OpenAI Codex repository as a reference point for Responses-style tool-loop handling, structured streaming/event handling, Codex CLI local-exec connectivity, and MCP/server/plugin integration patterns, including shell-tool routing and shell-disabling integration patterns.
+
+Upstream project:
+https://github.com/openai/codex
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: OpenAI Codex [LICENSE]`)
+
+Notice:
+The implementation in this repository is separate Zotero-native JavaScript code. Codex is acknowledged here for design lineage around agent runtime orchestration, local execution connectivity, and tool/server integration behavior.
+
+Packaging status:
+OpenAI Codex is optional external software and is not bundled by this repository.
+
+15. opencode-inspired tool shapes
+
+Some structured file-tool and shell-tool ideas in the agent tooling were designed with reference to opencode-style tool shapes. Systematic Reviewer ships its own Zotero-native implementation.
+
+Upstream project:
+https://github.com/opencode-ai/opencode
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: opencode [LICENSE]`)
+
+
+16. PRISMA2020 repository lineage
+
+The PRISMA diagram work in Systematic Reviewer was translated into native JavaScript from the PRISMA2020 R package/Shiny application design and workflow model. The JavaScript implementation in this repository is separate code, but the upstream project is acknowledged here for lineage and attribution.
+
+Upstream project:
+https://github.com/prisma-flowdiagram/PRISMA2020
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: PRISMA2020 [LICENSE.md]`)
+
+Upstream citation:
+Haddaway, N., Page, M. J., Pritchard, C. C., & McGuinness, L. A. (2022). PRISMA2020: an R package and Shiny app for producing PRISMA 2020-compliant flow diagrams, with interactivity for optimised digital transparency and Open Synthesis. Campbell Systematic Reviews. https://doi.org/10.1002/cl2.1230
+
+17. PRISMA 2020 statement and explanation documents
+
+Systematic Reviewer uses PRISMA terminology and supports PRISMA-style reporting/export workflows.
+
+Upstream guidance:
+https://www.prisma-statement.org/citing-prisma-2020
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: PRISMA 2020 CC BY 4.0 [LICENSE]`)
+
+Notice:
+The PRISMA website states that both the PRISMA 2020 statement and the Explanation and Elaboration documents are distributed under the Creative Commons Attribution 4.0 International License (CC BY 4.0).
+The PRISMA website recommends citing the journal articles rather than citing the website itself:
+
+- Page, M. J., McKenzie, J. E., Bossuyt, P. M., et al. (2021). The PRISMA 2020 statement: an updated guideline for reporting systematic reviews. BMJ. https://doi.org/10.1136/bmj.n71
+- Page, M. J., Moher, D., Bossuyt, P. M., et al. (2021). PRISMA 2020 explanation and elaboration: updated guidance and exemplars for reporting systematic reviews. BMJ. https://doi.org/10.1136/bmj.n160
+
+18. UWA Library citation guides
+
+Systematic Reviewer used style-guide reference material from the University of Western Australia Library guides when checking document-style and citation-style conventions.
+
+Upstream guide site:
+https://guides.library.uwa.edu.au/
+
+Bundled full-text license entry:
+`licenses/LICENSES.txt` (`BEGIN: UWA Library Guides CC BY-SA 4.0 [LICENSE]`)
+
+
+Names
+
+All third-party names, product names, marks, and copyrights remain the property of their respective owners.

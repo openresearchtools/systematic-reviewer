@@ -1,0 +1,291 @@
+name: Build public XPI release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Public release version, for example 0.71"
+        required: true
+        default: "0.71"
+      channel:
+        description: "Release channel"
+        required: true
+        type: choice
+        default: "pre-release"
+        options:
+          - "pre-release"
+          - "release"
+      tag:
+        description: "Git tag to create/update. Leave blank to use v<version>."
+        required: false
+        default: ""
+      release_name:
+        description: "GitHub release title. Leave blank to use Systematic Reviewer <version>."
+        required: false
+        default: ""
+      make_latest:
+        description: "Mark stable release as GitHub latest"
+        required: true
+        type: boolean
+        default: true
+
+run-name: Build ${{ inputs.channel }} ${{ inputs.version }}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: public-xpi-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build release XPI
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ inputs.version }}"
+          TAG="${{ inputs.tag }}"
+          if [[ -z "$TAG" ]]; then
+            TAG="v$VERSION"
+          fi
+          UPDATE_URL="https://systematicreviewer.com/updates.json"
+          OUT_DIR="$RUNNER_TEMP/systematic-reviewer-release"
+          STAGE_DIR="$RUNNER_TEMP/systematic-reviewer-stage"
+          mkdir -p "$OUT_DIR"
+          rm -rf "$STAGE_DIR"
+          mkdir -p "$STAGE_DIR"
+
+          python3 - <<'PY' "$VERSION" "$UPDATE_URL"
+          import json
+          import sys
+          from pathlib import Path
+
+          version, update_url = sys.argv[1], sys.argv[2]
+          manifest_path = Path("src/manifest.json")
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          manifest["version"] = version
+          manifest.setdefault("applications", {}).setdefault("zotero", {})["update_url"] = update_url
+          manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+          PY
+
+          cp -R src/. "$STAGE_DIR"/
+          find "$STAGE_DIR" -name '.DS_Store' -delete
+          for doc in LICENSE README.md CITATION.cff; do
+            if [[ -f "$doc" ]]; then
+              cp "$doc" "$STAGE_DIR/$doc"
+            fi
+          done
+          if [[ -d licenses ]]; then
+            mkdir -p "$STAGE_DIR/licenses"
+            cp -R licenses/. "$STAGE_DIR/licenses"/
+          fi
+
+          XPI="$OUT_DIR/systematic-reviewer-$VERSION.xpi"
+          (cd "$STAGE_DIR" && zip -Xqr "$XPI" .)
+          python3 - <<'PY' "$XPI"
+          import sys
+          import zipfile
+
+          xpi_path = sys.argv[1]
+          required = {
+            "manifest.json",
+            "LICENSE",
+            "licenses/LICENSES.txt",
+            "licenses/THIRD_PARTY_NOTICES.txt",
+          }
+          with zipfile.ZipFile(xpi_path) as archive:
+            names = set(archive.namelist())
+          missing = sorted(required - names)
+          if missing:
+            raise SystemExit("Release XPI is missing bundled notice/license files: " + ", ".join(missing))
+          PY
+          cp "$XPI" "$OUT_DIR/release.xpi"
+          SHA256="$(sha256sum "$XPI" | awk '{print $1}')"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "xpi=$XPI" >> "$GITHUB_OUTPUT"
+          echo "release_xpi=$OUT_DIR/release.xpi" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ steps.build.outputs.version }}"
+          TAG="${{ steps.build.outputs.tag }}"
+          XPI="${{ steps.build.outputs.xpi }}"
+          RELEASE_XPI="${{ steps.build.outputs.release_xpi }}"
+          CHANNEL="${{ inputs.channel }}"
+          IS_PRERELEASE="false"
+          if [[ "$CHANNEL" == "pre-release" ]]; then
+            IS_PRERELEASE="true"
+          fi
+          RELEASE_TITLE="${{ inputs.release_name }}"
+          if [[ -z "$RELEASE_TITLE" ]]; then
+            RELEASE_TITLE="Systematic Reviewer $VERSION"
+          fi
+          NOTES="$RUNNER_TEMP/release-notes.md"
+
+          {
+            echo "Systematic Reviewer - Research Preview $VERSION"
+            echo
+            if [[ "$IS_PRERELEASE" == "true" ]]; then
+              echo "This is a public pre-release XPI build for Zotero. Pre-release builds are tested mainly on macOS and may contain bugs."
+            else
+              echo "This is a public release XPI build for Zotero."
+            fi
+          } > "$NOTES"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$XPI" "$RELEASE_XPI" --clobber
+            if [[ "$IS_PRERELEASE" == "true" ]]; then
+              gh release edit "$TAG" --title "$RELEASE_TITLE" --notes-file "$NOTES" --prerelease
+            elif [[ "${{ inputs.make_latest }}" == "true" ]]; then
+              gh release edit "$TAG" --title "$RELEASE_TITLE" --notes-file "$NOTES" --latest
+            else
+              gh release edit "$TAG" --title "$RELEASE_TITLE" --notes-file "$NOTES" --prerelease=false
+            fi
+          else
+            if [[ "$IS_PRERELEASE" == "true" ]]; then
+              gh release create "$TAG" "$XPI" "$RELEASE_XPI" --title "$RELEASE_TITLE" --notes-file "$NOTES" --prerelease
+            elif [[ "${{ inputs.make_latest }}" == "true" ]]; then
+              gh release create "$TAG" "$XPI" "$RELEASE_XPI" --title "$RELEASE_TITLE" --notes-file "$NOTES" --latest
+            else
+              gh release create "$TAG" "$XPI" "$RELEASE_XPI" --title "$RELEASE_TITLE" --notes-file "$NOTES"
+            fi
+          fi
+
+      - name: Generate website release index and update manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p website/assets
+          gh api "repos/${{ github.repository }}/releases?per_page=100" > "$RUNNER_TEMP/releases-api.json"
+
+          python3 - <<'PY' "$RUNNER_TEMP/releases-api.json" "${{ github.repository }}"
+          import datetime as dt
+          import json
+          import re
+          import sys
+          from pathlib import Path
+
+          api_path = Path(sys.argv[1])
+          repository = sys.argv[2]
+          releases = json.loads(api_path.read_text(encoding="utf-8"))
+
+          def version_from_tag(tag):
+            raw = str(tag or "")
+            return raw[1:] if raw.startswith("v") else raw
+
+          def version_key(value):
+            parts = re.findall(r"\d+", str(value or ""))
+            return tuple(int(part) for part in parts) if parts else (0,)
+
+          def asset_urls(release):
+            assets = release.get("assets") or []
+            versioned = None
+            fallback = None
+            for asset in assets:
+              name = str(asset.get("name") or "")
+              url = str(asset.get("browser_download_url") or "")
+              if not name.endswith(".xpi") or not url:
+                continue
+              if name == "release.xpi":
+                fallback = fallback or url
+              else:
+                versioned = versioned or url
+            return versioned or fallback
+
+          rows = []
+          for release in releases:
+            if release.get("draft"):
+              continue
+            xpi_url = asset_urls(release)
+            if not xpi_url:
+              continue
+            tag = str(release.get("tag_name") or "")
+            version = version_from_tag(tag)
+            rows.append({
+              "version": version,
+              "tag": tag,
+              "name": release.get("name") or f"Systematic Reviewer {version}",
+              "prerelease": bool(release.get("prerelease")),
+              "published_at": release.get("published_at"),
+              "html_url": release.get("html_url"),
+              "xpi_url": xpi_url,
+            })
+
+          rows.sort(key=lambda row: version_key(row["version"]), reverse=True)
+          latest_release = next((row for row in rows if not row["prerelease"]), None)
+          latest_prerelease = next((row for row in rows if row["prerelease"]), None)
+
+          # Zotero's add-on updater must only advertise stable releases.
+          # Pre-releases stay in website/assets/releases.json for manual downloads,
+          # but they must never become the automatic update target.
+          update_release = latest_release
+
+          index = {
+            "repository": repository,
+            "updated_at": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+            "latest_release": latest_release,
+            "latest_prerelease": latest_prerelease,
+            "releases": rows,
+          }
+          Path("website/assets/releases.json").write_text(json.dumps(index, indent=2) + "\n", encoding="utf-8")
+
+          if update_release:
+            update_manifest = {
+              "addons": {
+                "openresearchtools@gmail.com": {
+                  "updates": [
+                    {
+                      "version": update_release["version"],
+                      "update_link": update_release["xpi_url"],
+                      "applications": {
+                        "zotero": {
+                          "strict_min_version": "7.0",
+                          "strict_max_version": "9.*",
+                        }
+                      },
+                    }
+                  ]
+                }
+              }
+            }
+          else:
+            update_manifest = {"addons": {"openresearchtools@gmail.com": {"updates": []}}}
+          Path("website/updates.json").write_text(json.dumps(update_manifest, indent=2) + "\n", encoding="utf-8")
+          PY
+
+      - name: Commit website release metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout -- src/manifest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/assets/releases.json website/updates.json
+          if git diff --cached --quiet; then
+            echo "No website release metadata changes to commit."
+          else
+            git commit -m "Update public release metadata"
+            git push
+          fi

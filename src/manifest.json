@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "Systematic Reviewer",
+  "version": "0.1045",
+  "description": "Research Preview plugin to conduct automated and semi-automated systematic research.",
+  "author": "Rutkauskas L.",
+  "developer": {
+    "name": "Rutkauskas L.",
+    "url": "https://systematicreviewer.com"
+  },
+  "homepage_url": "https://systematicreviewer.com",
+  "applications": {
+    "zotero": {
+      "id": "openresearchtools@gmail.com",
+      "update_url": "https://127.0.0.1:8877/updates.json",
+      "strict_min_version": "7.0",
+      "strict_max_version": "9.*"
+    }
+  }
+}
