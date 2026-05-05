@@ -47,7 +47,7 @@
       '    <p>Rutkauskas, L. <em>Systematic Reviewer</em>. Version <span data-citation-version>Research Preview</span>. Computer software. Zenodo, April 7, 2026. <a href="https://doi.org/10.5281/zenodo.20044491" target="_blank" rel="noopener">https://doi.org/10.5281/zenodo.20044491</a>.</p>',
       '    <h3>BibTeX</h3>',
       '    <button class="btn btn--copy" type="button" data-copy-target="citation-bibtex-' + idSuffix + '">Copy BibTeX</button>',
-      '    <pre class="notice__code" id="citation-bibtex-' + idSuffix + '">@software{Rutkauskas_2026_SystematicReviewer,\n  author  = {Rutkauskas, L.},\n  title   = {Systematic Reviewer},\n  version = {Research Preview},\n  date    = {2026-04-07},\n  publisher = {Zenodo},\n  doi     = {10.5281/zenodo.20044491},\n  url     = {https://doi.org/10.5281/zenodo.20044491}\n}</pre>',
+      '    <pre class="notice__code" id="citation-bibtex-' + idSuffix + '">@software{Rutkauskas_2026_SystematicReviewer,\n  author  = {Rutkauskas, L.},\n  title   = {Systematic Reviewer},\n  version = {Research Preview},\n  date    = {2026-04-07},\n  publisher = {Zenodo},\n  doi     = {10.5281/zenodo.20044491},\n  url     = {https://systematicreviewer.com}\n}</pre>',
       "  </div>",
       "</div>",
     ].join("");

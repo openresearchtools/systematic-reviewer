@@ -77,6 +77,6 @@ Rutkauskas, L. (2026). *Systematic Reviewer* (Version Research Preview; replace 
   date    = {2026-04-07},
   publisher = {Zenodo},
   doi     = {10.5281/zenodo.20044491},
-  url     = {https://doi.org/10.5281/zenodo.20044491}
+  url     = {https://systematicreviewer.com}
 }
 ```
