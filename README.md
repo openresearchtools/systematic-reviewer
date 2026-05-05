@@ -1,6 +1,8 @@
 # Systematic Reviewer - Research Preview
 
-[Website](https://systematicreviewer.com/) · [Download and install](https://systematicreviewer.com/manual/install/) · [Manual start](https://systematicreviewer.com/manual/install/) · [Troubleshooting](https://systematicreviewer.com/manual/troubleshooting/)
+[Website](https://systematicreviewer.com/) · [Download and install](https://systematicreviewer.com/manual/install/) · [Manual start](https://systematicreviewer.com/manual/install/) · [Troubleshooting](https://systematicreviewer.com/manual/troubleshooting/) · [License](LICENSE)
+
+**License:** GNU Affero General Public License v3.0 or later (`AGPL-3.0-or-later`).
 
 ![Systematic Reviewer running inside Zotero with a Writer workspace, report preview, project chat, model controls, export controls, and Zotero-style navigation.](https://systematicreviewer.com/assets/images/systematic-reviewer-writer-workspace.webp)
 
@@ -54,6 +56,12 @@ This project is largely developed with the help of AI coding agents, with best e
 ## Third-Party Notice
 
 Systematic Reviewer - Research Preview is an independent third-party project by [OpenResearchTools](https://openresearchtools.com), developed by Dr Rutkauskas. It is developed as an extension for Zotero and can work with external AI and agent tools, but it is not affiliated with, sponsored by, or endorsed by Zotero, Codex, LM Studio, Ollama, or any other third-party software referenced on this site.
+
+## License
+
+Systematic Reviewer is copyright (C) 2026 Rutkauskas L. and is released under the [GNU Affero General Public License v3.0 or later](LICENSE).
+
+The GNU AGPL keeps the software open, inspectable, and available to the research community, including when modified versions are run as network software.
 
 ## Citation
 
