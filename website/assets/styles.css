@@ -530,8 +530,8 @@ main {
 
 .manual-layout {
   display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
-  gap: 1.25rem;
+  grid-template-columns: minmax(170px, 210px) minmax(0, 1fr);
+  gap: 1rem;
   align-items: start;
 }
 
@@ -540,7 +540,7 @@ main {
   top: 74px;
   max-height: calc(100vh - 92px);
   overflow: auto;
-  padding: 0.72rem;
+  padding: 0.58rem;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.9);
@@ -559,10 +559,10 @@ main {
 
 .manual-nav a {
   display: block;
-  padding: 0.36rem 0.48rem;
+  padding: 0.32rem 0.42rem;
   border-radius: 8px;
   color: #203149;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   line-height: 1.25;
   text-decoration: none;
 }
@@ -755,8 +755,64 @@ main {
   color: var(--muted-2);
 }
 
+.release-archive {
+  padding: 0;
+}
+
+.release-archive summary {
+  position: relative;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.72rem 0.95rem;
+  cursor: pointer;
+  color: #203149;
+  font-weight: 650;
+  list-style: none;
+}
+
+.release-archive summary::-webkit-details-marker {
+  display: none;
+}
+
+.release-archive summary::after {
+  content: "+";
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(10, 79, 115, 0.24);
+  color: var(--accent-2);
+  font-weight: 700;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.release-archive[open] summary::after {
+  content: "-";
+}
+
+.release-archive__hint {
+  margin-left: auto;
+  color: var(--muted-2);
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+.release-archive__body {
+  padding: 0 0.95rem 0.82rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.release-archive__link {
+  margin-top: 0.62rem;
+}
+
 .release-list {
-  max-height: 14rem;
+  max-height: 11rem;
   overflow: auto;
   margin: 0.65rem 0 0;
   padding: 0;
@@ -868,6 +924,54 @@ main {
   line-height: 1.45;
 }
 
+.install-media-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(9rem, 16rem);
+  align-items: start;
+  gap: 1rem;
+  margin-top: 0.72rem;
+  padding: 0.82rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(248, 250, 253, 0.74);
+}
+
+.install-media-step--narrow {
+  grid-template-columns: minmax(0, 1fr) minmax(7rem, 12rem);
+}
+
+.install-media-step__copy p:first-child {
+  margin-top: 0;
+}
+
+.install-media-step .manual-screenshot {
+  justify-self: end;
+  margin: 0;
+  padding: 0.42rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.manual-screenshot--thumbnail {
+  width: auto;
+  max-width: 100%;
+}
+
+.manual-screenshot--thumbnail img {
+  width: auto;
+  max-width: 100%;
+  max-height: 12rem;
+  object-fit: contain;
+}
+
+.install-media-step--narrow .manual-screenshot--thumbnail img {
+  max-height: 15rem;
+}
+
+.manual-screenshot--thumbnail figcaption {
+  font-size: 0.78rem;
+}
+
 .manual-screenshot-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(240px, 1fr));
@@ -909,6 +1013,15 @@ main {
 
   .manual-layout {
     grid-template-columns: 1fr;
+  }
+
+  .install-media-step,
+  .install-media-step--narrow {
+    grid-template-columns: 1fr;
+  }
+
+  .install-media-step .manual-screenshot {
+    justify-self: start;
   }
 
   .manual-nav {
@@ -988,5 +1101,32 @@ main {
 
   .manual-article {
     padding: 1rem;
+  }
+
+  .release-archive summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.18rem;
+  }
+
+  .release-archive summary::after {
+    position: absolute;
+    right: 0.85rem;
+    top: 0.75rem;
+  }
+
+  .release-archive__hint {
+    margin-left: 0;
+    padding-right: 2rem;
+  }
+
+  .release-list li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .release-list span {
+    white-space: normal;
   }
 }

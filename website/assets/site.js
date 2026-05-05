@@ -46,7 +46,7 @@
       '    <p>Rutkauskas, L. <em>Systematic Reviewer</em>. Version <span data-citation-version>Research Preview</span>. Computer software. Open Research Tools, April 7, 2026. <a href="https://systematicreviewer.com" target="_blank" rel="noopener">https://systematicreviewer.com</a>.</p>',
       '    <h3>BibTeX</h3>',
       '    <button class="btn btn--copy" type="button" data-copy-target="citation-bibtex-' + idSuffix + '">Copy BibTeX</button>',
-      '    <pre class="notice__code" id="citation-bibtex-' + idSuffix + '">@software{Rutkauskas_2026_SystematicReviewer,\\n  author  = {Rutkauskas, L.},\\n  title   = {Systematic Reviewer},\\n  version = {Research Preview},\\n  date    = {2026-04-07},\\n  publisher = {Open Research Tools},\\n  url     = {https://systematicreviewer.com}\\n}</pre>',
+      '    <pre class="notice__code" id="citation-bibtex-' + idSuffix + '">@software{Rutkauskas_2026_SystematicReviewer,\n  author  = {Rutkauskas, L.},\n  title   = {Systematic Reviewer},\n  version = {Research Preview},\n  date    = {2026-04-07},\n  publisher = {Open Research Tools},\n  url     = {https://systematicreviewer.com}\n}</pre>',
       "  </div>",
       "</div>",
     ].join("");
@@ -226,13 +226,17 @@
           var latestRelease = data.latest_release || null;
           var latestPrerelease = data.latest_prerelease || null;
           var releases = Array.isArray(data.releases) ? data.releases : [];
+          var currentReleaseKeys = [latestRelease, latestPrerelease].filter(Boolean).map(function (release) {
+            return [releaseURL(release), releaseLabel(release), String(release.tag || "")].join("|");
+          });
           var rows = releases.filter(function (release) {
-            return releaseURL(release);
+            var key = [releaseURL(release), releaseLabel(release), String(release.tag || "")].join("|");
+            return releaseURL(release) && currentReleaseKeys.indexOf(key) === -1;
           });
 
           var latestHTML = latestRelease && releaseURL(latestRelease)
             ? '<a class="btn" href="' + escapeHTML(releaseURL(latestRelease)) + '">Download latest release ' + escapeHTML(releaseLabel(latestRelease)) + '</a>'
-            : '<a class="btn" href="https://github.com/openresearchtools/systematic-reviewer/releases">View releases on GitHub</a>';
+            : '<span class="release-card__empty">No stable release listed yet.</span>';
           var prereleaseHTML = latestPrerelease && releaseURL(latestPrerelease)
             ? '<a class="btn btn--secondary" href="' + escapeHTML(releaseURL(latestPrerelease)) + '">Download latest pre-release ' + escapeHTML(releaseLabel(latestPrerelease)) + '</a>'
             : '<span class="release-card__empty">No pre-release listed yet.</span>';
@@ -241,7 +245,7 @@
                 var kind = release.prerelease ? "Pre-release" : "Release";
                 return '<li><a href="' + escapeHTML(releaseURL(release)) + '">' + escapeHTML(releaseLabel(release)) + '</a><span>' + kind + '</span></li>';
               }).join("")
-            : '<li><a href="https://github.com/openresearchtools/systematic-reviewer/releases">GitHub releases</a><span>All versions</span></li>';
+            : '<li><span>No archived versions listed yet.</span></li>';
 
           panel.innerHTML = [
             '<div class="release-card">',
@@ -254,19 +258,20 @@
             '  <p>Pre-releases are tested mainly on macOS and may contain bugs.</p>',
             '  ' + prereleaseHTML,
             '</div>',
-            '<div class="release-card release-card--wide">',
-            '  <h3>Older versions</h3>',
-            '  <ul class="release-list">' + rowsHTML + '</ul>',
-            '  <p><a href="https://github.com/openresearchtools/systematic-reviewer/releases">Open all GitHub releases</a></p>',
-            '</div>',
+            '<details class="release-card release-card--wide release-archive">',
+            '  <summary><span>Older versions</span><span class="release-archive__hint">Show archived downloads</span></summary>',
+            '  <div class="release-archive__body">',
+            '    <ul class="release-list">' + rowsHTML + '</ul>',
+            '    <p class="release-archive__link"><a href="https://github.com/openresearchtools/systematic-reviewer/releases">Open all GitHub releases</a></p>',
+            '  </div>',
+            '</details>',
           ].join("");
         })
         .catch(function () {
           panel.innerHTML = [
             '<div class="release-card release-card--wide">',
             '  <h3>Downloads</h3>',
-            '  <p>The release index could not be loaded from this local preview. Open GitHub releases to download the XPI.</p>',
-            '  <a class="btn" href="https://github.com/openresearchtools/systematic-reviewer/releases">Open GitHub releases</a>',
+            '  <p>The release index could not be loaded. Refresh this page or open the repository release list from the older versions drawer after downloads load.</p>',
             '</div>',
           ].join("");
         });
