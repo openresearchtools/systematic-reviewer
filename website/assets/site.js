@@ -42,12 +42,12 @@
       '  <div class="notice__overlay" id="citation-overlay-' + idSuffix + '" role="dialog" aria-label="Citation formats">',
       '    <p>If you use <strong>Systematic Reviewer</strong> for your work, recommended citation:</p>',
       '    <h3>APA 7th</h3>',
-      '    <p>Rutkauskas, L. (2026). <em>Systematic Reviewer</em> (Version <span data-citation-version>Research Preview</span>) [Computer software]. Zenodo. <a href="https://doi.org/10.5281/zenodo.20044490" target="_blank" rel="noopener">https://doi.org/10.5281/zenodo.20044490</a></p>',
+      '    <p>Rutkauskas, L. (2026). <em>Systematic Reviewer</em> (Version <span data-citation-version>Research Preview; replace with the version used</span>) [Computer software]. Zenodo. <a href="https://doi.org/10.5281/zenodo.20044490" target="_blank" rel="noopener">https://doi.org/10.5281/zenodo.20044490</a></p>',
       '    <h3>Chicago</h3>',
-      '    <p>Rutkauskas, L. <em>Systematic Reviewer</em>. Version <span data-citation-version>Research Preview</span>. Computer software. Zenodo, April 7, 2026. <a href="https://doi.org/10.5281/zenodo.20044490" target="_blank" rel="noopener">https://doi.org/10.5281/zenodo.20044490</a>.</p>',
+      '    <p>Rutkauskas, L. <em>Systematic Reviewer</em>. Version <span data-citation-version>Research Preview; replace with the version used</span>. Computer software. Zenodo, April 7, 2026. <a href="https://doi.org/10.5281/zenodo.20044490" target="_blank" rel="noopener">https://doi.org/10.5281/zenodo.20044490</a>.</p>',
       '    <h3>BibTeX</h3>',
       '    <button class="btn btn--copy" type="button" data-copy-target="citation-bibtex-' + idSuffix + '">Copy BibTeX</button>',
-      '    <pre class="notice__code" id="citation-bibtex-' + idSuffix + '">@software{Rutkauskas_2026_SystematicReviewer,\n  author  = {Rutkauskas, L.},\n  title   = {Systematic Reviewer},\n  version = {Research Preview},\n  date    = {2026-04-07},\n  publisher = {Zenodo},\n  doi     = {10.5281/zenodo.20044490},\n  url     = {https://systematicreviewer.com}\n}</pre>',
+      '    <pre class="notice__code" id="citation-bibtex-' + idSuffix + '">@software{Rutkauskas_2026_SystematicReviewer,\n  author  = {Rutkauskas, L.},\n  title   = {Systematic Reviewer},\n  version = {Research Preview; replace with the version used},\n  date    = {2026-04-07},\n  publisher = {Zenodo},\n  doi     = {10.5281/zenodo.20044490},\n  url     = {https://systematicreviewer.com}\n}</pre>',
       "  </div>",
       "</div>",
     ].join("");
@@ -280,45 +280,6 @@
   }
 
   renderReleaseDownloads();
-
-  function releaseVersion(data) {
-    var release = data && (data.latest_release || data.latest_prerelease);
-    var version = String(release && release.version || "").trim();
-    if (!version) {
-      return "Research Preview";
-    }
-    return /research[-\s]?preview/i.test(version) ? version : version + "-research-preview";
-  }
-
-  function updateCitationVersion() {
-    var targets = Array.prototype.slice.call(document.querySelectorAll("[data-citation-version]"));
-    var bibtexBlocks = Array.prototype.slice.call(document.querySelectorAll(".notice__code"));
-    if (!targets.length && !bibtexBlocks.length) {
-      return;
-    }
-    var source = "/assets/releases.json";
-    fetch(source, { cache: "no-store" })
-      .then(function (response) {
-        if (!response.ok) {
-          throw new Error("Release index unavailable");
-        }
-        return response.json();
-      })
-      .then(function (data) {
-        var version = releaseVersion(data);
-        targets.forEach(function (target) {
-          target.textContent = version;
-        });
-        bibtexBlocks.forEach(function (block) {
-          if (block.textContent && block.textContent.includes("@software{Rutkauskas_2026_SystematicReviewer")) {
-            block.textContent = block.textContent.replace(/version = \\{[^}]+\\}/, "version = {" + version + "}");
-          }
-        });
-      })
-      .catch(function () {});
-  }
-
-  updateCitationVersion();
 
   document.addEventListener("click", function (event) {
     overlayHosts.forEach(function (host) {

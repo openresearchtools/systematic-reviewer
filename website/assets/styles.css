@@ -378,6 +378,11 @@ main {
   margin: 0 0 0.55rem;
   color: #203149;
   font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.notice__overlay a {
+  overflow-wrap: anywhere;
 }
 
 .notice__overlay h3 {
