@@ -66,26 +66,28 @@ jobs:
           rm -rf "$STAGE_DIR"
           mkdir -p "$STAGE_DIR"
 
-          python3 - <<'PY' "$VERSION" "$UPDATE_URL"
+          cp -R src/. "$STAGE_DIR"/
+          find "$STAGE_DIR" -name '.DS_Store' -delete
+
+          python3 - <<'PY' "$STAGE_DIR/manifest.json" "$VERSION" "$UPDATE_URL"
           import json
           import sys
           from pathlib import Path
 
-          version, update_url = sys.argv[1], sys.argv[2]
-          manifest_path = Path("src/manifest.json")
+          manifest_path = Path(sys.argv[1])
+          version, update_url = sys.argv[2], sys.argv[3]
           manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
           manifest["version"] = version
           manifest.setdefault("applications", {}).setdefault("zotero", {})["update_url"] = update_url
           manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
           PY
 
-          cp -R src/. "$STAGE_DIR"/
-          find "$STAGE_DIR" -name '.DS_Store' -delete
-          for doc in LICENSE README.md CITATION.cff; do
+          for doc in README.md CITATION.cff; do
             if [[ -f "$doc" ]]; then
               cp "$doc" "$STAGE_DIR/$doc"
             fi
           done
+          cp licenses/LICENSE.txt "$STAGE_DIR/LICENSE"
           if [[ -d licenses ]]; then
             mkdir -p "$STAGE_DIR/licenses"
             cp -R licenses/. "$STAGE_DIR/licenses"/
@@ -101,14 +103,20 @@ jobs:
           required = {
             "manifest.json",
             "LICENSE",
+            "README.md",
+            "CITATION.cff",
+            "licenses/LICENSE.txt",
             "licenses/LICENSES.txt",
             "licenses/THIRD_PARTY_NOTICES.txt",
           }
           with zipfile.ZipFile(xpi_path) as archive:
             names = set(archive.namelist())
+            packaged_license = archive.read("LICENSE").decode("utf-8", errors="replace")
           missing = sorted(required - names)
           if missing:
             raise SystemExit("Release XPI is missing bundled notice/license files: " + ", ".join(missing))
+          if not packaged_license.startswith("Systematic Reviewer\nCopyright (C) 2026 Rutkauskas L."):
+            raise SystemExit("Release XPI LICENSE did not come from licenses/LICENSE.txt")
           PY
           cp "$XPI" "$OUT_DIR/release.xpi"
           SHA256="$(sha256sum "$XPI" | awk '{print $1}')"
@@ -279,7 +287,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git checkout -- src/manifest.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add website/assets/releases.json website/updates.json
