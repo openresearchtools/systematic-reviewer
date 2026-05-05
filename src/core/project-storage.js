@@ -103,172 +103,75 @@ var SystematicReviewerProjectStorage = {
 		].join("\n");
 	},
 
-	_systematicReviewerSoftwareCitationMarker() {
-		return "Systematic Reviewer Software Citation";
-	},
-
 	_systematicReviewerSoftwareCitationDefinition() {
 		return {
 			title: "Systematic Reviewer",
-			version: "1.0",
-			dateReleased: "2026-04-07",
-			license: "AGPL-3.0-or-later",
+			doi: "10.5281/zenodo.20044491",
+			doiURL: "https://doi.org/10.5281/zenodo.20044491",
 			url: "https://systematicreviewer.com",
-			publisher: "Open Research Tools",
-			creator: {
-				firstName: "L.",
-				lastName: "Rutkauskas",
-			},
 		};
 	},
 
-	_systematicReviewerSoftwareCitationExtra(existingExtra = "") {
-		let definition = this._systematicReviewerSoftwareCitationDefinition();
-		let managedPrefixes = [
-			this._systematicReviewerSoftwareCitationMarker(),
-			"Citation Source:",
-			"Software:",
-			"Version:",
-			"Date Released:",
-			"Publisher:",
-			"License:",
-		];
-		let preserved = String(existingExtra || "")
-			.replace(/\r\n?/g, "\n")
-			.split("\n")
-			.map((line) => String(line || "").trimEnd())
-			.filter((line) => {
-				let trimmed = line.trim();
-				if (!trimmed) {
-					return false;
-				}
-				return !managedPrefixes.some((prefix) => trimmed == prefix || trimmed.startsWith(prefix));
-			});
-		return [
-			this._systematicReviewerSoftwareCitationMarker(),
-			"Citation Source: CITATION.cff",
-			`Software: ${definition.title}`,
-			`Version: ${definition.version}`,
-			`Date Released: ${definition.dateReleased}`,
-			`Publisher: ${definition.publisher}`,
-			`License: ${definition.license}`,
-			...preserved,
-		].join("\n");
+	_normalizeSoftwareCitationDOI(value = "") {
+		let raw = String(value || "").trim();
+		if (!raw) {
+			return "";
+		}
+		try {
+			if (Zotero?.Utilities?.cleanDOI) {
+				raw = Zotero.Utilities.cleanDOI(raw) || raw;
+			}
+		}
+		catch (_err) {}
+		return String(raw || "")
+			.trim()
+			.replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, "")
+			.replace(/^doi:\s*/i, "")
+			.toLowerCase();
 	},
 
-	_zoteroItemTypeAvailable(itemType) {
-		try {
-			return !!Zotero.ItemTypes?.getID?.(itemType);
-		}
-		catch (_err) {
+	_itemHasSystematicReviewerSoftwareCitationDOI(item) {
+		if (!item) {
 			return false;
 		}
-	},
-
-	_systematicReviewerSoftwareCitationItemType() {
-		return this._zoteroItemTypeAvailable("computerProgram") ? "computerProgram" : "document";
+		let definition = this._systematicReviewerSoftwareCitationDefinition();
+		let expected = this._normalizeSoftwareCitationDOI(definition.doi);
+		let candidates = [
+			this._itemField(item, "DOI"),
+			this._itemField(item, "doi"),
+			this._itemField(item, "url"),
+			this._itemField(item, "extra"),
+		];
+		return candidates.some((value) => this._normalizeSoftwareCitationDOI(value).includes(expected));
 	},
 
 	_isSystematicReviewerSoftwareCitationItem(item) {
 		if (!item || item.deleted || item.isAttachment?.() || item.isNote?.() || item.isAnnotation?.()) {
 			return false;
 		}
-		let definition = this._systematicReviewerSoftwareCitationDefinition();
-		let title = this._itemField(item, "title").trim();
-		let url = this._itemField(item, "url").trim();
-		let extra = this._itemField(item, "extra");
-		if (extra.includes(this._systematicReviewerSoftwareCitationMarker())) {
-			return true;
-		}
-		if (title != definition.title) {
-			return false;
-		}
-		if (url && url == definition.url) {
-			return true;
-		}
-		try {
-			return item.itemTypeID && Zotero.ItemTypes?.getName?.(item.itemTypeID) == "computerProgram";
-		}
-		catch (_err) {
-			return false;
-		}
+		return this._itemHasSystematicReviewerSoftwareCitationDOI(item);
 	},
 
-	_setSoftwareCitationField(item, field, value) {
-		if (!item || value === undefined || value === null || String(value).trim() === "") {
-			return false;
-		}
-		try {
-			if (this._itemField(item, field) == String(value)) {
-				return false;
-			}
-			item.setField(field, String(value));
-			return true;
-		}
-		catch (_err) {
-			return false;
-		}
-	},
-
-	_setSystematicReviewerSoftwareCitationCreators(item) {
-		if (!item) {
-			return false;
-		}
-		let definition = this._systematicReviewerSoftwareCitationDefinition();
-		let current = [];
-		try {
-			current = item.getCreators ? item.getCreators() : [];
-		}
-		catch (_err) {
-			current = [];
-		}
-		let hasCreator = current.some((creator) =>
-			String(creator?.lastName || "").trim() == definition.creator.lastName
-			&& String(creator?.firstName || "").trim() == definition.creator.firstName
-		);
-		if (hasCreator) {
-			return false;
-		}
-		let creators = [
-			Object.assign({ creatorType: "programmer" }, definition.creator),
-		];
-		try {
-			if (typeof item.setCreators == "function") {
-				item.setCreators(creators);
-			}
-			else if (typeof item.setCreator == "function") {
-				item.setCreator(0, definition.creator, "programmer");
-			}
-			return true;
-		}
-		catch (_err) {
-			try {
-				if (typeof item.setCreators == "function") {
-					item.setCreators([
-						Object.assign({ creatorType: "author" }, definition.creator),
-					]);
-				}
-				else if (typeof item.setCreator == "function") {
-					item.setCreator(0, definition.creator, "author");
-				}
-				return true;
-			}
-			catch (_innerErr) {
-				return false;
-			}
-		}
-	},
-
-	async _findSystematicReviewerSoftwareCitationItem(libraryID) {
-		let normalizedLibraryID = Number(libraryID || Zotero.Libraries.userLibraryID || 0) || 0;
-		if (!normalizedLibraryID) {
+	_systematicReviewerSoftwareCitationItemForKey(libraryID, itemKey = "") {
+		let key = String(itemKey || "").trim();
+		if (!key || !Zotero?.Items?.getByLibraryAndKey) {
 			return null;
 		}
+		try {
+			let item = Zotero.Items.getByLibraryAndKey(libraryID, key) || null;
+			return item && !item.deleted ? item : null;
+		}
+		catch (_err) {
+			return null;
+		}
+	},
+
+	async _searchSystematicReviewerSoftwareCitationCandidates(libraryID, condition, operator, value) {
 		let candidates = [];
 		try {
 			let search = new Zotero.Search();
-			search.libraryID = normalizedLibraryID;
-			search.addCondition("title", "contains", "Systematic Reviewer");
+			search.libraryID = libraryID;
+			search.addCondition(condition, operator, value);
 			let ids = await search.search();
 			for (let id of ids || []) {
 				let item = Zotero.Items.get(id);
@@ -278,51 +181,66 @@ var SystematicReviewerProjectStorage = {
 			}
 		}
 		catch (_err) {
-			candidates = [];
+			return [];
 		}
-		for (let item of candidates) {
-			if (this._isSystematicReviewerSoftwareCitationItem(item)) {
+		return candidates;
+	},
+
+	async _resolveSystematicReviewerSoftwareCitationItemByDOI(libraryID, itemKey = "") {
+		let normalizedLibraryID = Number(libraryID || Zotero.Libraries.userLibraryID || 0) || 0;
+		if (!normalizedLibraryID) {
+			return null;
+		}
+		let explicitItem = this._systematicReviewerSoftwareCitationItemForKey(normalizedLibraryID, itemKey);
+		if (explicitItem && this._itemHasSystematicReviewerSoftwareCitationDOI(explicitItem)) {
+			return explicitItem;
+		}
+		let definition = this._systematicReviewerSoftwareCitationDefinition();
+		let candidates = new Map();
+		let addCandidates = (items = []) => {
+			for (let item of items || []) {
+				if (item?.id && !candidates.has(item.id)) {
+					candidates.set(item.id, item);
+				}
+			}
+		};
+		addCandidates(await this._searchSystematicReviewerSoftwareCitationCandidates(normalizedLibraryID, "DOI", "is", definition.doi));
+		addCandidates(await this._searchSystematicReviewerSoftwareCitationCandidates(normalizedLibraryID, "DOI", "contains", definition.doi));
+		for (let item of candidates.values()) {
+			if (this._itemHasSystematicReviewerSoftwareCitationDOI(item)) {
 				return item;
 			}
 		}
 		return null;
 	},
 
-	async _ensureSystematicReviewerSoftwareCitationMetadata(item) {
-		if (!item || item.deleted) {
-			return item;
-		}
-		let definition = this._systematicReviewerSoftwareCitationDefinition();
-		let dirty = false;
-		dirty = this._setSoftwareCitationField(item, "title", definition.title) || dirty;
-		dirty = this._setSoftwareCitationField(item, "date", definition.dateReleased) || dirty;
-		dirty = this._setSoftwareCitationField(item, "url", definition.url) || dirty;
-		dirty = this._setSoftwareCitationField(item, "version", definition.version) || dirty;
-		dirty = this._setSoftwareCitationField(item, "company", definition.publisher) || dirty;
-		dirty = this._setSoftwareCitationField(item, "publisher", definition.publisher) || dirty;
-		dirty = this._setSoftwareCitationField(item, "rights", definition.license) || dirty;
-		dirty = this._setSoftwareCitationField(item, "extra", this._systematicReviewerSoftwareCitationExtra(this._itemField(item, "extra"))) || dirty;
-		dirty = this._setSystematicReviewerSoftwareCitationCreators(item) || dirty;
-		if (dirty) {
-			await item.saveTx();
-		}
-		return item;
-	},
-
-	async _ensureSystematicReviewerSoftwareCitationItem(collection) {
+	async _importSystematicReviewerSoftwareCitationItem(collection) {
 		if (!collection) {
-			throw new Error("Project collection is unavailable for the Systematic Reviewer citation.");
+			return null;
 		}
 		let libraryID = collection.libraryID || Zotero.Libraries.userLibraryID;
-		let item = await this._findSystematicReviewerSoftwareCitationItem(libraryID);
-		if (!item) {
-			item = new Zotero.Item(this._systematicReviewerSoftwareCitationItemType());
-			item.libraryID = libraryID;
-			item.setCollections([collection.id]);
-			await this._ensureSystematicReviewerSoftwareCitationMetadata(item);
+		let definition = this._systematicReviewerSoftwareCitationDefinition();
+		let identifier = { DOI: definition.doi };
+		let translate = new Zotero.Translate.Search();
+		translate.setIdentifier(identifier);
+		let translators = await translate.getTranslators();
+		if (!translators || !translators.length) {
+			throw new Error("No Zotero translator is available for the Systematic Reviewer DOI.");
+		}
+		translate.setTranslator(translators);
+		let items = await translate.translate({
+			libraryID,
+			collections: [collection.id],
+			saveAttachments: false,
+		});
+		let itemList = Array.isArray(items) ? items.filter((item) => item && !item.deleted) : [];
+		return itemList.find((item) => this._itemHasSystematicReviewerSoftwareCitationDOI(item)) || itemList[0] || null;
+	},
+
+	async _ensureSystematicReviewerSoftwareCitationCollection(item, collection) {
+		if (!item || !collection) {
 			return item;
 		}
-		await this._ensureSystematicReviewerSoftwareCitationMetadata(item);
 		let collections = [];
 		try {
 			collections = item.getCollections ? item.getCollections() : [];
@@ -335,6 +253,42 @@ var SystematicReviewerProjectStorage = {
 			await item.saveTx();
 		}
 		return item;
+	},
+
+	async _ensureSystematicReviewerSoftwareCitationItem(collection, itemKey = "") {
+		if (!collection) {
+			throw new Error("Project collection is unavailable for the Systematic Reviewer citation.");
+		}
+		let libraryID = collection.libraryID || Zotero.Libraries.userLibraryID;
+		let item = await this._resolveSystematicReviewerSoftwareCitationItemByDOI(libraryID, itemKey);
+		if (!item) {
+			item = await this._importSystematicReviewerSoftwareCitationItem(collection);
+		}
+		if (!item) {
+			throw new Error("Zotero could not import the Systematic Reviewer DOI citation.");
+		}
+		return await this._ensureSystematicReviewerSoftwareCitationCollection(item, collection);
+	},
+
+	async _replaceSoftwareCitationItemKeyInReport(context, oldItemKey = "", currentItemKey = "") {
+		let oldKey = String(oldItemKey || "").trim();
+		let currentKey = String(currentItemKey || "").trim();
+		if (!context?.reportPath || !oldKey || !currentKey || oldKey == currentKey) {
+			return false;
+		}
+		let markdown = "";
+		try {
+			markdown = String(await this._readFileText(context.reportPath) || "");
+		}
+		catch (_err) {
+			return false;
+		}
+		let next = markdown.split(`@[${oldKey}]`).join(`@[${currentKey}]`);
+		if (next == markdown) {
+			return false;
+		}
+		await this._writeTextFile(context.reportPath, next);
+		return true;
 	},
 
 	_projectShellItemKind(item) {
@@ -582,18 +536,29 @@ var SystematicReviewerProjectStorage = {
 		let projectType = this._normalizeProjectType(options.projectType || options.project_type || PROJECT_TYPE_SYSTEMATIC_REVIEW);
 		let projectOutputsItem = options.projectOutputsItem || options.project_outputs_item || null;
 		let reportExists = await this._pathExists(context.reportPath);
+		let settings = (await this._readJSONFile(context.settingsPath)) || {};
+		let storedSoftwareCitationItemKey = String(settings.software_citation_item_key || "").trim();
 		let softwareCitationItem = null;
+		if (!reportExists || storedSoftwareCitationItemKey) {
+			try {
+				softwareCitationItem = await this._ensureSystematicReviewerSoftwareCitationItem(collection, storedSoftwareCitationItemKey);
+				if (reportExists && storedSoftwareCitationItemKey && softwareCitationItem?.key) {
+					await this._replaceSoftwareCitationItemKeyInReport(context, storedSoftwareCitationItemKey, softwareCitationItem.key);
+				}
+			}
+			catch (error) {
+				this.log(`software citation DOI import skipped: ${error?.message || error}`);
+			}
+		}
 		if (!reportExists) {
-			softwareCitationItem = await this._ensureSystematicReviewerSoftwareCitationItem(collection);
 			await this._writeTextFile(context.reportPath, this._defaultReportMarkdown(collection, projectType, {
-				softwareCitationItemKey: softwareCitationItem?.key || "",
+				softwareCitationItemKey: softwareCitationItem?.key || storedSoftwareCitationItemKey || "",
 			}));
 		}
 		if (!(await this._pathExists(context.logPath))) {
 			await this._writeTextFile(context.logPath, this._defaultWorkflowLogMarkdown(collection, projectType));
 		}
 
-		let settings = (await this._readJSONFile(context.settingsPath)) || {};
 		settings.kind = "systematic-reviewer-settings";
 		settings.version = 1;
 		settings.collection = {
@@ -605,7 +570,7 @@ var SystematicReviewerProjectStorage = {
 		settings.project_type_label = this._projectTypeLabel(projectType);
 		settings.project_item_key = projectItem.key;
 		settings.outputs_item_key = projectOutputsItem?.key || settings.outputs_item_key || "";
-		settings.software_citation_item_key = softwareCitationItem?.key || settings.software_citation_item_key || "";
+		settings.software_citation_item_key = softwareCitationItem?.key || storedSoftwareCitationItemKey || settings.software_citation_item_key || "";
 		settings.collections = settings.collections && typeof settings.collections == "object" ? settings.collections : {};
 		settings.database_path = context.databasePath;
 		settings.report_path = context.reportPath;

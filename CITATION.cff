@@ -1,10 +1,11 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: "If you use this software, please cite the exact version you used."
 title: "Systematic Reviewer"
 type: software
-version: "1.0"
+version: "Research Preview; replace with the version used"
 date-released: "2026-04-07"
 license: "AGPL-3.0-or-later"
+doi: "10.5281/zenodo.20044491"
 authors:
   - family-names: "Rutkauskas"
     given-names: "L."
@@ -15,8 +16,9 @@ preferred-citation:
     - family-names: "Rutkauskas"
       given-names: "L."
   title: "Systematic Reviewer"
-  version: "1.0"
+  version: "Research Preview; replace with the version used"
   date-released: "2026-04-07"
-  url: "https://systematicreviewer.com"
+  doi: "10.5281/zenodo.20044491"
+  url: "https://doi.org/10.5281/zenodo.20044491"
   publisher:
-    name: "Open Research Tools"
+    name: "Zenodo"

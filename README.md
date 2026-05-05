@@ -67,15 +67,16 @@ The GNU AGPL keeps the software open, inspectable, and available to the research
 
 If you use Systematic Reviewer for your work, recommended citation:
 
-Rutkauskas, L. (2026). *Systematic Reviewer* (Version Research Preview) [Computer software]. Open Research Tools. https://systematicreviewer.com
+Rutkauskas, L. (2026). *Systematic Reviewer* (Version Research Preview; replace with the version used) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.20044491
 
 ```bibtex
 @software{Rutkauskas_2026_SystematicReviewer,
   author  = {Rutkauskas, L.},
   title   = {Systematic Reviewer},
-  version = {Research Preview},
+  version = {Research Preview; replace with the version used},
   date    = {2026-04-07},
-  publisher = {Open Research Tools},
-  url     = {https://systematicreviewer.com}
+  publisher = {Zenodo},
+  doi     = {10.5281/zenodo.20044491},
+  url     = {https://doi.org/10.5281/zenodo.20044491}
 }
 ```
