@@ -1,6 +1,6 @@
 # Systematic Reviewer - Research Preview
 
-[Website](https://systematicreviewer.com/) · [Download and install](https://systematicreviewer.com/manual/install/) · [Manual start](https://systematicreviewer.com/manual/install/) · [Troubleshooting](https://systematicreviewer.com/manual/troubleshooting/) · [License](LICENSE)
+[Website](https://systematicreviewer.com/) · [Download and install](https://systematicreviewer.com/manual/install/) · [Manual start](https://systematicreviewer.com/manual/install/) · [Troubleshooting](https://systematicreviewer.com/manual/troubleshooting/) · [Contact](https://forms.gle/E2CTy9LqmYKR6bn26) · [License](LICENSE)
 
 **License:** GNU Affero General Public License v3.0 or later (`AGPL-3.0-or-later`).
 
@@ -21,6 +21,8 @@ Researchers can also use it with qualitative interviews, reports, policy documen
 ### Supports your preferred AI runtimes
 
 Use the local or hosted AI runtimes that fit your environment, including, but not limited to, Ollama, LM Studio, and other compatible APIs, and connect the plugin to MCP-compatible agent workflows such as Codex.
+
+Questions, feedback, collaboration, or funding enquiries: [contact Dr Rutkauskas](https://forms.gle/E2CTy9LqmYKR6bn26).
 
 ### Open source
 
