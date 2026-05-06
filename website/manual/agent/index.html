@@ -60,6 +60,47 @@
           <p>If a tool call fails or uses the wrong shape, the bridge returns the problem to the model so it can try the correct call. You should see the correction as another tool call or a short explanation.</p>
           <div class="manual-callout"><p>If the agent repeatedly fails the same tool call, keeps trying the wrong action, or seems stuck in an unhelpful context, the quickest fix is usually to click <strong>New Session</strong> and ask the task again in a fresh chat.</p></div>
 
+          <h2>Slash commands and guided modes</h2>
+          <p>Type <code>/</code> in the message box to open command shortcuts. These shortcuts prepare common tool-backed requests while still leaving the final message visible before you send it.</p>
+          <div class="manual-media-stack">
+            <section class="manual-media-step">
+              <div class="manual-media-step__copy">
+                <h3>Open the command menu</h3>
+                <p>Start with <code>/</code> when you want a guided action instead of a plain chat message. Choose <strong>/find</strong> for evidence search, <strong>/explore</strong> for scoped synthesis, <strong>/status</strong> for project counts, or <strong>/Autodrive</strong> for a multi-turn agent run.</p>
+              </div>
+              <figure class="manual-screenshot manual-screenshot--thumbnail">
+                <img src="../../assets/manual/agent/agent-function-functions-chat.webp" width="708" height="702" loading="lazy" alt="Chat slash command menu listing AutoDrive, explore, status, and find commands.">
+              </figure>
+            </section>
+            <section class="manual-media-step">
+              <div class="manual-media-step__copy">
+                <h3>Find project evidence</h3>
+                <p>Use <code>/find</code> when you need traceable snippets. Type the search query after the command, choose <strong>Keyword</strong> for exact wording or <strong>Semantic</strong> for meaning-based retrieval, then choose the scope before sending.</p>
+              </div>
+              <figure class="manual-screenshot manual-screenshot--thumbnail">
+                <img src="../../assets/manual/agent/agent-function-find.webp" width="736" height="564" loading="lazy" alt="Find command form with keyword and semantic modes, Pending scope, Model, Stop, and Send controls.">
+              </figure>
+            </section>
+            <section class="manual-media-step">
+              <div class="manual-media-step__copy">
+                <h3>Explore extraction fields</h3>
+                <p>Use <code>/explore</code> for synthesis over selected fields. Type <code>@</code> after the command to pick extraction columns, then set the scope such as Included. This is useful when you want the agent to compare extracted evidence across records.</p>
+              </div>
+              <figure class="manual-screenshot manual-screenshot--thumbnail">
+                <img src="../../assets/manual/agent/agent-function-extraction.webp" width="956" height="1020" loading="lazy" alt="Explore command with extraction field autocomplete suggestions and Included scope.">
+              </figure>
+            </section>
+            <section class="manual-media-step">
+              <div class="manual-media-step__copy">
+                <h3>Run AutoDrive with checkpoints</h3>
+                <p>Use <code>/autodrive</code> when you want the agent to keep working across several turns. Pick the number of turns, choose when reviewer checks should happen, inspect the agent and reviewer prompts, then start AutoDrive. Use <strong>Stop Auto Drive</strong> if the run drifts from the project goal.</p>
+              </div>
+              <figure class="manual-screenshot manual-screenshot--thumbnail">
+                <img src="../../assets/manual/agent/agent-function-autodrive.webp" width="722" height="998" loading="lazy" alt="AutoDrive command form with turn count, reviewer check mode, prompts, and Start Auto Drive button.">
+              </figure>
+            </section>
+          </div>
+
           <h2>Ask for project work</h2>
           <ul>
             <li>For report writing, ask the agent to edit a named section or to draft a new section with citations.</li>

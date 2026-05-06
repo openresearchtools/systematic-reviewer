@@ -895,6 +895,35 @@ main {
   color: #203149;
 }
 
+.manual-media-stack {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.9rem;
+}
+
+.manual-media-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 17rem);
+  align-items: start;
+  gap: 1rem;
+  padding: 0.82rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(248, 250, 253, 0.74);
+}
+
+.manual-media-step__copy p:first-child {
+  margin-top: 0;
+}
+
+.manual-media-step .manual-screenshot {
+  justify-self: end;
+  margin: 0;
+  padding: 0.42rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
 .manual-screenshot {
   margin: 1rem 0 0;
   padding: 0.75rem;
@@ -1021,11 +1050,13 @@ main {
   }
 
   .install-media-step,
-  .install-media-step--narrow {
+  .install-media-step--narrow,
+  .manual-media-step {
     grid-template-columns: 1fr;
   }
 
-  .install-media-step .manual-screenshot {
+  .install-media-step .manual-screenshot,
+  .manual-media-step .manual-screenshot {
     justify-self: start;
   }
 
