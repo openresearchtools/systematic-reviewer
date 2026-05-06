@@ -63,6 +63,10 @@
     ].join("");
   }
 
+  function contactLinkHTML() {
+    return '<a class="banner-link banner-contact" href="https://forms.gle/E2CTy9LqmYKR6bn26" target="_blank" rel="noopener">Contact</a>';
+  }
+
   function enhanceManualHeader() {
     if (!location.pathname.includes("/manual/")) {
       return;
@@ -78,7 +82,16 @@
     if (!actions.querySelector('[aria-controls^="citation-overlay-"]')) {
       actions.insertAdjacentHTML("beforeend", citationOverlayHTML("manual"));
     }
-    if (!banner.querySelector(".icon-pill")) {
+    var githubLink = banner.querySelector(".icon-pill");
+    if (!banner.querySelector(".banner-contact")) {
+      if (githubLink) {
+        githubLink.insertAdjacentHTML("beforebegin", contactLinkHTML());
+      }
+      else {
+        banner.insertAdjacentHTML("beforeend", contactLinkHTML());
+      }
+    }
+    if (!githubLink) {
       banner.insertAdjacentHTML("beforeend", githubIconHTML());
     }
   }
@@ -96,7 +109,6 @@
       '<div class="shell footer__inner">',
       '  <small>&copy; 2026 Rutkauskas L.</small>',
       '  <div class="footer__actions">',
-      '    <a class="btn" href="https://forms.gle/E2CTy9LqmYKR6bn26" target="_blank" rel="noopener">Contact</a>',
       '    <div class="footer__policy overlay-host" data-overlay-host>',
       '      <a class="btn overlay-trigger" href="#privacy-policy-overlay" aria-expanded="false" aria-controls="privacy-policy-overlay">Cookie &amp; Privacy Policy</a>',
       '      <div class="notice__overlay notice__overlay--up" id="privacy-policy-overlay" role="dialog" aria-label="Cookie and privacy policy">',

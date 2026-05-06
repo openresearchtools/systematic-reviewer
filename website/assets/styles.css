@@ -143,6 +143,14 @@ a:focus-visible {
   align-items: center;
 }
 
+.banner-contact {
+  margin-left: auto;
+}
+
+.banner-contact + .icon-pill {
+  margin-left: 0;
+}
+
 .icon-pill {
   width: 34px;
   height: 34px;
