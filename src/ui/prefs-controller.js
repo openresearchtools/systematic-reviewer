@@ -3966,8 +3966,8 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 						children: [
 							this._readonlyField("Version", version, false),
 							this._field("Manual", this._node("a", {
-								textContent: "systematicreviewer.com/manual/install.html",
-								attrs: { href: "https://systematicreviewer.com/manual/install.html" },
+								textContent: "systematicreviewer.com/manual/install/",
+								attrs: { href: "https://systematicreviewer.com/manual/install/" },
 							}), true),
 						],
 					}),

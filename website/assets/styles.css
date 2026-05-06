@@ -906,10 +906,15 @@ main {
   grid-template-columns: minmax(0, 1fr) minmax(10rem, 17rem);
   align-items: start;
   gap: 1rem;
+  margin-top: 0.85rem;
   padding: 0.82rem 0.9rem;
   border-radius: 10px;
   border: 1px solid rgba(15, 23, 42, 0.1);
   background: rgba(248, 250, 253, 0.74);
+}
+
+.manual-media-stack .manual-media-step {
+  margin-top: 0;
 }
 
 .manual-media-step__copy p:first-child {
