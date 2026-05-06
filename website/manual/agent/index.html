@@ -87,7 +87,7 @@
             <section class="manual-media-step">
               <div class="manual-media-step__copy">
                 <h3>Start a Find request</h3>
-                <p>Use <code>/find</code> when you need traceable snippets. Type the search query after the command, choose <strong>Keyword</strong> for exact wording or <strong>Semantic</strong> for meaning-based retrieval, then choose the scope before sending.</p>
+                <p>Use <code>/find</code> when you need traceable snippets. Type the search query after the command, choose <strong>Keyword</strong> for exact wording or <strong>Semantic</strong> for meaning-based retrieval, then choose the scope before sending. Semantic Find is available only after full-text embeddings have been made for the project.</p>
               </div>
               <figure class="manual-screenshot manual-screenshot--thumbnail">
                 <img src="../../assets/manual/agent/agent-function-find.webp" width="736" height="564" loading="lazy" alt="Find command form with keyword and semantic modes, Pending scope, Model, Stop, and Send controls.">
@@ -109,7 +109,7 @@
           </figure>
           <div class="manual-function-grid">
             <section class="manual-function"><h3>Keyword Find</h3><p>Searches converted project text for exact terms and phrases. Use it when you know the wording you need.</p></section>
-            <section class="manual-function"><h3>Semantic Find</h3><p>Uses full-text embeddings when they exist. Use it when you know the meaning you want but not the exact wording.</p></section>
+            <section class="manual-function"><h3>Semantic Find</h3><p>Uses stored full-text embeddings. Run full-text embeddings first; without them, use Keyword Find instead.</p></section>
             <section class="manual-function"><h3>Open</h3><p>Opens the source result so you can inspect the supporting document or passage instead of trusting the snippet alone.</p></section>
             <section class="manual-function"><h3>Copy and excerpt</h3><p>Copy saves the visible result text. Longer excerpt requests more surrounding text when the short snippet is not enough.</p></section>
           </div>
