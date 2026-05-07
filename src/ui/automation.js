@@ -5936,7 +5936,25 @@ export async function createAutomationTab(ctx) {
       applyChatBudget(event?.chat_budget || null);
       return;
     }
+    if (type === "model.retry") {
+      const retryIndex = Math.max(1, Number(event?.retry_index || 0) || 1);
+      const maxRetries = Math.max(1, Number(event?.max_retries || 0) || 5);
+      const retryDelayMs = Math.max(0, Number(event?.retry_delay_ms || 0) || 0);
+      const delayLabel = retryDelayMs >= 1000 ? ` in ${Math.round(retryDelayMs / 1000)}s` : "";
+      clearLiveChatTransientState();
+      upsertLiveProgressRow("model-retry", {
+        role: "system",
+        event_type: "assistant_status",
+        title: "Retrying Model Call",
+        content: `Retrying model call ${retryIndex}/${maxRetries}${delayLabel}.`,
+      });
+      setStatus(`Retrying model call ${retryIndex}/${maxRetries}${delayLabel}...`, "");
+      renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
+      await flushChatStreamFrame(true);
+      return;
+    }
     if (type === "assistant.delta") {
+      removeLiveProgressRow("model-retry");
       const transport = String(event?.transport || "").trim();
       if (transport === "native-structured") {
         state.liveAssistantMessage = null;
@@ -5985,6 +6003,7 @@ export async function createAutomationTab(ctx) {
       return;
     }
     if (type === "responses.reasoning.delta") {
+      removeLiveProgressRow("model-retry");
       const nextText = String(event?.text || "") || "Reasoning...";
       removeLiveProgressRow("assistant-resumed");
       upsertLiveProgressRow("responses-reasoning", {
@@ -6000,6 +6019,7 @@ export async function createAutomationTab(ctx) {
     if (type === "tool.call.started") {
       const callID = String(event?.call_id || "").trim();
       const name = String(event?.name || "tool").trim() || "tool";
+      removeLiveProgressRow("model-retry");
       removeLiveProgressRow("assistant-stream-planner");
       removeLiveProgressRow("assistant-resumed");
       upsertLiveProgressRow(`tool-start:${callID}`, {
@@ -6020,6 +6040,7 @@ export async function createAutomationTab(ctx) {
     if (type === "tool.call.delta") {
       const callID = String(event?.call_id || "").trim();
       const name = String(event?.name || "tool").trim() || "tool";
+      removeLiveProgressRow("model-retry");
       upsertLiveProgressRow(`tool-start:${callID}`, {
         role: "tool",
         event_type: "function_call",
@@ -6038,6 +6059,7 @@ export async function createAutomationTab(ctx) {
     if (type === "tool.call.waiting") {
       const callID = String(event?.call_id || "").trim();
       const name = String(event?.name || "tool").trim() || "tool";
+      removeLiveProgressRow("model-retry");
       removeLiveProgressRow(`tool-start:${callID}`);
       upsertLiveProgressRow(`tool-wait:${callID}`, {
         role: "tool",
@@ -6055,6 +6077,7 @@ export async function createAutomationTab(ctx) {
       return;
     }
     if (type === "assistant.resumed") {
+      removeLiveProgressRow("model-retry");
       removeLiveProgressRow("assistant-stream-planner");
       upsertLiveProgressRow("assistant-resumed", {
         role: "system",
@@ -6097,6 +6120,7 @@ export async function createAutomationTab(ctx) {
       if (!text) {
         return;
       }
+      removeLiveProgressRow("model-retry");
       removeLiveProgressRow("assistant-resumed");
       upsertLiveProgressRow("codex-agent-status", {
         role: "system",
@@ -6112,6 +6136,7 @@ export async function createAutomationTab(ctx) {
       if (!command) {
         return;
       }
+      removeLiveProgressRow("model-retry");
       upsertLiveProgressRow(`codex-command:${itemID}`, {
         role: "system",
         event_type: "assistant_status",
@@ -6135,6 +6160,7 @@ export async function createAutomationTab(ctx) {
       return;
     }
     if (type === "responses.reasoning.started") {
+      removeLiveProgressRow("model-retry");
       removeLiveProgressRow("assistant-resumed");
       upsertLiveProgressRow("responses-reasoning", {
         role: "assistant",
@@ -6164,12 +6190,14 @@ export async function createAutomationTab(ctx) {
         removeLiveToolProgress(String(entry?.payload?.call_id || "").trim());
       }
       if (["assistant_final", "thinking", "assistant_status"].includes(String(entry?.event_type || ""))) {
+        removeLiveProgressRow("model-retry");
         removeLiveProgressRow("assistant-stream-planner");
         removeLiveProgressRow("assistant-resumed");
         removeLiveProgressRow("codex-agent-status");
         removeLiveProgressRow("explore-run-status");
       }
       if (["responses_message", "responses_reasoning"].includes(String(entry?.event_type || ""))) {
+        removeLiveProgressRow("model-retry");
         removeLiveProgressRow("assistant-stream-planner");
         removeLiveProgressRow("assistant-resumed");
         removeLiveProgressRow("responses-reasoning");

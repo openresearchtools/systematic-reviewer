@@ -1,4 +1,14 @@
 var SystematicReviewerAutomationRunner = {
+	_sessionAgentModelMaxRetries() {
+		return 5;
+	},
+
+	_sessionAgentModelRetryDelayMs(retryIndex = 1) {
+		let delays = [1000, 2000, 4000, 8000, 16000];
+		let index = Math.max(0, Math.min(delays.length - 1, (Number(retryIndex || 0) || 1) - 1));
+		return delays[index];
+	},
+
 	_isSessionAbortError(error) {
 		let name = String(error?.name || "").trim();
 		let message = String(error?.message || error || "").trim().toLowerCase();
@@ -15,6 +25,78 @@ var SystematicReviewerAutomationRunner = {
 		let error = new Error(String(message || "Session run stopped."));
 		error.name = "AbortError";
 		throw error;
+	},
+
+	_sessionAgentRetryErrorMessage(error) {
+		let message = String(error?.message || error || "Model call failed.").trim() || "Model call failed.";
+		return this._truncateText ? this._truncateText(message, 900) : message.slice(0, 900);
+	},
+
+	_cloneSessionAgentModelPayload(value) {
+		if (!value || typeof value != "object") {
+			return value;
+		}
+		try {
+			return JSON.parse(JSON.stringify(value));
+		}
+		catch (_error) {
+			if (Array.isArray(value)) {
+				return value.slice();
+			}
+			return Object.assign({}, value);
+		}
+	},
+
+	async _waitSessionAgentModelRetry(delayMs = 0, signal = null) {
+		this._throwIfSessionAborted(signal);
+		let ms = Math.max(0, Number(delayMs || 0) || 0);
+		if (!ms) {
+			this._throwIfSessionAborted(signal);
+			return;
+		}
+		await new Promise((resolve, reject) => {
+			let settled = false;
+			let timer = null;
+			let cleanup = () => {
+				if (timer) {
+					clearTimeout(timer);
+					timer = null;
+				}
+				if (signal && typeof signal.removeEventListener == "function") {
+					try {
+						signal.removeEventListener("abort", onAbort);
+					}
+					catch (_error) {}
+				}
+			};
+			let finish = (error = null) => {
+				if (settled) {
+					return;
+				}
+				settled = true;
+				cleanup();
+				if (error) {
+					reject(error);
+				}
+				else {
+					resolve();
+				}
+			};
+			let onAbort = () => {
+				let error = new Error("Session run stopped.");
+				error.name = "AbortError";
+				finish(error);
+			};
+			if (signal?.aborted) {
+				onAbort();
+				return;
+			}
+			if (signal && typeof signal.addEventListener == "function") {
+				signal.addEventListener("abort", onAbort, { once: true });
+			}
+			timer = setTimeout(() => finish(), ms);
+		});
+		this._throwIfSessionAborted(signal);
 	},
 
 	async _runSessionAgent(current, sessionID, message, options = {}) {
@@ -483,9 +565,7 @@ var SystematicReviewerAutomationRunner = {
 		let input = Object.prototype.hasOwnProperty.call(options || {}, "input")
 			? options.input
 			: String(promptPacket?.projection?.prompt_text || "").trim();
-		let functionArguments = new Map();
-		let reasoningText = "";
-		let response = await SystematicReviewerPDFMarkdown.requestResponses(promptPacket.chatClient, {
+		let requestPayload = {
 			model: promptPacket.chatClient.model,
 			input,
 			tools: promptPacket.tools,
@@ -499,7 +579,41 @@ var SystematicReviewerAutomationRunner = {
 			reasoning: promptPacket?.chatClient?.reasoningEffort
 				? { effort: String(promptPacket.chatClient.reasoningEffort || "").trim() }
 				: undefined,
-		}, {
+		};
+		let maxRetries = this._sessionAgentModelMaxRetries();
+		let lastError = null;
+		for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+			this._throwIfSessionAborted(options?.abortSignal || null);
+			try {
+				return await this._requestSessionAgentNativeStepOnce(promptPacket, requestPayload, options);
+			}
+			catch (error) {
+				if (this._isSessionAbortError(error)) {
+					throw error;
+				}
+				lastError = error;
+				if (attempt >= maxRetries) {
+					break;
+				}
+				let retryIndex = attempt + 1;
+				let retryDelayMs = this._sessionAgentModelRetryDelayMs(retryIndex);
+				await this._emitSessionProgress(options.progress || null, "model.retry", {
+					step: Number(options?.step || 0) || 0,
+					retry_index: retryIndex,
+					max_retries: maxRetries,
+					retry_delay_ms: retryDelayMs,
+					error_message: this._sessionAgentRetryErrorMessage(error),
+				});
+				await this._waitSessionAgentModelRetry(retryDelayMs, options.abortSignal || null);
+			}
+		}
+		throw lastError instanceof Error ? lastError : new Error(String(lastError || "Model call failed."));
+	},
+
+	async _requestSessionAgentNativeStepOnce(promptPacket, requestPayload = {}, options = {}) {
+		let functionArguments = new Map();
+		let reasoningText = "";
+		let response = await SystematicReviewerPDFMarkdown.requestResponses(promptPacket.chatClient, this._cloneSessionAgentModelPayload(requestPayload), {
 			signal: options.abortSignal || null,
 			onEvent: async (event = {}) => {
 				let type = String(event?.type || "").trim();
@@ -577,15 +691,58 @@ var SystematicReviewerAutomationRunner = {
 			toolCatalog: promptPacket.toolCatalog,
 			advertisedTools: promptPacket.tools,
 		});
-		if (!String(normalized?.reply || "").trim() && !(Array.isArray(normalized?.toolCalls) && normalized.toolCalls.length)) {
-			throw new Error("Responses tool loop returned no function calls or assistant text.");
-		}
+		this._assertValidNativeAssistantResponse(response, normalized);
 		return {
 			reply: String(normalized?.reply || "").trim(),
 			responseID: String(response?.responseID || "").trim(),
 			toolCalls: Array.isArray(normalized?.toolCalls) ? normalized.toolCalls : [],
 			raw: response?.raw || {},
 		};
+	},
+
+	_assertValidNativeAssistantResponse(response = {}, normalized = {}) {
+		if (response?.truncated || String(response?.finishReason || "").trim() == "length") {
+			let reason = String(response?.finishReason || "length").trim() || "length";
+			throw new Error(`Responses tool loop returned a truncated model response: ${reason}.`);
+		}
+		let reply = String(normalized?.reply || "").trim();
+		let toolCalls = Array.isArray(normalized?.toolCalls) ? normalized.toolCalls : [];
+		let rawFunctionCalls = Array.isArray(response?.functionCalls) ? response.functionCalls : [];
+		for (let entry of rawFunctionCalls) {
+			if (!entry || typeof entry != "object") {
+				continue;
+			}
+			let name = String(
+				entry.name
+				|| entry.tool
+				|| entry.tool_name
+				|| entry.toolName
+				|| entry.id
+				|| ""
+			).trim();
+			if (!name) {
+				throw new Error("Responses tool loop returned a function call without a tool name.");
+			}
+		}
+		for (let toolCall of toolCalls) {
+			let name = String(toolCall?.name || "").trim();
+			if (!name) {
+				throw new Error("Responses tool loop returned a function call without a tool name.");
+			}
+			if (!toolCall?.isAdvertisedTool) {
+				throw new Error(`Responses tool loop returned an unadvertised tool call: ${name}.`);
+			}
+			if (!toolCall?.args || typeof toolCall.args != "object" || Array.isArray(toolCall.args)) {
+				throw new Error(
+					toolCall?.argumentsError
+						? `Responses tool loop returned invalid arguments for ${name}: ${toolCall.argumentsError}`
+						: `Responses tool loop returned invalid arguments for ${name}: expected one JSON object.`
+				);
+			}
+		}
+		if (!reply && !toolCalls.length) {
+			throw new Error("Responses tool loop returned no function calls or assistant text.");
+		}
 	},
 
 	_normalizeNativeAssistantResponse(response = {}, options = {}) {
