@@ -40,6 +40,15 @@ var SystematicReviewerSavePDF = (() => {
 		return file;
 	}
 
+	function isWindowsPlatform() {
+		try {
+			return String(Services.appinfo?.OS || "").toUpperCase() == "WINNT";
+		}
+		catch (_error) {
+			return false;
+		}
+	}
+
 	function ensureHiddenBrowserCompat(win) {
 		try {
 			if (win?.gBrowser && typeof win.gBrowser.getTabForBrowser != "function") {
@@ -1511,7 +1520,9 @@ var SystematicReviewerSavePDF = (() => {
 				tocTargetAnchors = staticTOCTargetAnchors;
 			}
 			let tocLinkAnnotations = collectPrintTOCLinkAnnotations(printDocument);
-			removePrintTOCHrefsBeforePDFPrint(printDocument);
+			if (isWindowsPlatform()) {
+				removePrintTOCHrefsBeforePDFPrint(printDocument);
+			}
 			if ((tocRefresh.tocCount > 0 || staticTOCRefresh.tocCount > 0) && pdfAnchorPageMap.size <= 0) {
 				throw new Error("The PDF print document rendered a TOC, but the exporter could not derive any TOC page-number targets.");
 			}
