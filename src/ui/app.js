@@ -614,7 +614,15 @@ function bindChrome(root) {
   root.querySelectorAll("[data-tab]").forEach((button) => {
     button.addEventListener("click", async () => {
       closeTabContextMenu();
-      await switchTab(button.getAttribute("data-tab") || "automation");
+      try {
+        await invoke("workflow.openTab", {
+          tab_id: button.getAttribute("data-tab") || "automation",
+          new_tab: true,
+        });
+      }
+      catch (error) {
+        setStatus(error?.message || String(error), "is-error");
+      }
     });
     button.addEventListener("contextmenu", (event) => {
       event.preventDefault();
@@ -664,7 +672,7 @@ function bindChrome(root) {
         return;
       }
       try {
-        await invoke("workflow.settings.open", {});
+        await invoke("workflow.settings.open", { new_tab: true });
         setStatus("Opened Settings tab.", "is-ready");
       }
       catch (error) {

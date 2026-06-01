@@ -46,24 +46,45 @@ var SystematicReviewerTabLocator = {
 		return container ? { id: tab.id, container } : null;
 	},
 
-	_findWorkflowTab(win, projectRef = null) {
+	_findWorkflowTab(win, projectRef = null, options = {}) {
 		if (!win?.Zotero_Tabs) {
 			return null;
 		}
 		let spec = this._projectTabSpec("manual", projectRef);
+		let activeTab = String(options?.activeTab || options?.active_tab || "").trim();
+		let matchesWorkflowTab = (candidate) => {
+			if (!candidate) {
+				return false;
+			}
+			let matchesProject =
+				candidate.id == spec.id
+				|| (spec.projectID && candidate?.type == spec.type && candidate?.data?.projectID == spec.projectID)
+				|| (!spec.projectID && candidate.id == this.workflowTabID);
+			if (!matchesProject) {
+				return false;
+			}
+			if (!activeTab) {
+				return true;
+			}
+			let candidateActiveTab = String(candidate?.data?.activeTab || candidate?.data?.active_tab || "").trim();
+			if (typeof this._inspectWorkflowTabState == "function") {
+				try {
+					candidateActiveTab = String(this._inspectWorkflowTabState(win, candidate)?.activeTab || candidateActiveTab || "").trim();
+				}
+				catch (_err) {}
+			}
+			return candidateActiveTab == activeTab;
+		};
 		let tab = null;
 		try {
 			if (typeof win.Zotero_Tabs._getTab == "function") {
-				tab = win.Zotero_Tabs._getTab(spec.id)?.tab || null;
+				let candidate = win.Zotero_Tabs._getTab(spec.id)?.tab || null;
+				tab = matchesWorkflowTab(candidate) ? candidate : null;
 			}
 		}
 		catch (_err) {}
 		if (!tab) {
-			tab = win.Zotero_Tabs._tabs?.find((candidate) =>
-				candidate.id == spec.id
-				|| (spec.projectID && candidate?.type == spec.type && candidate?.data?.projectID == spec.projectID)
-				|| (!spec.projectID && candidate.id == this.workflowTabID)
-			) || null;
+			tab = win.Zotero_Tabs._tabs?.find((candidate) => matchesWorkflowTab(candidate)) || null;
 		}
 		if (!tab) {
 			return null;

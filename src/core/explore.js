@@ -166,6 +166,30 @@ var SystematicReviewerWorkflowExplore = (() => {
 		return reviewer._joinPath(outputRoot(reviewer, context), "chats");
 	}
 
+	function normalizePathForContainment(reviewer, path) {
+		let raw = "";
+		try {
+			raw = reviewer?._normalizeLocalPath ? reviewer._normalizeLocalPath(path) : String(path || "");
+		}
+		catch (_error) {
+			raw = String(path || "");
+		}
+		let normalized = String(raw || "").replace(/\\/g, "/").replace(/\/+$/g, "");
+		if (/^[A-Za-z]:\//.test(normalized) || String(raw || "").includes("\\")) {
+			normalized = normalized.toLowerCase();
+		}
+		return normalized;
+	}
+
+	function pathIsInsideRoot(reviewer, path, root) {
+		let normalizedPath = normalizePathForContainment(reviewer, path);
+		let normalizedRoot = normalizePathForContainment(reviewer, root);
+		if (!normalizedPath || !normalizedRoot) {
+			return false;
+		}
+		return normalizedPath == normalizedRoot || normalizedPath.startsWith(`${normalizedRoot}/`);
+	}
+
 	function markdownRoot(reviewer, context) {
 		return outputRoot(reviewer, context);
 	}
@@ -1066,8 +1090,7 @@ var SystematicReviewerWorkflowExplore = (() => {
 		if (!resolvedPath) {
 			throw new Error("Provide a saved explore run path or file name.");
 		}
-		let prefix = root.endsWith("/") ? root : `${root}/`;
-		if (resolvedPath != root && !resolvedPath.startsWith(prefix)) {
+		if (!pathIsInsideRoot(reviewer, resolvedPath, root)) {
 			throw new Error("Saved explore run must be inside the current project explore outputs folder.");
 		}
 		if (!reviewer._pathExists(resolvedPath)) {
@@ -1095,8 +1118,7 @@ var SystematicReviewerWorkflowExplore = (() => {
 		if (!resolvedPath) {
 			throw new Error("Provide a chat id or chat path.");
 		}
-		let prefix = root.endsWith("/") ? root : `${root}/`;
-		if (resolvedPath != root && !resolvedPath.startsWith(prefix)) {
+		if (!pathIsInsideRoot(reviewer, resolvedPath, root)) {
 			throw new Error("Explore chat must be inside the current project explore chats folder.");
 		}
 		if (!reviewer._pathExists(resolvedPath)) {

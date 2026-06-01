@@ -2780,6 +2780,11 @@ function messageBodyText(message = {}) {
   return content;
 }
 
+function isAutomationChatRunActive(run = null) {
+  return String(run?.status || "").trim() === "running"
+    && !!String(run?.runID || run?.run_id || "").trim();
+}
+
 function renderedChatMessages(messages = [], state = {}) {
   const source = Array.isArray(messages) ? messages.slice() : [];
 	  if (state?.optimisticUserMessage) {
@@ -2817,11 +2822,11 @@ function renderedChatMessages(messages = [], state = {}) {
     if (insertIndex >= 0) {
       source.splice(insertIndex, 0, durationEntry);
     }
-    else if (!state?.chatRun || state.chatRun.status !== "running") {
+    else if (!isAutomationChatRunActive(state?.chatRun)) {
       source.push(durationEntry);
     }
   }
-  if (state?.chatRun?.status === "running") {
+  if (isAutomationChatRunActive(state?.chatRun)) {
     source.push({
       role: "system",
       event_type: "assistant_status",
@@ -3651,9 +3656,10 @@ export async function createAutomationTab(ctx) {
     chatPopoverTimer: 0,
 	    chatStreamAbortController: null,
 	    liveAssistantMessage: null,
-	    liveProgressRows: [],
+    liveProgressRows: [],
 	    promptPreviewRows: [],
 	    chatDetailState: new Map(),
+    chatInputRefreshFrame: 0,
     previewModeLocked: false,
     previewRefreshTimer: 0,
     previewRefreshToken: 0,
@@ -4372,7 +4378,7 @@ export async function createAutomationTab(ctx) {
     const customAnalysis = projectType === "custom_analysis";
     const promptText = optionalString(chatAutodrivePrompt.value);
     const promptMissing = customAnalysis && !promptText;
-    const running = String(state.chatRun?.status || "").trim() === "running";
+    const running = isAutomationChatRunActive(state.chatRun);
     chatAutodriveStrip.hidden = false;
     chatAutodriveSummary.textContent = `Auto Drive ${count} turn${count === 1 ? "" : "s"}`;
     chatAutodrivePreview.textContent = `Reviewer checks ${automationAutodriveReviewerModeLabel(reviewerMode)}.`;
@@ -4400,7 +4406,7 @@ export async function createAutomationTab(ctx) {
     renderChatAutodriveComposer();
     closeCommandMenu();
     try {
-      if (state.chatRun?.status === "running") {
+      if (isAutomationChatRunActive(state.chatRun)) {
         await queueChatMessage(message, "queued", payload);
         renderChatBudget();
         setStatus("Message queued. It will run after the current task finishes unless you mark it as steer.", "ready");
@@ -5026,13 +5032,13 @@ export async function createAutomationTab(ctx) {
 
   function startChatClock() {
     clearChatClockTimer();
-    if (!state.chatRun || state.chatRun.status !== "running") {
+    if (!isAutomationChatRunActive(state.chatRun)) {
       updateChatRunStatus();
       return;
     }
     updateChatRunStatus();
     state.chatClockTimer = window.setInterval(() => {
-      if (!state.chatRun || state.chatRun.status !== "running") {
+      if (!isAutomationChatRunActive(state.chatRun)) {
         clearChatClockTimer();
         updateChatRunStatus();
         return;
@@ -5313,7 +5319,7 @@ export async function createAutomationTab(ctx) {
       chatModelSelect.appendChild(createOption(option.preset_id, option.label || option.short_label || option.preset_id));
     }
     chatModelSelect.value = selectedPresetID;
-    const runLocked = state.chatRun?.status === "running";
+    const runLocked = isAutomationChatRunActive(state.chatRun);
     chatModelSelect.disabled = runLocked;
     chatModelBtn.disabled = runLocked;
     const selected = options.find((entry) => String(entry?.preset_id || "") === selectedPresetID) || options[0] || null;
@@ -7388,9 +7394,28 @@ function estimateTextTokens(value = "") {
     renderChatAutodriveComposer();
   }
 
+  function refreshChatInputDerivedState() {
+    updateCommandMenu();
+    renderChatBudget();
+    state.chatExploreConfirming = false;
+    state.chatExploreScopeError = "";
+    renderChatExploreComposer();
+    renderChatFindComposer();
+    renderChatAutodriveComposer();
+  }
+
+  function scheduleChatInputRefresh() {
+    if (state.chatInputRefreshFrame) {
+      return;
+    }
+    state.chatInputRefreshFrame = window.requestAnimationFrame(() => {
+      state.chatInputRefreshFrame = 0;
+      refreshChatInputDerivedState();
+    });
+  }
+
   function setChatRun(nextRun = null) {
-    let startingRun = nextRun && String(nextRun?.status || "").trim() === "running"
-      && String(state.chatRun?.status || "").trim() !== "running";
+    let wasRunning = isAutomationChatRunActive(state.chatRun);
     state.chatRun = nextRun ? { ...nextRun } : null;
     if (state.chatRun) {
       state.chatRun.sequenceBase = Number(state.chatRun.sequence_base || state.chatRun.sequenceBase || 0) || 0;
@@ -7398,13 +7423,15 @@ function estimateTextTokens(value = "") {
       state.chatRun.startedAtMs = Date.parse(state.chatRun.started_at || "") || Date.now();
       state.chatRun.elapsedMs = Number(state.chatRun.elapsed_ms || 0) || Math.max(0, Date.now() - state.chatRun.startedAtMs);
     }
+    let running = isAutomationChatRunActive(state.chatRun);
+    let startingRun = running && !wasRunning;
     updateChatRunStatus();
     renderChatBudget();
     if (startingRun) {
       state.chatAutoFollowLocked = false;
       state.runReportBaselineHash = state.lastRenderedReportHash;
     }
-    if (state.chatRun?.status === "running") {
+    if (running) {
       state.previewModeLocked = true;
       stopBtn.hidden = false;
       stopBtn.disabled = false;
@@ -7491,7 +7518,7 @@ function estimateTextTokens(value = "") {
         await refreshPreviewFromDisk({ force: true }).catch((error) => setStatus(error?.message || String(error), "error"));
       }
       let startedQueuedRun = false;
-      if (result?.run?.status === "complete" && (!state.chatRun?.status || state.chatRun.status !== "running")) {
+      if (result?.run?.status === "complete" && !isAutomationChatRunActive(state.chatRun)) {
         startedQueuedRun = await processNextQueuedMessage({ mode: "queued" });
       }
       if (completionMessage && !startedQueuedRun) {
@@ -7544,7 +7571,7 @@ function estimateTextTokens(value = "") {
   }
 
   async function processNextQueuedMessage(options = {}) {
-    if (state.destroyed || state.chatRun?.status === "running") {
+    if (state.destroyed || isAutomationChatRunActive(state.chatRun)) {
       return false;
     }
     const mode = String(options?.mode || "queued").trim() || "queued";
@@ -14461,7 +14488,7 @@ function estimateTextTokens(value = "") {
   }
 
   async function switchMode(nextMode) {
-    if (state.chatRun?.status === "running" && nextMode !== "preview") {
+    if (isAutomationChatRunActive(state.chatRun) && nextMode !== "preview") {
       setStatus("Preview stays available while the session is running. Editor and Raw unlock when the run stops.", "ready");
       return;
     }
@@ -14490,7 +14517,7 @@ function estimateTextTokens(value = "") {
   }
 
   function updateModeControlAvailability() {
-    let running = state.chatRun?.status === "running";
+    let running = isAutomationChatRunActive(state.chatRun);
     modePreviewBtn.disabled = false;
     modeNativeBtn.disabled = running;
     modeRawBtn.disabled = running;
@@ -15398,7 +15425,7 @@ function estimateTextTokens(value = "") {
     await savePendingDocument({ silent: true, surface: "", saveReason: "mode-switch-save" });
     clearChatPollTimer();
     clearChatClockTimer();
-    if (state.chatRun?.status === "running") {
+    if (isAutomationChatRunActive(state.chatRun)) {
       await stopActiveChatRun({ silent: true });
     }
     state.chatStreamAbortController?.abort?.();
@@ -15869,7 +15896,7 @@ function estimateTextTokens(value = "") {
     await savePendingDocument({ silent: true, surface: "", saveReason: "mode-switch-save" });
     clearChatPollTimer();
     clearChatClockTimer();
-    if (state.chatRun?.status === "running") {
+    if (isAutomationChatRunActive(state.chatRun)) {
       await stopActiveChatRun({ silent: true });
     }
     state.chatStreamAbortController?.abort?.();
@@ -17172,15 +17199,7 @@ function estimateTextTokens(value = "") {
       chatForm?.requestSubmit();
     }
   });
-  chatInput.addEventListener("input", () => updateCommandMenu());
-  chatInput.addEventListener("input", () => renderChatBudget());
-  chatInput.addEventListener("input", () => {
-    state.chatExploreConfirming = false;
-    state.chatExploreScopeError = "";
-    renderChatExploreComposer();
-    renderChatFindComposer();
-    renderChatAutodriveComposer();
-  });
+  chatInput.addEventListener("input", scheduleChatInputRefresh);
   chatInput.addEventListener("click", () => updateCommandMenu());
   chatExploreScopeSelect.addEventListener("change", () => {
     state.chatExploreSelectedScopeKey = String(chatExploreScopeSelect.value || "").trim();
@@ -17295,7 +17314,7 @@ function estimateTextTokens(value = "") {
     if (state.chatProgrammaticScroll) {
       return;
     }
-    if (state.chatRun?.status === "running" && (delta < -4 || !isChatNearBottom())) {
+    if (isAutomationChatRunActive(state.chatRun) && (delta < -4 || !isChatNearBottom())) {
       state.chatAutoFollowLocked = true;
     }
   });
@@ -17362,6 +17381,10 @@ function estimateTextTokens(value = "") {
       clearNativeBlurReflowTimer();
       clearSurfaceReflowTimer("preview");
       clearSurfaceReflowTimer("native");
+      if (state.chatInputRefreshFrame) {
+        window.cancelAnimationFrame?.(state.chatInputRefreshFrame);
+        state.chatInputRefreshFrame = 0;
+      }
       if (state.reflowFrame) {
         if (typeof window.cancelAnimationFrame === "function") {
           window.cancelAnimationFrame(state.reflowFrame);

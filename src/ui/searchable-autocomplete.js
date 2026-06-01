@@ -231,9 +231,6 @@ export function createSearchablePlaceholderAutocomplete(ctx, config = {}) {
     const onInput = () => {
       void handleInput(input);
     };
-    const onKeyup = () => {
-      void handleInput(input);
-    };
     const onClick = () => {
       const resolver = typeof config.queryState === "function" ? config.queryState : defaultPlaceholderQueryState;
       const queryState = resolver(input);
@@ -250,10 +247,9 @@ export function createSearchablePlaceholderAutocomplete(ctx, config = {}) {
       }
     };
     input.addEventListener("input", onInput);
-    input.addEventListener("keyup", onKeyup);
     input.addEventListener("click", onClick);
     input.addEventListener("keydown", onKeydown);
-    state.attached.push({ input, onInput, onKeyup, onClick, onKeydown });
+    state.attached.push({ input, onInput, onClick, onKeydown });
   }
 
   searchInput.addEventListener("input", () => {
@@ -318,7 +314,6 @@ export function createSearchablePlaceholderAutocomplete(ctx, config = {}) {
       window.removeEventListener("scroll", repositionHandler, true);
       for (const entry of state.attached) {
         entry.input.removeEventListener("input", entry.onInput);
-        entry.input.removeEventListener("keyup", entry.onKeyup);
         entry.input.removeEventListener("click", entry.onClick);
         entry.input.removeEventListener("keydown", entry.onKeydown);
       }

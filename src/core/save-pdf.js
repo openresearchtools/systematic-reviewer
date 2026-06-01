@@ -491,7 +491,34 @@ var SystematicReviewerSavePDF = (() => {
 		};
 	}
 
+	function decodeAnchorText(anchor = "") {
+		let value = String(anchor || "").trim();
+		if (!value) {
+			return "";
+		}
+		try {
+			return decodeURIComponent(value);
+		}
+		catch (_error) {
+			return value;
+		}
+	}
+
 	function extractPrintLinkTargetAnchor(link = null) {
+		let storedAnchor = "";
+		try {
+			storedAnchor = String(
+				link?.getAttribute?.("data-sr-toc-target-anchor")
+				|| link?.closest?.("[data-sr-toc-target-anchor]")?.getAttribute?.("data-sr-toc-target-anchor")
+				|| ""
+			).trim();
+		}
+		catch (_error) {
+			storedAnchor = "";
+		}
+		if (storedAnchor) {
+			return decodeAnchorText(storedAnchor);
+		}
 		let rawHref = "";
 		try {
 			rawHref = String(link?.getAttribute?.("href") || link?.href || "").trim();
@@ -510,11 +537,20 @@ var SystematicReviewerSavePDF = (() => {
 		if (!anchor) {
 			return "";
 		}
-		try {
-			return decodeURIComponent(anchor);
-		}
-		catch (_error) {
-			return anchor;
+		return decodeAnchorText(anchor);
+	}
+
+	function removePrintTOCHrefsBeforePDFPrint(doc = null) {
+		for (let link of Array.from(doc?.querySelectorAll?.(".sr-toc-link[data-sr-toc-link='true'], .sr-toc-link") || [])) {
+			let anchor = extractPrintLinkTargetAnchor(link);
+			if (!anchor) {
+				continue;
+			}
+			try {
+				link.setAttribute("data-sr-toc-target-anchor", anchor);
+				link.removeAttribute("href");
+			}
+			catch (_error) {}
 		}
 	}
 
@@ -686,12 +722,7 @@ var SystematicReviewerSavePDF = (() => {
 		if (!anchor) {
 			return "";
 		}
-		try {
-			return decodeURIComponent(anchor);
-		}
-		catch (_error) {
-			return anchor;
-		}
+		return decodeAnchorText(anchor);
 	}
 
 	function collectPrintTOCTargetAnchors(doc) {
@@ -998,16 +1029,30 @@ var SystematicReviewerSavePDF = (() => {
 		while ((match = trailerRegex.exec(String(pdfText || "")))) {
 			last = match;
 		}
-		if (!last) {
+		let dict = "";
+		let startXRef = 0;
+		if (last) {
+			dict = String(last[1] || "");
+			startXRef = Number(last[2] || 0) || 0;
+		}
+		else {
+			let startMatches = Array.from(String(pdfText || "").matchAll(/startxref\s*(\d+)\s*%%EOF/g));
+			startXRef = Number(startMatches[startMatches.length - 1]?.[1] || 0) || 0;
+			let objects = latestPDFObjects(extractPDFObjects(pdfText));
+			let xrefObject = objects.find((object) => Number(object?.start || 0) == startXRef)
+				|| objects.filter((object) => /\/Type\s*\/XRef\b/.test(object?.body || "")).pop()
+				|| null;
+			let xrefDictionary = String(xrefObject?.body || "").split(/\bstream\b/)[0] || "";
+			dict = (xrefDictionary.match(/<<([\s\S]*?)>>/) || [])[1] || xrefDictionary;
+		}
+		if (!dict) {
 			throw new Error("Unable to locate the PDF trailer.");
 		}
-		let dict = String(last[1] || "");
 		let size = Number((dict.match(/\/Size\s+(\d+)/) || [])[1] || 0) || 0;
 		let root = (dict.match(/\/Root\s+(\d+\s+\d+\s+R)/) || [])[1] || "";
 		let info = (dict.match(/\/Info\s+(\d+\s+\d+\s+R)/) || [])[1] || "";
 		let encrypt = (dict.match(/\/Encrypt\s+(\d+\s+\d+\s+R)/) || [])[1] || "";
 		let idBody = (dict.match(/\/ID\s*\[([\s\S]*?)\]/) || [])[1] || "";
-		let startXRef = Number(last[2] || 0) || 0;
 		if (!root) {
 			throw new Error("Unable to locate the PDF catalog reference.");
 		}
@@ -1041,11 +1086,15 @@ var SystematicReviewerSavePDF = (() => {
 		let objectsByNumber = new Map(objects.map((object) => [object.number, object]));
 		let actions = [];
 		for (let object of objects) {
-			if (!/\/Type\s*\/Action\b/.test(object.body)) {
+			let body = String(object?.body || "");
+			if (!/\/S\s*\/(?:URI|GoTo)\b/.test(body)) {
 				continue;
 			}
-			if (/\/S\s*\/URI\b/.test(object.body)) {
-				let uriText = extractPDFURIText(object.body, objectsByNumber);
+			if (/\/Subtype\s*\/Link\b/.test(body) && !/\/Type\s*\/Action\b/.test(body)) {
+				continue;
+			}
+			if (/\/S\s*\/URI\b/.test(body)) {
+				let uriText = extractPDFURIText(body, objectsByNumber);
 				let anchor = decodePDFURIAnchor(uriText);
 				actions.push({
 					objectNumber: object.number,
@@ -1056,12 +1105,12 @@ var SystematicReviewerSavePDF = (() => {
 				});
 				continue;
 			}
-			if (/\/S\s*\/GoTo\b/.test(object.body)) {
+			if (/\/S\s*\/GoTo\b/.test(body)) {
 				actions.push({
 					objectNumber: object.number,
 					generation: object.generation,
 					type: "GoTo",
-					body: object.body,
+					body,
 				});
 			}
 		}
@@ -1070,16 +1119,20 @@ var SystematicReviewerSavePDF = (() => {
 
 	function inspectPDFLinkAnnotations(pdfText = "") {
 		let objects = latestPDFObjects(extractPDFObjects(pdfText));
+		let objectsByNumber = new Map(objects.map((object) => [object.number, object]));
 		return objects
 			.filter((object) => /\/Subtype\s*\/Link\b/.test(object.body))
 			.map((object) => {
 				let actionMatch = object.body.match(/\/A\s+(\d+)\s+(\d+)\s+R\b/);
+				let directActionMatch = object.body.match(/\/A\s*<<([\s\S]*?)>>/);
+				let directURIText = directActionMatch ? extractPDFURIText(directActionMatch[1], objectsByNumber) : "";
 				let destMatch = object.body.match(/\/Dest\s*\[\s*(\d+)\s+\d+\s+R\s+\/Fit\s*\]/);
 				return {
 					objectNumber: object.number,
 					generation: object.generation,
 					body: object.body,
 					actionObjectNumber: actionMatch ? Number(actionMatch[1]) || 0 : 0,
+					directURIAnchor: decodePDFURIAnchor(directURIText),
 					destPageObjectNumber: destMatch ? Number(destMatch[1]) || 0 : 0,
 				};
 			});
@@ -1127,6 +1180,7 @@ var SystematicReviewerSavePDF = (() => {
 		let body = String(annotationBody || "").trim();
 		body = body
 			.replace(/\s*\/A\s+\d+\s+\d+\s+R\b/g, "")
+			.replace(/\s*\/A\s*<<[\s\S]*?>>/g, "")
 			.replace(/\s*\/Dest\s*\[\s*\d+\s+\d+\s+R\s+\/Fit\s*\]/g, "");
 		if (body.endsWith(">>")) {
 			return `${body.slice(0, -2).trim()} /Dest [ ${target} 0 R /Fit ] >>`;
@@ -1171,6 +1225,13 @@ var SystematicReviewerSavePDF = (() => {
 		}
 		for (let annotation of inspectPDFLinkAnnotations(pdfText)) {
 			let targetPageObject = Number(actionTargetsByObject.get(annotation.actionObjectNumber) || 0) || 0;
+			if (!targetPageObject && annotation.directURIAnchor) {
+				let targetPageIndex = Number(anchors.get(annotation.directURIAnchor) || 0) || 0;
+				targetPageObject = pageObjectNumbers[targetPageIndex - 1] || 0;
+				if (targetPageObject) {
+					internalURIActionCount += 1;
+				}
+			}
 			if (!targetPageObject) {
 				continue;
 			}
@@ -1286,8 +1347,12 @@ var SystematicReviewerSavePDF = (() => {
 			&& action.anchor
 			&& knownInternalAnchors.has(action.anchor)
 		);
-		if (leftoverInternalURIs.length) {
-			throw new Error(`PDF still contains ${leftoverInternalURIs.length} internal URI action(s) instead of same-document GoTo actions.`);
+		let leftoverInternalAnnotationURIs = annotations.filter((annotation) =>
+			annotation.directURIAnchor
+			&& knownInternalAnchors.has(annotation.directURIAnchor)
+		);
+		if (leftoverInternalURIs.length || leftoverInternalAnnotationURIs.length) {
+			throw new Error(`PDF still contains ${leftoverInternalURIs.length + leftoverInternalAnnotationURIs.length} internal URI action(s) instead of same-document destinations.`);
 		}
 		if (tocTargets.size) {
 			let directDestAnnotations = annotations.filter((annotation) => annotation.destPageObjectNumber > 0);
@@ -1446,6 +1511,7 @@ var SystematicReviewerSavePDF = (() => {
 				tocTargetAnchors = staticTOCTargetAnchors;
 			}
 			let tocLinkAnnotations = collectPrintTOCLinkAnnotations(printDocument);
+			removePrintTOCHrefsBeforePDFPrint(printDocument);
 			if ((tocRefresh.tocCount > 0 || staticTOCRefresh.tocCount > 0) && pdfAnchorPageMap.size <= 0) {
 				throw new Error("The PDF print document rendered a TOC, but the exporter could not derive any TOC page-number targets.");
 			}

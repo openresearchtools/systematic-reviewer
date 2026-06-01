@@ -20,9 +20,12 @@ var SystematicReviewerWorkflowHost = {
 		let spec = this._projectTabSpec("jobs", projectRef);
 		let forceNew = !!(options?.forceNew || options?.force_new || options?.newTab || options?.new_tab);
 
-		let existing = forceNew ? null : this._findJobsTab(win, spec.projectRef);
+		let exactExisting = forceNew ? this._findJobsTab(win, spec.projectRef) : null;
+		let existing = exactExisting || (forceNew ? null : this._findJobsTab(win, spec.projectRef));
 		if (existing) {
-			await this._mountJobsTab(win, existing.container, spec.projectRef);
+			if (!exactExisting) {
+				await this._mountJobsTab(win, existing.container, spec.projectRef);
+			}
 			win.Zotero_Tabs.select(existing.id);
 			win.focus();
 			return existing;
@@ -65,12 +68,17 @@ var SystematicReviewerWorkflowHost = {
 		let spec = this._projectTabSpec(kind, projectRef);
 		let forceNew = !!(options?.forceNew || options?.force_new || options?.newTab || options?.new_tab);
 
-		let existing = forceNew
+		let exactExisting = forceNew
+			? (kind == "settings" ? this._findSettingsTab(win) : this._findWorkflowTab(win, spec.projectRef, { activeTab }))
+			: null;
+		let existing = exactExisting || (forceNew
 			? null
-			: (kind == "settings" ? this._findSettingsTab(win) : this._findWorkflowTab(win, spec.projectRef));
+			: (kind == "settings" ? this._findSettingsTab(win) : this._findWorkflowTab(win, spec.projectRef)));
 		if (existing) {
-			await this._mountWorkflowTab(win, existing.container, spec.projectRef, { activeTab, tabID: existing.id });
-			await this._renameSystematicTabByID(existing.id, this._workflowTabTitle(spec.projectRef, activeTab));
+			if (!exactExisting) {
+				await this._mountWorkflowTab(win, existing.container, spec.projectRef, { activeTab, tabID: existing.id });
+				await this._renameSystematicTabByID(existing.id, this._workflowTabTitle(spec.projectRef, activeTab));
+			}
 			win.Zotero_Tabs.select(existing.id);
 			win.focus();
 			return existing;
