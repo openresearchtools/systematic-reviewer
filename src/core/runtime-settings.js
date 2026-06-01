@@ -3646,32 +3646,16 @@ var SystematicReviewerRuntimeSettings = {
 					models: [],
 				};
 			}
-			let tempRoot = this._joinPath(this._configRoot(), "local-exec");
-			await this._ensureDirectory(tempRoot);
-			let token = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-			let outputPath = this._joinPath(tempRoot, `opencode-models-${token}.jsonl`);
-			let errorPath = this._joinPath(tempRoot, `opencode-models-${token}.stderr.txt`);
-			let commandParts = [
-				...(this._isWindowsPlatform() ? [] : ["exec"]),
-				this._shellQuote(executor.binary_path),
-				"models",
-				"--verbose",
-				"--pure",
-				">",
-				this._shellQuote(outputPath),
-				"2>",
-				this._shellQuote(errorPath),
-			];
 			try {
-				let exitCode = await this._runShellCommandAsync(commandParts.join(" "), {
+				let result = await this._runOpenCodeSubprocessStream(executor.binary_path, ["models", "--verbose", "--pure"], {
 					timeoutMs: 45000,
 				});
-				let output = await this._readFileText(outputPath).catch(() => "");
-				let stderr = await this._readFileText(errorPath).catch(() => "");
-				if (exitCode !== 0) {
+				let output = String(result?.stdout || "");
+				let stderr = String(result?.stderr || "");
+				if (Number(result?.exitCode || 0) !== 0) {
 					return {
 						scanned_at: scannedAt,
-						error: `OpenCode model scan failed with exit code ${exitCode}.${stderr ? ` ${stderr.trim()}` : ""}`.trim(),
+						error: `OpenCode model scan failed with exit code ${Number(result?.exitCode || 0)}.${stderr ? ` ${stderr.trim()}` : ""}`.trim(),
 						models: [],
 					};
 				}
@@ -3681,9 +3665,12 @@ var SystematicReviewerRuntimeSettings = {
 					models: this._parseOpenCodeVerboseModels(output),
 				};
 			}
-			finally {
-				await this._removeIfExists(outputPath);
-				await this._removeIfExists(errorPath);
+			catch (error) {
+				return {
+					scanned_at: scannedAt,
+					error: error?.message || String(error || "OpenCode model scan failed."),
+					models: [],
+				};
 			}
 		},
 
