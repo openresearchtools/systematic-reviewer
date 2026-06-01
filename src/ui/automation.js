@@ -4853,24 +4853,24 @@ export async function createAutomationTab(ctx) {
     }
   }
 
-	  function clearLiveChatTransientState() {
-	    state.liveAssistantMessage = null;
-	    state.liveProgressRows = [];
-	    state.chatLastPaintYieldMs = 0;
+  function clearLiveChatTransientState() {
+    state.liveAssistantMessage = null;
+    state.liveProgressRows = [];
+    state.chatLastPaintYieldMs = 0;
     for (const key of Array.from(state.chatDetailState.keys())) {
       if (String(key || "").startsWith("live:")) {
         state.chatDetailState.delete(key);
-	    }
-	  }
+      }
+    }
+  }
 
-	  function clearPromptPreviewRows() {
-	    state.promptPreviewRows = [];
-	    for (const key of Array.from(state.chatDetailState.keys())) {
-	      if (String(key || "").startsWith("prompt-preview:")) {
-	        state.chatDetailState.delete(key);
-	      }
-	    }
-	  }
+  function clearPromptPreviewRows() {
+    state.promptPreviewRows = [];
+    for (const key of Array.from(state.chatDetailState.keys())) {
+      if (String(key || "").startsWith("prompt-preview:")) {
+        state.chatDetailState.delete(key);
+      }
+    }
   }
 
   function upsertLiveProgressRow(key, entry = {}) {
