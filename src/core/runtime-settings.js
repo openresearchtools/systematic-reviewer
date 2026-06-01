@@ -3489,6 +3489,9 @@ var SystematicReviewerRuntimeSettings = {
 			}
 			for (let candidate of candidates) {
 				try {
+					if (windows && /^[A-Za-z]:[\\/]Program Files[\\/]WindowsApps[\\/]/i.test(candidate)) {
+						continue;
+					}
 					let file = this._nsIFile(candidate);
 					if (file.exists() && !file.isDirectory()) {
 					return file.path;
@@ -4122,6 +4125,124 @@ var SystematicReviewerRuntimeSettings = {
 			}
 		},
 
+		async _runCodexSubprocessStream(binaryPath = "", args = [], stdinText = "", options = {}) {
+			let module = this._openCodeSubprocessModule();
+			if (!module?.call) {
+				throw new Error("Mozilla Subprocess is not available for Codex streaming.");
+			}
+			let proc = null;
+			let stdoutText = "";
+			let stderrText = "";
+			let finished = false;
+			let timeoutHandle = null;
+			let abortListener = null;
+			let abortSignal = options?.signal || null;
+			let makeAbortError = (message = "Codex process aborted.") => {
+				let error = new Error(String(message || "Codex process aborted."));
+				error.name = "AbortError";
+				return error;
+			};
+			let cleanup = () => {
+				if (timeoutHandle) {
+					try {
+						timeoutHandle.cancel();
+					}
+					catch (_error) {}
+					timeoutHandle = null;
+				}
+				if (abortSignal && abortListener && typeof abortSignal.removeEventListener == "function") {
+					try {
+						abortSignal.removeEventListener("abort", abortListener);
+					}
+					catch (_error) {}
+					abortListener = null;
+				}
+			};
+			let kill = () => {
+				try {
+					proc?.kill?.();
+				}
+				catch (_error) {}
+			};
+			if (abortSignal?.aborted) {
+				throw makeAbortError();
+			}
+			let callOptions = {
+				command: String(binaryPath || ""),
+				arguments: (Array.isArray(args) ? args : []).map((entry) => String(entry || "")),
+				stdout: "pipe",
+				stderr: "pipe",
+			};
+			if (options?.cwd) {
+				callOptions.workdir = String(options.cwd || "");
+			}
+			proc = await module.call(callOptions);
+			let stdoutLoop = (async () => {
+				while (proc?.stdout) {
+					let chunk = await proc.stdout.readString();
+					if (!chunk) {
+						break;
+					}
+					stdoutText += chunk;
+					await options?.onStdout?.(chunk, stdoutText);
+				}
+			})();
+			let stderrLoop = (async () => {
+				while (proc?.stderr) {
+					let chunk = await proc.stderr.readString();
+					if (!chunk) {
+						break;
+					}
+					stderrText = `${stderrText}${chunk}`.slice(-12000);
+					await options?.onStderr?.(chunk, stderrText);
+				}
+			})();
+			await proc.stdin.write(String(stdinText || ""));
+			try {
+				await proc.stdin.close();
+			}
+			catch (_error) {}
+			let waitPromise = Promise.resolve(proc.wait()).then((result) => {
+				finished = true;
+				return Number(result?.exitCode ?? result ?? 0) || 0;
+			});
+			let racers = [waitPromise];
+			let timeoutMs = Math.max(0, Number(options?.timeoutMs || 0) || 0);
+			if (timeoutMs > 0) {
+				racers.push(Zotero.Promise.delay(timeoutMs).then(() => {
+					if (!finished) {
+						kill();
+						throw new Error(`Codex executor timed out after ${timeoutMs} ms.`);
+					}
+					return 0;
+				}));
+			}
+			if (abortSignal && typeof abortSignal.addEventListener == "function") {
+				racers.push(new Promise((_resolve, reject) => {
+					abortListener = () => {
+						if (!finished) {
+							kill();
+						}
+						reject(makeAbortError());
+					};
+					abortSignal.addEventListener("abort", abortListener, { once: true });
+				}));
+			}
+			try {
+				let exitCode = await Promise.race(racers);
+				await stdoutLoop.catch(() => null);
+				await stderrLoop.catch(() => null);
+				return {
+					exitCode,
+					stdout: stdoutText,
+					stderr: stderrText,
+				};
+			}
+			finally {
+				cleanup();
+			}
+		},
+
 		_openCodeMessageFromPrompt(promptText = "", schema = null) {
 			let text = String(promptText || "").trim();
 			if (schema && typeof schema == "object" && !text.includes("BEGIN_SYSTEMATIC_REVIEWER_RESPONSES_REQUEST")) {
@@ -4548,11 +4669,9 @@ var SystematicReviewerRuntimeSettings = {
 			let reasoningConfigValue = this._isWindowsPlatform()
 				? `model_reasoning_effort=${reasoningEffort}`
 				: `model_reasoning_effort="${reasoningEffort}"`;
-			let cmdParts = [
-				...(this._isWindowsPlatform() ? [] : ["exec"]),
-				this._shellQuote(executor.binary_path),
-				...args.map((entry) => this._shellQuote(entry)),
-				...(reasoningEffort && !hasReasoningOverride ? ["-c", this._shellQuote(reasoningConfigValue)] : []),
+			let processArgs = [
+				...args,
+				...(reasoningEffort && !hasReasoningOverride ? ["-c", reasoningConfigValue] : []),
 				...(isCodexExecutor && !hasDisableFeature("shell_tool") ? ["--disable", "shell_tool"] : []),
 				...(isCodexExecutor && !hasDisableFeature("plugins") ? ["--disable", "plugins"] : []),
 				...(isCodexExecutor && !hasDisableFeature("shell_snapshot") ? ["--disable", "shell_snapshot"] : []),
@@ -4561,10 +4680,15 @@ var SystematicReviewerRuntimeSettings = {
 				...(hasArg("--skip-git-repo-check") ? [] : ["--skip-git-repo-check"]),
 				...(hasArg("--ephemeral") ? [] : ["--ephemeral"]),
 				"-C",
-				this._shellQuote(cwd),
-				...(schemaPath ? ["--output-schema", this._shellQuote(schemaPath)] : []),
-				...(schemaPath ? ["-o", this._shellQuote(outputPath)] : []),
+				cwd,
+				...(schemaPath ? ["--output-schema", schemaPath] : []),
+				...(schemaPath ? ["-o", outputPath] : []),
 				"-",
+			];
+			let cmdParts = [
+				...(this._isWindowsPlatform() ? [] : ["exec"]),
+				this._shellQuote(executor.binary_path),
+				...processArgs.map((entry) => this._shellQuote(entry)),
 				"<",
 				this._shellQuote(promptPath),
 				">",
@@ -4579,16 +4703,7 @@ var SystematicReviewerRuntimeSettings = {
 			let completed = false;
 			let exitCode = -1;
 			let processError = null;
-			let processPromise = this._runShellCommandAsync(cmdParts.join(" "), {
-				timeoutMs,
-				signal: options?.signal || null,
-			}).then((code) => {
-				exitCode = code;
-				completed = true;
-			}).catch((error) => {
-				processError = error;
-				completed = true;
-			});
+			let processPromise = null;
 			let emitted = "";
 			let streamedText = "";
 			let processedStructuredLines = 0;
@@ -4670,6 +4785,50 @@ var SystematicReviewerRuntimeSettings = {
 				processedStructuredLines = lines.length;
 			};
 			try {
+				if (this._isWindowsPlatform() && isCodexExecutor) {
+					let subprocessResult = await this._runCodexSubprocessStream(
+						executor.binary_path,
+						processArgs,
+						String(promptText || ""),
+						{
+							cwd,
+							timeoutMs,
+							signal: options?.signal || null,
+							onStdout: async (_chunk, stdout) => {
+								await processOutput(stdout, false);
+							},
+						}
+					);
+					await processOutput(subprocessResult.stdout || "", true);
+					if (subprocessResult.exitCode !== 0) {
+						let stderr = String(subprocessResult.stderr || "").trim();
+						throw new Error(`Local executor failed with exit code ${subprocessResult.exitCode}.${stderr ? ` ${stderr}` : ""}`.trim());
+					}
+					let structuredOutput = schemaPath
+						? await this._readFileText(outputPath).catch(() => "")
+						: "";
+					let text = structuredStream
+						? String(schemaPath ? structuredOutput : streamedText || "").trim()
+						: String(subprocessResult.stdout || "").trim();
+					if (!text) {
+						let stderr = String(subprocessResult.stderr || "").trim();
+						throw new Error(`Local executor returned no output.${stderr ? ` ${stderr}` : ""}`.trim());
+					}
+					return {
+						text,
+						responseID: "",
+					};
+				}
+				processPromise = this._runShellCommandAsync(cmdParts.join(" "), {
+					timeoutMs,
+					signal: options?.signal || null,
+				}).then((code) => {
+					exitCode = code;
+					completed = true;
+				}).catch((error) => {
+					processError = error;
+					completed = true;
+				});
 				while (!completed) {
 					let output = await this._readFileText(streamPath).catch(() => "");
 					await processOutput(output, false);
