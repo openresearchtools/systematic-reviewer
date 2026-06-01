@@ -4169,6 +4169,17 @@ var SystematicReviewerRuntimeSettings = {
 					await options?.onStderr?.(chunk, stderrText);
 				}
 			})();
+			if (Object.prototype.hasOwnProperty.call(options || {}, "stdinText")) {
+				let stdinText = String(options.stdinText || "");
+				if (stdinText && !stdinText.endsWith("\n")) {
+					stdinText += "\n";
+				}
+				await proc.stdin.write(stdinText);
+				try {
+					await proc.stdin.close();
+				}
+				catch (_error) {}
+			}
 			let waitPromise = Promise.resolve(proc.wait()).then((result) => {
 				finished = true;
 				return Number(result?.exitCode ?? result ?? 0) || 0;
