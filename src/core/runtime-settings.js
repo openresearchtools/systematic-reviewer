@@ -3693,6 +3693,47 @@ var SystematicReviewerRuntimeSettings = {
 					models: [],
 				};
 			}
+			if (!this._isWindowsPlatform()) {
+				let tempRoot = this._joinPath(this._configRoot(), "local-exec");
+				await this._ensureDirectory(tempRoot);
+				let token = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+				let outputPath = this._joinPath(tempRoot, `opencode-models-${token}.jsonl`);
+				let errorPath = this._joinPath(tempRoot, `opencode-models-${token}.stderr.txt`);
+				let commandParts = [
+					"exec",
+					this._shellQuote(executor.binary_path),
+					"models",
+					"--verbose",
+					"--pure",
+					">",
+					this._shellQuote(outputPath),
+					"2>",
+					this._shellQuote(errorPath),
+				];
+				try {
+					let exitCode = await this._runShellCommandAsync(commandParts.join(" "), {
+						timeoutMs: 45000,
+					});
+					let output = await this._readFileText(outputPath).catch(() => "");
+					let stderr = await this._readFileText(errorPath).catch(() => "");
+					if (exitCode !== 0) {
+						return {
+							scanned_at: scannedAt,
+							error: `OpenCode model scan failed with exit code ${exitCode}.${stderr ? ` ${stderr.trim()}` : ""}`.trim(),
+							models: [],
+						};
+					}
+					return {
+						scanned_at: scannedAt,
+						error: "",
+						models: this._parseOpenCodeVerboseModels(output),
+					};
+				}
+				finally {
+					await this._removeIfExists(outputPath);
+					await this._removeIfExists(errorPath);
+				}
+			}
 			try {
 				let result = await this._runOpenCodeSubprocessStream(executor.binary_path, ["models", "--verbose", "--pure"], {
 					timeoutMs: 45000,
@@ -4017,7 +4058,7 @@ var SystematicReviewerRuntimeSettings = {
 		},
 
 		_openCodeEnvObject(configPath = "") {
-			return {
+			let out = {
 				OPENCODE_CONFIG: String(configPath || ""),
 				OPENCODE_DISABLE_AUTOUPDATE: "1",
 				OPENCODE_DISABLE_CLAUDE_CODE: "1",
@@ -4026,6 +4067,10 @@ var SystematicReviewerRuntimeSettings = {
 				OPENCODE_DISABLE_LSP_DOWNLOAD: "1",
 				OPENCODE_CLIENT: "systematic-reviewer",
 			};
+			if (!this._isWindowsPlatform()) {
+				out.OPENCODE_DISABLE_DEFAULT_PLUGINS = "1";
+			}
+			return out;
 		},
 
 		_openCodeSubprocessModule() {
