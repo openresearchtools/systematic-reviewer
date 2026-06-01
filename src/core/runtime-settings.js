@@ -791,6 +791,10 @@ var SystematicReviewerRuntimeSettings = {
 					this._joinPath(localAppData, "OpenAI", "Codex", "bin"),
 					"codex.exe"
 				));
+				opencodePaths.push(...this._windowsNestedExecutablePaths(
+					this._joinPath(localAppData, "Microsoft", "WinGet", "Packages"),
+					"opencode.exe"
+				));
 			}
 		}
 		return [
