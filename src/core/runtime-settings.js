@@ -4270,6 +4270,13 @@ var SystematicReviewerRuntimeSettings = {
 				}));
 			}
 			try {
+				if (Object.prototype.hasOwnProperty.call(options || {}, "stdinText")) {
+					await proc.stdin.write(String(options.stdinText || ""));
+					try {
+						await proc.stdin.close();
+					}
+					catch (_error) {}
+				}
 				let exitCode = await Promise.race(racers);
 				await stdoutLoop.catch(() => null);
 				await stderrLoop.catch(() => null);
@@ -4558,6 +4565,43 @@ var SystematicReviewerRuntimeSettings = {
 				return parts.join("; ");
 			};
 			try {
+				if (this._isWindowsPlatform()) {
+					let subprocessResult = await this._runOpenCodeSubprocessStream(
+						executor.binary_path,
+						processArgs,
+						{
+							cwd,
+							timeoutMs,
+							signal: options?.signal || null,
+							environment: this._openCodeEnvObject(configPath),
+							stdinText: this._openCodeMessageFromPrompt(promptText, schema),
+							onStdout: async (chunk) => {
+								await processOutputChunk(chunk, false);
+							},
+						}
+					);
+					await processOutputChunk("", true);
+					let exitCode = Number(subprocessResult?.exitCode || 0) || 0;
+					let output = String(subprocessResult?.stdout || "");
+					let stderr = String(subprocessResult?.stderr || "");
+					if (exitCode === -15 || exitCode === 143) {
+						let error = new Error("OpenCode process aborted.");
+						error.name = "AbortError";
+						throw error;
+					}
+					if (exitCode !== 0) {
+						throw new Error(`OpenCode executor failed with exit code ${exitCode}. ${diagnosticSuffix(stderr, output)}`.trim());
+					}
+					let text = String(streamedText || "").trim();
+					if (!text) {
+						throw new Error(`OpenCode executor returned no output. ${diagnosticSuffix(stderr, output)}`.trim());
+					}
+					return {
+						text,
+						responseID: "",
+						usage,
+					};
+				}
 				let completed = false;
 				let exitCode = -1;
 				let processError = null;
