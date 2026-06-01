@@ -285,9 +285,8 @@ var SystematicReviewerSessions = {
 		await this._writeJSONFile(context.settingsPath, settings);
 	},
 
-	async _loadSessionMessages(context, sessionID) {
-		let timeline = await this._loadSessionTimeline(context, sessionID);
-		return timeline
+	_sessionMessagesFromTimeline(timeline = []) {
+		return (Array.isArray(timeline) ? timeline : [])
 			.filter((entry) => {
 				let eventType = String(entry?.event_type || "").trim();
 				if (!["user", "assistant"].includes(String(entry?.role || ""))) {
@@ -306,6 +305,11 @@ var SystematicReviewerSessions = {
 				content: entry.content,
 				created_at: entry.created_at,
 			}));
+	},
+
+	async _loadSessionMessages(context, sessionID) {
+		let timeline = await this._loadSessionTimeline(context, sessionID);
+		return this._sessionMessagesFromTimeline(timeline);
 	},
 
 	async _loadRecentSessionMessages(context, sessionID, limit = 12) {
@@ -784,6 +788,8 @@ var SystematicReviewerSessions = {
 		let surface = String(options?.surface || "session").trim() || "session";
 		let includeInspection = options?.includeInspection !== false && options?.includeSessionInspection !== false;
 		let includePromptProjection = options?.includePromptProjection !== false && options?.includeSessionPromptProjection !== false;
+		let historyLimit = Math.round(Number(options?.historyLimit || options?.history_limit || 0) || 0);
+		historyLimit = historyLimit > 0 ? Math.max(1, Math.min(5000, historyLimit)) : 0;
 		let activeSessionID = sessionID || await this._ensureActiveSession(current.context);
 		let inspection = includeInspection ? await this._inspectProjectSession(current) : null;
 		let session = await this._loadSessionState(current.context, activeSessionID);
@@ -793,6 +799,13 @@ var SystematicReviewerSessions = {
 			? await this._sessionPromptProjection(current, activeSessionID, { surface })
 			: null;
 		let rawTimeline = await this._loadSessionTimeline(current.context, activeSessionID);
+		let returnedTimeline = historyLimit ? rawTimeline.slice(-historyLimit) : rawTimeline;
+		let visibleTimeline = Array.isArray(promptState?.projection?.visible_timeline)
+			? promptState.projection.visible_timeline
+			: returnedTimeline;
+		if (historyLimit) {
+			visibleTimeline = visibleTimeline.slice(-historyLimit);
+		}
 		let pendingTokens = 0;
 		let pendingSteerTokens = 0;
 		let pendingQueuedTokens = 0;
@@ -816,12 +829,12 @@ var SystematicReviewerSessions = {
 			inspection,
 			tool_catalog: this._sessionToolCatalog(surface),
 			sessions: await this._listProjectSessions(current.context),
-			transcript: await this._loadSessionMessages(current.context, activeSessionID),
-			timeline: rawTimeline,
+			transcript: this._sessionMessagesFromTimeline(returnedTimeline),
+			timeline: returnedTimeline,
+			timeline_total: rawTimeline.length,
+			timeline_complete: !historyLimit || returnedTimeline.length >= rawTimeline.length,
 			pending_messages,
-			visible_timeline: Array.isArray(promptState?.projection?.visible_timeline)
-				? promptState.projection.visible_timeline
-				: rawTimeline,
+			visible_timeline: visibleTimeline,
 			prompt_projection: promptState?.projection || null,
 			chat_budget: promptState?.projection
 				? {
@@ -878,6 +891,7 @@ var SystematicReviewerSessions = {
 			includeSessionInspection: options?.includeSessionInspection,
 			includePromptProjection: options?.includePromptProjection,
 			includeSessionPromptProjection: options?.includeSessionPromptProjection,
+			historyLimit: options?.historyLimit || options?.history_limit,
 		});
 	},
 

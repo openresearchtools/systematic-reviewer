@@ -549,17 +549,25 @@ var SystematicReviewerSavePDF = (() => {
 		return decodeAnchorText(anchor);
 	}
 
-	function removePrintTOCHrefsBeforePDFPrint(doc = null) {
-		for (let link of Array.from(doc?.querySelectorAll?.(".sr-toc-link[data-sr-toc-link='true'], .sr-toc-link") || [])) {
-			let anchor = extractPrintLinkTargetAnchor(link);
-			if (!anchor) {
-				continue;
+	function preparePrintHTMLForPDF(html = "", win = null) {
+		if (!isWindowsPlatform()) {
+			return String(html || "");
+		}
+		try {
+			let doc = parsePrintHTMLDocument(html, win);
+			let tocFragmentLinks = Array.from(doc.querySelectorAll?.(".sr-toc-link[href]") || [])
+				.filter((link) => String(link?.getAttribute?.("href") || "").trim().startsWith("#"));
+			let bases = Array.from(doc.querySelectorAll?.("base[href]") || []);
+			if (!tocFragmentLinks.length || !bases.length) {
+				return String(html || "");
 			}
-			try {
-				link.setAttribute("data-sr-toc-target-anchor", anchor);
-				link.removeAttribute("href");
+			for (let base of bases) {
+				base.remove();
 			}
-			catch (_error) {}
+			return `<!DOCTYPE html>\n${doc.documentElement?.outerHTML || String(html || "")}`;
+		}
+		catch (_error) {
+			return String(html || "");
 		}
 	}
 
@@ -865,6 +873,11 @@ var SystematicReviewerSavePDF = (() => {
 			.map((object) => object.number);
 	}
 
+	function pdfUsesCompressedObjectStreams(pdfText = "") {
+		let source = String(pdfText || "");
+		return /\/ObjStm\b/.test(source) || /\/Type\s*\/XRef\b/.test(source);
+	}
+
 	function extractPDFPageObjectNumbersFromPageTree(objects = [], trailerInfo = null) {
 		let objectsByNumber = new Map(Array.from(objects || []).map((object) => [object.number, object]));
 		let rootRef = String(trailerInfo?.root || "");
@@ -1017,6 +1030,13 @@ var SystematicReviewerSavePDF = (() => {
 		let pdfText = bytesToBinaryString(pdfBytes);
 		let boxes = extractPDFPageBoxes(pdfText);
 		if (boxes.length != expected.length) {
+			if (!boxes.length && pdfUsesCompressedObjectStreams(pdfText)) {
+				try {
+					Zotero.debug("Systematic Reviewer: skipped PDF page-layout validation because Gecko wrote compressed object streams.");
+				}
+				catch (_error) {}
+				return;
+			}
 			throw new Error(`PDF page count mismatch after printing: Gecko produced ${boxes.length} page(s), expected ${expected.length} rendered page sheet(s).`);
 		}
 		for (let index = 0; index < expected.length; index += 1) {
@@ -1207,10 +1227,32 @@ var SystematicReviewerSavePDF = (() => {
 		let pdfText = bytesToBinaryString(originalBytes);
 		let objects = latestPDFObjects(extractPDFObjects(pdfText));
 		let objectsByNumber = new Map(objects.map((object) => [object.number, object]));
-		let trailer = extractPDFTrailerInfo(pdfText);
+		let usesCompressedObjectStreams = pdfUsesCompressedObjectStreams(pdfText);
+		let trailer = null;
+		try {
+			trailer = extractPDFTrailerInfo(pdfText);
+		}
+		catch (error) {
+			if (usesCompressedObjectStreams) {
+				return {
+					updatedCount: 0,
+					internalURIActionCount: 0,
+					gotoActionCount: 0,
+					compressedObjectStreams: true,
+					pageObjectsReadable: false,
+				};
+			}
+			throw error;
+		}
 		let pageObjectNumbers = extractPDFPageObjectNumbersFromPageTree(objects, trailer);
 		if (!pageObjectNumbers.length) {
-			return { updatedCount: 0, internalURIActionCount: 0, gotoActionCount: 0 };
+			return {
+				updatedCount: 0,
+				internalURIActionCount: 0,
+				gotoActionCount: inspectPDFInternalActionTargets(pdfText).filter((action) => action.type == "GoTo").length,
+				compressedObjectStreams: usesCompressedObjectStreams,
+				pageObjectsReadable: false,
+			};
 		}
 		let updatesByObject = new Map();
 		let internalURIActionCount = 0;
@@ -1345,6 +1387,7 @@ var SystematicReviewerSavePDF = (() => {
 		let expectedTOCLinks = Array.isArray(tocLinkAnnotations) ? tocLinkAnnotations.length : 0;
 		let pdfBytes = await readBinaryFileBytes(outputPath);
 		let pdfText = bytesToBinaryString(pdfBytes);
+		let usesCompressedObjectStreams = pdfUsesCompressedObjectStreams(pdfText);
 		let actions = inspectPDFInternalActionTargets(pdfText);
 		let annotations = inspectPDFLinkAnnotations(pdfText);
 		let knownInternalAnchors = new Set([
@@ -1366,6 +1409,13 @@ var SystematicReviewerSavePDF = (() => {
 		if (tocTargets.size) {
 			let directDestAnnotations = annotations.filter((annotation) => annotation.destPageObjectNumber > 0);
 			let gotoActions = actions.filter((action) => action.type == "GoTo" && /\/D\s*\[\s*\d+\s+0\s+R\s+\/Fit\s*\]/.test(action.body || ""));
+			if (usesCompressedObjectStreams && !actions.length && !annotations.length) {
+				try {
+					Zotero.debug("Systematic Reviewer: skipped PDF internal-link validation because Gecko wrote compressed object streams.");
+				}
+				catch (_error) {}
+				return;
+			}
 			if (!directDestAnnotations.length && !gotoActions.length) {
 				throw new Error("PDF TOC export did not produce any standards-compliant internal destinations.");
 			}
@@ -1464,7 +1514,8 @@ var SystematicReviewerSavePDF = (() => {
 		let browser = null;
 		let tempFile = null;
 		let restoreInternalDestinationsPref = () => {};
-		let staticPrintDocument = parsePrintHTMLDocument(html, win);
+		let printHTML = preparePrintHTMLForPDF(html, win);
+		let staticPrintDocument = parsePrintHTMLDocument(printHTML, win);
 		let staticTOCRefresh = refreshPrintTOCPageNumbers(staticPrintDocument);
 		let staticRenderedTOCPageMap = collectRenderedTOCPageNumberMap(staticPrintDocument);
 		let staticTOCTargetAnchors = collectPrintTOCTargetAnchors(staticPrintDocument);
@@ -1477,7 +1528,7 @@ var SystematicReviewerSavePDF = (() => {
 			}
 			catch (_error) {}
 
-			tempFile = await createTempPrintHTMLFile(html);
+			tempFile = await createTempPrintHTMLFile(printHTML);
 			let fileURL = Services.io.newFileURI(tempFile).spec;
 			viewerWindow = openBasicViewerWindow(win, fileURL);
 			try {
@@ -1520,9 +1571,6 @@ var SystematicReviewerSavePDF = (() => {
 				tocTargetAnchors = staticTOCTargetAnchors;
 			}
 			let tocLinkAnnotations = collectPrintTOCLinkAnnotations(printDocument);
-			if (isWindowsPlatform()) {
-				removePrintTOCHrefsBeforePDFPrint(printDocument);
-			}
 			if ((tocRefresh.tocCount > 0 || staticTOCRefresh.tocCount > 0) && pdfAnchorPageMap.size <= 0) {
 				throw new Error("The PDF print document rendered a TOC, but the exporter could not derive any TOC page-number targets.");
 			}

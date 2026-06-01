@@ -30,6 +30,7 @@ var SystematicReviewerWorkspaceController = {
 			includeSessionInspection: options?.includeSessionInspection,
 			includePromptProjection: options?.includePromptProjection,
 			includeSessionPromptProjection: options?.includeSessionPromptProjection,
+			historyLimit: options?.historyLimit || options?.history_limit,
 		});
 		let sessionID = sessionStatus.session.session_id;
 		let projectCatalog = (await this._listStoredProjects()).filter((entry) => entry.project_id == current.context.projectID);
@@ -79,6 +80,8 @@ var SystematicReviewerWorkspaceController = {
 			chat_history: sessionStatus.timeline || sessionStatus.visible_timeline,
 			chat_history_visible: sessionStatus.visible_timeline || [],
 			chat_history_raw: sessionStatus.timeline,
+			chat_history_total: Number(sessionStatus.timeline_total || 0) || (Array.isArray(sessionStatus.timeline) ? sessionStatus.timeline.length : 0),
+			chat_history_complete: sessionStatus.timeline_complete !== false,
 			chat_budget: sessionStatus.chat_budget || null,
 			pending_messages: sessionStatus.pending_messages || [],
 			prompt_projection: sessionStatus.prompt_projection || null,

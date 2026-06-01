@@ -681,6 +681,7 @@ var SystematicReviewerWorkflowCommands = (() => {
 			includeSessionInspection: options?.includeSessionInspection,
 			includePromptProjection: options?.includePromptProjection,
 			includeSessionPromptProjection: options?.includeSessionPromptProjection,
+			historyLimit: options?.historyLimit || options?.history_limit,
 		});
 		let reportHash = "";
 		try {
@@ -701,6 +702,8 @@ var SystematicReviewerWorkflowCommands = (() => {
 			chat_history: status.timeline || status.visible_timeline || [],
 			chat_history_visible: status.visible_timeline || [],
 			chat_history_raw: status.timeline || [],
+			chat_history_total: Number(status.timeline_total || 0) || (Array.isArray(status.timeline) ? status.timeline.length : 0),
+			chat_history_complete: status.timeline_complete !== false,
 			chat_budget: status.chat_budget || null,
 			pending_messages: status.pending_messages || [],
 			prompt_projection: status.prompt_projection || null,
@@ -735,6 +738,7 @@ var SystematicReviewerWorkflowCommands = (() => {
 			return await automationChatState(current, sessionID, null, {
 				includeInspection: false,
 				includePromptProjection: false,
+				historyLimit: payload?.history_limit || payload?.historyLimit,
 			});
 		})().finally(() => {
 			automationSessionContextRuns.delete(key);
@@ -2309,19 +2313,25 @@ var SystematicReviewerWorkflowCommands = (() => {
 				return Object.assign({
 					ok: true,
 					canceled: true,
-				}, await automationChatState(current, sessionID, run));
+				}, await automationChatState(current, sessionID, run, {
+					historyLimit: payload?.history_limit || payload?.historyLimit,
+				}));
 			}
 				await appendAutomationErrorEntries(current, sessionID, error, handlers);
 				run.status = "error";
 				run.error = error?.message || String(error);
 				run.finishedAt = new Date().toISOString();
 				try {
-					error.automation_result = await automationChatState(current, sessionID, run);
+					error.automation_result = await automationChatState(current, sessionID, run, {
+						historyLimit: payload?.history_limit || payload?.historyLimit,
+					});
 				}
 				catch (_stateError) {}
 				throw error;
 			}
-		return await automationChatState(current, sessionID, run);
+		return await automationChatState(current, sessionID, run, {
+			historyLimit: payload?.history_limit || payload?.historyLimit,
+		});
 	}
 
 	async function automationBeginChatRun(current, payload = {}) {
@@ -2376,7 +2386,9 @@ var SystematicReviewerWorkflowCommands = (() => {
 		return Object.assign({
 			ok: true,
 			run_id: runID,
-		}, await automationChatState(current, sessionID, run));
+		}, await automationChatState(current, sessionID, run, {
+			historyLimit: payload?.history_limit || payload?.historyLimit,
+		}));
 	}
 
 	function autoDriveMarkerValue(text = "", marker = "") {
@@ -2803,7 +2815,9 @@ var SystematicReviewerWorkflowCommands = (() => {
 		return Object.assign({
 			ok: true,
 			run_id: runID,
-		}, await automationChatState(current, sessionID, run));
+		}, await automationChatState(current, sessionID, run, {
+			historyLimit: payload?.history_limit || payload?.historyLimit,
+		}));
 	}
 
 	function bindAutomationWorkspaceRenderCache(controller) {
@@ -3877,6 +3891,7 @@ var SystematicReviewerWorkflowCommands = (() => {
 			includeSessionPromptProjection: false,
 			ensureSessionWelcome: false,
 			surface: "automation",
+			historyLimit: payload?.history_limit || payload?.historyLimit,
 		});
 		if (!bootstrap.current_project) {
 			bootstrap.current_project = {};
@@ -5155,7 +5170,9 @@ var SystematicReviewerWorkflowCommands = (() => {
 				return Object.assign({
 					ok: true,
 					queue_message: queuedMessage,
-				}, await automationChatState(current, sessionID));
+				}, await automationChatState(current, sessionID, null, {
+					historyLimit: payload?.history_limit || payload?.historyLimit,
+				}));
 			},
 		});
 
@@ -5191,7 +5208,9 @@ var SystematicReviewerWorkflowCommands = (() => {
 				return Object.assign({
 					ok: true,
 					queue_message: queuedMessage,
-				}, await automationChatState(current, sessionID));
+				}, await automationChatState(current, sessionID, null, {
+					historyLimit: payload?.history_limit || payload?.historyLimit,
+				}));
 			},
 		});
 
@@ -5213,7 +5232,9 @@ var SystematicReviewerWorkflowCommands = (() => {
 				return Object.assign({
 					ok: true,
 					removed_message: removedMessage,
-				}, await automationChatState(current, sessionID));
+				}, await automationChatState(current, sessionID, null, {
+					historyLimit: payload?.history_limit || payload?.historyLimit,
+				}));
 			},
 		});
 
@@ -5233,7 +5254,9 @@ var SystematicReviewerWorkflowCommands = (() => {
 				return Object.assign({
 					ok: true,
 					queue_message: queueMessage || null,
-				}, await automationChatState(current, sessionID));
+				}, await automationChatState(current, sessionID, null, {
+					historyLimit: payload?.history_limit || payload?.historyLimit,
+				}));
 			},
 		});
 
@@ -5277,7 +5300,9 @@ var SystematicReviewerWorkflowCommands = (() => {
 				let runID = String(payload?.run_id || payload?.runID || "").trim();
 				let run = runID ? (automationChatRuns.get(runID) || null) : null;
 				let sessionID = String(payload?.session_id || payload?.sessionID || run?.sessionID || current?.sessionID || "").trim();
-				return await automationChatState(current, sessionID, run);
+				return await automationChatState(current, sessionID, run, {
+					historyLimit: payload?.history_limit || payload?.historyLimit,
+				});
 			},
 		});
 
@@ -5297,13 +5322,17 @@ var SystematicReviewerWorkflowCommands = (() => {
 					return Object.assign({
 						ok: true,
 						stopped: false,
-					}, await automationChatState(current, sessionID, null));
+					}, await automationChatState(current, sessionID, null, {
+						historyLimit: payload?.history_limit || payload?.historyLimit,
+					}));
 				}
 				run.cancel("Session run stopped by user.");
 				return Object.assign({
 					ok: true,
 					stopped: true,
-				}, await automationChatState(current, sessionID, run));
+				}, await automationChatState(current, sessionID, run, {
+					historyLimit: payload?.history_limit || payload?.historyLimit,
+				}));
 			},
 		});
 
@@ -5343,13 +5372,17 @@ var SystematicReviewerWorkflowCommands = (() => {
 					return Object.assign({
 						ok: true,
 						stopped: false,
-					}, await automationChatState(current, sessionID, run || null));
+					}, await automationChatState(current, sessionID, run || null, {
+						historyLimit: payload?.history_limit || payload?.historyLimit,
+					}));
 				}
 				run.cancel("Auto Drive stopped by user.");
 				return Object.assign({
 					ok: true,
 					stopped: true,
-				}, await automationChatState(current, sessionID, run));
+				}, await automationChatState(current, sessionID, run, {
+					historyLimit: payload?.history_limit || payload?.historyLimit,
+				}));
 			},
 		});
 
@@ -5365,7 +5398,9 @@ var SystematicReviewerWorkflowCommands = (() => {
 				return Object.assign({
 					ok: true,
 					autodrive_active: !!(run && String(run?.kind || "").trim() == "autodrive"),
-				}, await automationChatState(current, sessionID, run));
+				}, await automationChatState(current, sessionID, run, {
+					historyLimit: payload?.history_limit || payload?.historyLimit,
+				}));
 			},
 		});
 

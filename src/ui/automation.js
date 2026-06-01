@@ -1,9 +1,13 @@
-import { cleanDisplayText, compactStatusText } from "./text-utils.js";
+﻿import { cleanDisplayText, compactStatusText } from "./text-utils.js";
 import { hasMarkdownTable, renderExploreMarkdown } from "./explore-markdown.js";
 import { createPrismaSurface } from "./prisma.js";
 import { createSearchablePlaceholderAutocomplete } from "./searchable-autocomplete.js";
 
 const AUTOMATION_MARKDOWN_CLIPBOARD_MIME = "application/x-systematic-reviewer-markdown";
+const CHAT_RENDER_INITIAL_LIMIT = 80;
+const CHAT_RENDER_INCREMENT = 80;
+const CHAT_RENDER_TOP_THRESHOLD = 120;
+const CHAT_BOOTSTRAP_HISTORY_LIMIT = CHAT_RENDER_INITIAL_LIMIT * 3;
 
 const AUTOMATION_WORKSPACE_CSS = `
 .mw-automation-panel {
@@ -520,6 +524,11 @@ const AUTOMATION_WORKSPACE_CSS = `
   background: var(--mw-panel);
   overscroll-behavior: contain;
   scrollbar-gutter: stable both-edges;
+}
+.sr-chat-history-window {
+  display:flex;
+  justify-content:center;
+  padding:2px 0 4px;
 }
 .sr-workspace-message {
   display:flex;
@@ -2784,7 +2793,6 @@ function isAutomationChatRunActive(run = null) {
   return String(run?.status || "").trim() === "running"
     && !!String(run?.runID || run?.run_id || "").trim();
 }
-
 function renderedChatMessages(messages = [], state = {}) {
   const source = Array.isArray(messages) ? messages.slice() : [];
 	  if (state?.optimisticUserMessage) {
@@ -2940,7 +2948,6 @@ function prismaPageContext(markdown = "") {
     after: [],
   };
 }
-
 function prismaReportFitBox(markdown = "", options = {}) {
   const editorSettings = SystematicReviewerNativeMarkdown.normalizeSettings(options?.editorSettings || {});
   return SystematicReviewerPrismaRenderer.computeReportFitBox(
@@ -3659,6 +3666,16 @@ export async function createAutomationTab(ctx) {
     liveProgressRows: [],
 	    promptPreviewRows: [],
 	    chatDetailState: new Map(),
+    chatRenderLimit: CHAT_RENDER_INITIAL_LIMIT,
+    chatRenderTotal: 0,
+    chatRenderSessionKey: "",
+    chatRenderRestore: null,
+    chatRenderExpanding: false,
+    chatHistoryTotal: 0,
+    chatHistoryComplete: true,
+    chatHistoryLoading: false,
+    chatStreamRenderPending: false,
+    chatStreamRenderForced: false,
     chatInputRefreshFrame: 0,
     previewModeLocked: false,
     previewRefreshTimer: 0,
@@ -3972,7 +3989,7 @@ export async function createAutomationTab(ctx) {
     state.chatExploreScopeLoading = true;
     state.chatExploreScopeError = "";
     renderChatExploreComposer();
-    state.chatExploreScopesPromise = ctx.invoke("automation.scope.list", {})
+    state.chatExploreScopesPromise = ctx.invoke("workflow.scopes.list", { purpose: "explore" })
       .then((result) => {
         const scopes = Array.isArray(result?.scopes) ? result.scopes.slice() : [];
         if (!scopes.length) {
@@ -4043,7 +4060,7 @@ export async function createAutomationTab(ctx) {
     state.chatFindScopeLoading = true;
     state.chatFindScopeError = "";
     renderChatFindComposer();
-    state.chatFindScopesPromise = ctx.invoke("automation.scope.list", {})
+    state.chatFindScopesPromise = ctx.invoke("workflow.scopes.list", { purpose: "screening" })
       .then((result) => {
         const scopes = Array.isArray(result?.scopes) ? result.scopes.slice() : [];
         if (!scopes.length) {
@@ -4181,9 +4198,6 @@ export async function createAutomationTab(ctx) {
       chatExploreConfirmCopy.textContent = "";
       return;
     }
-    if (!state.chatExploreScopes.length && !state.chatExploreScopesPromise && !state.chatExploreScopeError) {
-      void ensureAutomationExploreScopes().catch(() => {});
-    }
     const selectedScopeKey = syncAutomationExploreScopeSelection();
     const selectedScopeLabel = currentAutomationExploreScopeLabel() || "Select scope";
     const summaryKeys = columns.slice(0, 3).map((key) => `@{${key}}`);
@@ -4213,7 +4227,7 @@ export async function createAutomationTab(ctx) {
       }
     }
     else {
-      const emptyLabel = state.chatExploreScopeLoading ? "Loading scopes..." : (state.chatExploreScopeError ? "Scope unavailable" : "No scopes available");
+      const emptyLabel = state.chatExploreScopeLoading ? "Loading scopes..." : (state.chatExploreScopeError ? "Scope unavailable" : "Choose after sending");
       if (state.chatExploreScopeOptionsSignature !== `empty:${emptyLabel}`) {
         chatExploreScopeSelect.replaceChildren(createOption("", emptyLabel));
         state.chatExploreScopeOptionsSignature = `empty:${emptyLabel}`;
@@ -4236,7 +4250,7 @@ export async function createAutomationTab(ctx) {
       ? "Fix the Explore scope before sending."
       : ((state.chatExploreScopeLoading || state.chatExploreScopesPromise)
         ? "Loading scopes..."
-        : `This Explore prompt will run on scope “${selectedScopeLabel}”. Continue?`);
+        : `This Explore prompt will run on scope â€œ${selectedScopeLabel}â€. Continue?`);
     chatExploreContinueBtn.disabled = !!state.chatExploreScopeLoading || !!state.chatExploreScopesPromise || !!state.chatExploreScopeError || !selectedScopeKey;
   }
 
@@ -4610,14 +4624,28 @@ export async function createAutomationTab(ctx) {
     });
   }
 
-  async function flushChatStreamFrame(force = false) {
-    const now = Date.now();
-    const lastYield = Number(state.chatLastPaintYieldMs || 0) || 0;
-    if (!force && now - lastYield < 33) {
+  function scheduleChatStreamRender(force = false) {
+    state.chatStreamRenderForced = !!(state.chatStreamRenderForced || force);
+    if (state.chatStreamRenderPending) {
       return;
     }
-    await waitForNextFrame();
-    state.chatLastPaintYieldMs = Date.now();
+    state.chatStreamRenderPending = true;
+    nextFrame(() => {
+      state.chatStreamRenderPending = false;
+      if (state.destroyed) {
+        return;
+      }
+      const now = Date.now();
+      const lastPaint = Number(state.chatLastPaintYieldMs || 0) || 0;
+      const forced = !!state.chatStreamRenderForced;
+      state.chatStreamRenderForced = false;
+      if (!forced && now - lastPaint < 16) {
+        scheduleChatStreamRender(false);
+        return;
+      }
+      state.chatLastPaintYieldMs = Date.now();
+      renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
+    });
   }
 
   function withProgrammaticPreviewScroll(callback) {
@@ -4843,6 +4871,63 @@ export async function createAutomationTab(ctx) {
     withProgrammaticChatScroll(() => {
       chatMessages.scrollTop = chatMessages.scrollHeight;
     });
+  }
+
+  function currentChatRenderSessionKey() {
+    const projectID = String(state.bootstrap?.current_project?.entry?.project_id || "").trim();
+    const sessionID = String(state.bootstrap?.current_project?.active_session_id || sessionSelect.value || "").trim();
+    return `${projectID}:${sessionID}`;
+  }
+
+  function expandChatRenderWindow() {
+    const total = Number(state.chatRenderTotal || 0) || 0;
+    const limit = Math.max(CHAT_RENDER_INITIAL_LIMIT, Number(state.chatRenderLimit || 0) || CHAT_RENDER_INITIAL_LIMIT);
+    if (state.chatRenderExpanding || state.chatHistoryLoading) {
+      return;
+    }
+    if (!total) {
+      return;
+    }
+    state.chatRenderExpanding = true;
+    state.chatRenderRestore = {
+      scrollHeight: Number(chatMessages.scrollHeight || 0) || 0,
+      scrollTop: Number(chatMessages.scrollTop || 0) || 0,
+    };
+    if (limit >= total && !state.chatHistoryComplete) {
+      void loadOlderChatHistory(total + CHAT_RENDER_INCREMENT);
+      return;
+    }
+    if (limit >= total) {
+      state.chatRenderExpanding = false;
+      state.chatRenderRestore = null;
+      return;
+    }
+    state.chatRenderLimit = Math.min(total, limit + CHAT_RENDER_INCREMENT);
+    renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
+  }
+
+  async function loadOlderChatHistory(targetLoadedCount = 0) {
+    if (state.chatHistoryLoading) {
+      return;
+    }
+    state.chatHistoryLoading = true;
+    const total = Math.max(Number(state.chatHistoryTotal || 0) || 0, Number(targetLoadedCount || 0) || 0);
+    const nextLimit = Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Math.min(total || targetLoadedCount, targetLoadedCount));
+    state.chatRenderLimit = Math.max(state.chatRenderLimit || CHAT_RENDER_INITIAL_LIMIT, nextLimit);
+    try {
+      const bootstrap = await ctx.invoke("automation.getBootstrap", {
+        history_limit: nextLimit,
+      });
+      await refreshBootstrap(bootstrap);
+    }
+    catch (error) {
+      state.chatRenderExpanding = false;
+      state.chatRenderRestore = null;
+      setStatus(error?.message || String(error), "error");
+    }
+    finally {
+      state.chatHistoryLoading = false;
+    }
   }
 
   function clearPreviewRefreshTimer() {
@@ -5817,6 +5902,7 @@ function estimateTextTokens(value = "") {
                       session_id: sessionSelect.value,
                       queue_id: entry.queue_id,
                       mode: mode === "steer" ? "queued" : "steer",
+                      history_limit: Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Number(state.chatRenderTotal || 0) || 0),
                     });
                     if (state.bootstrap?.current_project) {
                       state.bootstrap.current_project.session_runtime_state = result?.runtime_state || state.bootstrap.current_project.session_runtime_state;
@@ -5850,6 +5936,7 @@ function estimateTextTokens(value = "") {
                     await ctx.invoke("automation.chat.queue.remove", {
                       session_id: sessionSelect.value,
                       queue_id: entry.queue_id,
+                      history_limit: Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Number(state.chatRenderTotal || 0) || 0),
                     });
                     chatInput.value = text;
                     chatInput.focus();
@@ -5875,6 +5962,7 @@ function estimateTextTokens(value = "") {
                     await ctx.invoke("automation.chat.queue.remove", {
                       session_id: sessionSelect.value,
                       queue_id: entry.queue_id,
+                      history_limit: Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Number(state.chatRenderTotal || 0) || 0),
                     });
                     await refreshBootstrap();
                     setStatus("Queued message removed.", "ready");
@@ -6138,6 +6226,17 @@ function estimateTextTokens(value = "") {
     chatBudgetStrip.appendChild(widget);
   }
 
+  function applyChatHistoryMeta(payload = {}, loadedCount = 0) {
+    const total = Math.max(
+      Number(payload?.chat_history_total || payload?.chatHistoryTotal || 0) || 0,
+      Number(loadedCount || 0) || 0
+    );
+    state.chatHistoryTotal = total;
+    state.chatHistoryComplete = payload?.chat_history_complete === false || payload?.chatHistoryComplete === false
+      ? false
+      : total <= (Number(loadedCount || 0) || 0);
+  }
+
   function applyChatSnapshot(result = {}) {
     clearLiveChatTransientState();
     if (state.bootstrap?.current_project) {
@@ -6148,6 +6247,7 @@ function estimateTextTokens(value = "") {
     const uiHistory = rawHistory.length
       ? rawHistory
       : (Array.isArray(result?.chat_history) ? result.chat_history : (state.bootstrap?.chat_history || []));
+    applyChatHistoryMeta(result || {}, rawHistory.length || uiHistory.length);
     state.bootstrap = {
       ...(state.bootstrap || {}),
       chat_history: uiHistory,
@@ -6199,6 +6299,7 @@ function estimateTextTokens(value = "") {
       ctx.invoke("automation.session.ensure_context", {
         project_id: projectID,
         session_id: sessionID,
+        history_limit: Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Number(state.chatRenderTotal || 0) || 0),
       }).then((result) => {
         if (state.destroyed || token !== state.sessionContextHydrationToken) {
           return;
@@ -6223,8 +6324,10 @@ function estimateTextTokens(value = "") {
     }
     const visible = Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history.slice() : [];
     const raw = Array.isArray(state.bootstrap?.chat_history_raw) ? state.bootstrap.chat_history_raw.slice() : visible.slice();
+    const previousHistoryTotal = Math.max(Number(state.chatHistoryTotal || 0) || 0, raw.length);
     visible.push(entry);
     raw.push(entry);
+    state.chatHistoryTotal = Math.max(previousHistoryTotal + 1, raw.length);
     let nextBudget = currentChatBudget();
     if (nextBudget && !nextBudget.stateful && !entry?.context_excluded) {
       nextBudget = {
@@ -6269,8 +6372,7 @@ function estimateTextTokens(value = "") {
 	    if (type === "prompt.preview") {
 	      applyChatBudget(event?.chat_budget || null);
 	      upsertPromptPreviewRow(event || {});
-	      renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
-	      await flushChatStreamFrame(true);
+	      scheduleChatStreamRender(true);
 	      return;
 	    }
 		    if (type === "model.retry") {
@@ -6286,8 +6388,7 @@ function estimateTextTokens(value = "") {
         content: `Retrying model call ${retryIndex}/${maxRetries}${delayLabel}.`,
       });
       setStatus(`Retrying model call ${retryIndex}/${maxRetries}${delayLabel}...`, "");
-      renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
-	      await flushChatStreamFrame(true);
+      scheduleChatStreamRender(true);
 	      return;
 	    }
 			    if (type === "memory.compaction.started" || type === "memory.compaction.retry" || type === "memory.compaction.completed" || type === "memory.compaction.failed" || type === "memory.compaction.warning" || type === "memory.compaction.stopped") {
@@ -6319,8 +6420,7 @@ function estimateTextTokens(value = "") {
 			        content: message,
 			      });
 		      setStatus(message, isFailed ? "error" : "");
-	      renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
-	      await flushChatStreamFrame(true);
+	      scheduleChatStreamRender(true);
 			      if (!isStarted && !isRetry) {
 	        window.setTimeout(() => {
 	          removeLiveProgressRow("memory-compaction");
@@ -6341,8 +6441,7 @@ function estimateTextTokens(value = "") {
           title: "Preparing Reply",
           content: "Formatting the next assistant reply.",
         });
-        renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
-        await flushChatStreamFrame();
+        scheduleChatStreamRender(false);
         return;
       }
       if (transport.includes("text")) {
@@ -6358,11 +6457,12 @@ function estimateTextTokens(value = "") {
           title: "Planning Next Step",
           content: nextPlannerText,
         });
-        renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
-        await flushChatStreamFrame();
+        scheduleChatStreamRender(false);
         return;
       }
-      const nextText = String(event?.text || state.liveAssistantMessage?.content || "");
+      const deltaText = String(event?.delta || "");
+      const existingText = String(state.liveAssistantMessage?.content || "");
+      const nextText = String(event?.text || "") || (deltaText ? `${existingText}${deltaText}` : existingText);
       if (!nextText) {
         return;
       }
@@ -6374,13 +6474,16 @@ function estimateTextTokens(value = "") {
         content: nextText,
         synthetic: true,
       };
-      renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
-      await flushChatStreamFrame();
+      scheduleChatStreamRender(false);
       return;
     }
     if (type === "responses.reasoning.delta") {
       removeLiveProgressRow("model-retry");
-      const nextText = String(event?.text || "") || "Reasoning...";
+      const reasoningDelta = String(event?.delta || "");
+      const existingReasoning = (Array.isArray(state.liveProgressRows) ? state.liveProgressRows : [])
+        .find((entry) => String(entry?._live_key || "") === "responses-reasoning");
+      const nextText = String(event?.text || "")
+        || (reasoningDelta ? `${String(existingReasoning?.content || "")}${reasoningDelta}` : "Reasoning...");
       removeLiveProgressRow("assistant-resumed");
       upsertLiveProgressRow("responses-reasoning", {
         role: "assistant",
@@ -6388,8 +6491,7 @@ function estimateTextTokens(value = "") {
         title: "Reasoning",
         content: nextText,
       });
-      renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
-      await flushChatStreamFrame();
+      scheduleChatStreamRender(false);
       return;
     }
     if (type === "tool.call.started") {
@@ -6544,8 +6646,7 @@ function estimateTextTokens(value = "") {
         title: "Reasoning",
         content: "Reasoning...",
       });
-      renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
-      await flushChatStreamFrame(true);
+      scheduleChatStreamRender(true);
       return;
     }
     if (type === "timeline.entry") {
@@ -6666,8 +6767,9 @@ function estimateTextTokens(value = "") {
     const controller = new AbortController();
     state.chatStreamAbortController = controller;
     const rawHistory = Array.isArray(state.bootstrap?.chat_history_raw) ? state.bootstrap.chat_history_raw : [];
+    const uiRunID = `automation-stream-ui-${Date.now()}`;
     setChatRun({
-      runID: `automation-stream-ui-${Date.now()}`,
+      runID: uiRunID,
       status: "running",
       sequenceBase: Number(rawHistory[rawHistory.length - 1]?.sequence_no || 0) || 0,
       startedAt: new Date().toISOString(),
@@ -6680,14 +6782,22 @@ function estimateTextTokens(value = "") {
         session_id: sessionSelect.value,
         message,
         explore_scope_key: String(options?.explore_scope_key || options?.exploreScopeKey || "").trim(),
+        history_limit: Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Number(state.chatRenderTotal || 0) || 0),
       }, async (event) => {
         await handleChatStreamEvent(event || {});
       }, {
         signal: controller.signal,
       });
+      if (!state.destroyed && String(state.chatRun?.runID || state.chatRun?.run_id || "") === uiRunID) {
+        state.optimisticUserMessage = null;
+        clearLiveChatTransientState();
+        setChatRun(null);
+        await refreshBootstrap().catch(() => {});
+      }
     }
     catch (error) {
       if (controller.signal.aborted || state.destroyed) {
+        setChatRun(null);
         return;
       }
       state.optimisticUserMessage = null;
@@ -6707,10 +6817,22 @@ function estimateTextTokens(value = "") {
     const runID = String(state.chatRun?.runID || state.chatRun?.run_id || "").trim();
     const controller = state.chatStreamAbortController || null;
     let result = null;
+    state.optimisticUserMessage = null;
+    clearLiveChatTransientState();
+    state.lastCompletedRun = null;
+    controller?.abort?.();
+    if (state.chatStreamAbortController === controller) {
+      state.chatStreamAbortController = null;
+    }
+    setChatRun(null);
+    if (state.mode === "preview") {
+      schedulePreviewRefresh({ force: true });
+    }
     try {
       result = await ctx.invoke("automation.chat.stop", {
         run_id: runID,
         session_id: sessionSelect.value,
+        history_limit: Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Number(state.chatRenderTotal || 0) || 0),
       });
     }
     finally {
@@ -6721,9 +6843,6 @@ function estimateTextTokens(value = "") {
         state.chatStreamAbortController = null;
       }
     }
-    state.optimisticUserMessage = null;
-    clearLiveChatTransientState();
-    state.lastCompletedRun = null;
     if (result) {
       applyChatSnapshot(result);
       setChatRun(result?.run || null);
@@ -7190,6 +7309,8 @@ function estimateTextTokens(value = "") {
   function renderChat(messages = []) {
     const previousScrollTop = Number(chatMessages.scrollTop || 0) || 0;
     const shouldAutoFollow = !state.chatAutoFollowLocked;
+    const renderRestore = state.chatRenderRestore;
+    state.chatRenderRestore = null;
     chatMessages.replaceChildren();
 	    const source = Array.isArray(messages) && messages.length
 	      ? messages
@@ -7200,7 +7321,35 @@ function estimateTextTokens(value = "") {
 	          event_type: "assistant_question",
 	        }];
     const list = renderedChatMessages(source, state);
-    for (const message of list) {
+    const sessionKey = currentChatRenderSessionKey();
+    if (sessionKey !== state.chatRenderSessionKey) {
+      state.chatRenderSessionKey = sessionKey;
+      state.chatRenderLimit = CHAT_RENDER_INITIAL_LIMIT;
+      state.chatRenderTotal = 0;
+      state.chatRenderExpanding = false;
+    }
+    const total = list.length;
+    if (shouldAutoFollow && !renderRestore) {
+      state.chatRenderLimit = CHAT_RENDER_INITIAL_LIMIT;
+    }
+    state.chatRenderTotal = total;
+    const limit = Math.max(CHAT_RENDER_INITIAL_LIMIT, Number(state.chatRenderLimit || 0) || CHAT_RENDER_INITIAL_LIMIT);
+    const startIndex = Math.max(0, total - Math.min(total, limit));
+    const visibleList = startIndex > 0 ? list.slice(startIndex) : list;
+    const serverOlderCount = !state.chatHistoryComplete
+      ? Math.max(0, (Number(state.chatHistoryTotal || 0) || 0) - total)
+      : 0;
+    if (startIndex > 0 || serverOlderCount > 0) {
+      const olderCount = Math.min(CHAT_RENDER_INCREMENT, startIndex > 0 ? startIndex : serverOlderCount);
+      const olderButton = createButton(state.chatHistoryLoading ? "Loading older" : `Show ${olderCount} older`, "sr-workspace-btn", { type: "button" });
+      olderButton.disabled = !!state.chatRenderExpanding || !!state.chatHistoryLoading;
+      olderButton.addEventListener("click", () => expandChatRenderWindow());
+      chatMessages.appendChild(createNode("div", {
+        className: "sr-chat-history-window",
+        children: [olderButton],
+      }));
+    }
+    for (const message of visibleList) {
 	      const customNode = renderModelInputPreviewMessage(message) || renderAutodriveMessage(message) || renderDocumentsFindMessage(message) || renderExploreChatMessage(message);
       if (customNode) {
         chatMessages.appendChild(customNode);
@@ -7294,11 +7443,20 @@ function estimateTextTokens(value = "") {
       }
       chatMessages.appendChild(wrapper);
     }
-    if (shouldAutoFollow) {
+    if (renderRestore) {
+      window.requestAnimationFrame(() => {
+        const scrollDelta = (Number(chatMessages.scrollHeight || 0) || 0) - (Number(renderRestore.scrollHeight || 0) || 0);
+        restoreChatScrollTop((Number(renderRestore.scrollTop || 0) || 0) + scrollDelta);
+        state.chatRenderExpanding = false;
+      });
+    }
+    else if (shouldAutoFollow) {
       scrollChatToBottom();
+      state.chatRenderExpanding = false;
     }
     else {
       restoreChatScrollTop(previousScrollTop);
+      state.chatRenderExpanding = false;
     }
     renderChatBudget();
   }
@@ -7470,6 +7628,7 @@ function estimateTextTokens(value = "") {
       const result = await ctx.invoke("automation.chat.poll", {
         run_id: runID,
         session_id: sessionSelect.value,
+        history_limit: Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Number(state.chatRenderTotal || 0) || 0),
       });
       if (state.destroyed || !state.chatRun || (state.chatRun.runID || state.chatRun.run_id) !== runID) {
         return;
@@ -7550,6 +7709,7 @@ function estimateTextTokens(value = "") {
       message,
       session_id: sessionSelect.value,
       explore_scope_key: String(options?.explore_scope_key || options?.exploreScopeKey || "").trim(),
+      history_limit: Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Number(state.chatRenderTotal || 0) || 0),
     });
     applyChatSnapshot(result || {});
     if (result?.run) {
@@ -7565,6 +7725,7 @@ function estimateTextTokens(value = "") {
       message,
       mode,
       payload: payload && typeof payload === "object" ? payload : null,
+      history_limit: Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Number(state.chatRenderTotal || 0) || 0),
     });
     applyChatSnapshot(result || {});
     return result?.queue_message || null;
@@ -7578,6 +7739,7 @@ function estimateTextTokens(value = "") {
     const result = await ctx.invoke("automation.chat.queue.consume_next", {
       session_id: sessionSelect.value,
       mode,
+      history_limit: Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Number(state.chatRenderTotal || 0) || 0),
     });
     applyChatSnapshot(result || {});
     const next = result?.queue_message || null;
@@ -7594,6 +7756,7 @@ function estimateTextTokens(value = "") {
         message: String(next.content || ""),
         mode: String(next.mode || "queued"),
         payload: next?.payload && typeof next.payload === "object" ? next.payload : null,
+        history_limit: Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Number(state.chatRenderTotal || 0) || 0),
       }).catch(() => {});
       await refreshBootstrap().catch(() => {});
       throw error;
@@ -9343,7 +9506,7 @@ function estimateTextTokens(value = "") {
     const marker = document.createElement("div");
     marker.className = "sr-native-list-marker";
     marker.setAttribute("contenteditable", "false");
-    marker.textContent = ordered ? `${index + 1}.` : "•";
+    marker.textContent = ordered ? `${index + 1}.` : "â€¢";
     row.append(marker, (() => {
       const editable = document.createElement("div");
       editable.className = "sr-block-editable";
@@ -9417,8 +9580,8 @@ function estimateTextTokens(value = "") {
     setListBlockStyleAttributes(listBlock, normalizedList);
     const orderedLabels = ordered ? SystematicReviewerNativeMarkdown.orderedListMarkerLabels(items, markerStyle) : [];
     const unorderedMarker = markerStyle === "square"
-      ? "▪"
-      : (markerStyle === "circle" ? "◦" : "•");
+      ? "â–ª"
+      : (markerStyle === "circle" ? "â—¦" : "â€¢");
     rows.forEach((row, index) => {
       setListItemLevel(row, items[index]?.level || 0);
       const marker = row.querySelector(".sr-native-list-marker");
@@ -15148,7 +15311,9 @@ function estimateTextTokens(value = "") {
   }
 
   async function refreshBootstrap(bootstrapPayload = null) {
-    const bootstrap = bootstrapPayload || await ctx.invoke("automation.getBootstrap", {});
+    const bootstrap = bootstrapPayload || await ctx.invoke("automation.getBootstrap", {
+      history_limit: Math.max(CHAT_BOOTSTRAP_HISTORY_LIMIT, Number(state.chatRenderTotal || 0) || 0),
+    });
     const preserveDirtyDocument = hasPendingDocumentChanges();
     const incomingMarkdown = String(bootstrap?.workspace_document?.markdown || "");
     const incomingRenderState = bootstrap?.render_state || null;
@@ -15156,6 +15321,7 @@ function estimateTextTokens(value = "") {
     if (Array.isArray(state.bootstrap?.chat_history_raw) && state.bootstrap.chat_history_raw.length) {
       state.bootstrap.chat_history = state.bootstrap.chat_history_raw;
     }
+    applyChatHistoryMeta(bootstrap || {}, Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history.length : 0);
     state.citationCatalog = Array.isArray(bootstrap?.citation_catalog) ? bootstrap.citation_catalog.slice() : [];
     state.localCommands = Array.isArray(bootstrap?.local_commands) ? bootstrap.local_commands.slice() : [];
     state.baseURL = String(bootstrap?.workspace_document?.base_url || "");
@@ -17314,7 +17480,13 @@ function estimateTextTokens(value = "") {
     if (state.chatProgrammaticScroll) {
       return;
     }
-    if (isAutomationChatRunActive(state.chatRun) && (delta < -4 || !isChatNearBottom())) {
+    if (currentTop <= CHAT_RENDER_TOP_THRESHOLD) {
+      expandChatRenderWindow();
+    }
+    if (isChatNearBottom()) {
+      state.chatAutoFollowLocked = false;
+    }
+    else if (delta < -4 || isAutomationChatRunActive(state.chatRun)) {
       state.chatAutoFollowLocked = true;
     }
   });
