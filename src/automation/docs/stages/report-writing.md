@@ -8,6 +8,7 @@ Rules:
 - Prefer structured markdown patch operations over replacing the whole file when only one section changes.
 - Keep the patch tied to evidence already gathered in the project.
 - For systematic reviews, successful major workflow runs should normally be followed by section-targeted report rewrites grounded in the latest tool result, `log.txt`, and saved artifacts.
+- After refreshing report sections for a major workflow action, continue the active objective from the latest instruction and the injected active memory unless the user's entire request was only to refresh the report.
 - When adding a new section, use explicit headings and concrete prose rather than TODO placeholders.
 - For systematic reviews, Methods, PRISMA, Results, Discussion, and Appendices should stay aligned with the deterministic artifacts already written by the backend, but the report itself should stay polished and user-facing rather than accumulate dated run blurbs.
 - When referencing specific studies, preserve `@[ITEMKEY]` citations instead of paraphrasing the evidence without anchors.

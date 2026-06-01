@@ -29,6 +29,7 @@ First orient yourself:
 - Use tool_search to discover current namespaces before guessing. Useful namespaces commonly include workspace, manual, harvest, screening, full_text, extraction, explore, prisma, documents, embeddings, semantic, project_data, and jobs.
 - Use workspace__search_file when available to find report markers, Appendix headings, or specific sections without reading an entire large file.
 - Use manual__read if stage order, decision rules, reporting expectations, or workflow doctrine are unclear.
+- Judge continuation against the injected active memory, REPORT.md, log.txt, and current collection state. A required report refresh does not by itself mean the broader Auto Drive objective is complete.
 
 Systematic-review stage expectations:
 1. Topic and rationale should be clear enough for a reader to understand why the review matters.

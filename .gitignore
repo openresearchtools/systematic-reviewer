@@ -12,6 +12,8 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
+tests/
+
 .idea/
 .vscode/
 
@@ -23,3 +25,6 @@ __pycache__/
 website/node_modules/
 website/.next/
 website/dist/
+
+# Local Zotero build/install workspace
+local/

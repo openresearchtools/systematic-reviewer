@@ -28,8 +28,9 @@ var SystematicReviewerResponsesToolCatalog = (() => {
 		jobs: "Background job listing, job inspection, and recent runtime job state for the current project.",
 		project_admin: "Project lifecycle, project bindings, collection/project management, and session/project navigation helpers.",
 		ui: "Open or move Zotero tabs, item actions, and UI-level helpers that act on the real plugin surfaces.",
-		workspace: "Project report/log editing helpers and file operations that modify or inspect the real project workspace.",
-		shell: "Privileged local shell execution for the in-app session agent only.",
+			workspace: "Project report/log editing helpers and file operations that modify or inspect the real project workspace.",
+			memory: "Durable project memory helpers, including active-memory rebuilds from chronological turn memory.",
+			shell: "Privileged local shell execution for the in-app session agent only.",
 		browser: "Privileged webpage browsing, page interaction, live page reading, screenshots, and project-aware webpage saving.",
 		automation_document: "Automation workspace document rendering, save/export flows, and report asset helpers.",
 	});
@@ -38,8 +39,9 @@ var SystematicReviewerResponsesToolCatalog = (() => {
 		"workspace",
 		"shell",
 		"browser",
-		"project_admin",
-		"manual",
+			"project_admin",
+			"memory",
+			"manual",
 		"harvest",
 		"screening",
 		"descriptives",
@@ -1804,9 +1806,12 @@ var SystematicReviewerResponsesToolCatalog = (() => {
 		if (/^(jobs|job)/i.test(local)) {
 			return "jobs";
 		}
-		if (/^(project|collection|session|scope)/i.test(local)) {
-			return "project_admin";
-		}
+			if (/^(project|collection|session|scope)/i.test(local)) {
+				return "project_admin";
+			}
+			if (/^memory/i.test(local)) {
+				return "memory";
+			}
 		if (/^shell/i.test(local)) {
 			return "shell";
 		}
@@ -1838,8 +1843,9 @@ var SystematicReviewerResponsesToolCatalog = (() => {
 			embeddings: /^embeddings/i,
 			semantic: /^semantic/i,
 			documents: /^documents/i,
-			project_data: /^projectData/i,
-			items: /^items/i,
+				project_data: /^projectData/i,
+				memory: /^memory/i,
+				items: /^items/i,
 			mcp: /^mcp/i,
 			screening: /^screening/i,
 			descriptives: /^descriptives/i,
@@ -2079,7 +2085,7 @@ var SystematicReviewerResponsesToolCatalog = (() => {
 				"Inspect the canonical tool catalog before choosing a domain-specific function.",
 				"Use this function when you need the detailed tool list, argument descriptions, and usage guidance for a namespace or task phrase.",
 				"Arguments: provide namespace to inspect one tool family, query to search by task phrase, or both to narrow results within a namespace.",
-				"Examples: namespace=harvest query='estimate import results'; namespace=documents query='find arguments keyword chunks'; namespace=mcp query='external server tools resources prompts'; namespace=descriptives query='counts percents scope rules'; namespace=extraction query='template run field update'; query='edit REPORT markdown'.",
+				"Examples: namespace=memory query='rebuild active memory'; namespace=harvest query='estimate import results'; namespace=documents query='find arguments keyword chunks'; namespace=mcp query='external server tools resources prompts'; namespace=descriptives query='counts percents scope rules'; namespace=extraction query='template run field update'; query='edit REPORT markdown'.",
 			].join(" "),
 			parameters: {
 				type: "object",
@@ -2087,7 +2093,7 @@ var SystematicReviewerResponsesToolCatalog = (() => {
 					namespace: {
 						type: "string",
 						minLength: 1,
-						description: "Optional namespace id such as manual, harvest, screening, descriptives, embeddings, semantic, documents, mcp, full_text, extraction, explore, prisma, jobs, project_admin, workspace, automation_document, or ui.",
+						description: "Optional namespace id such as memory, manual, harvest, screening, descriptives, embeddings, semantic, documents, mcp, full_text, extraction, explore, prisma, jobs, project_admin, workspace, automation_document, or ui.",
 					},
 					query: {
 						type: "string",
@@ -2239,6 +2245,7 @@ var SystematicReviewerResponsesToolCatalog = (() => {
 			"",
 			"How to inspect tools:",
 			"- For systematic-review workflow guidance, call tool_search({\"namespace\":\"manual\",\"query\":\"stage guidance report writing\"}).",
+			"- For active-memory rebuilds, call tool_search({\"namespace\":\"memory\",\"query\":\"rebuild active memory\"}).",
 			"- For harvest estimates/imports, call tool_search({\"namespace\":\"harvest\",\"query\":\"estimate import results\"}).",
 			"- For full-text retrieval and conversion, call tool_search({\"namespace\":\"full_text\",\"query\":\"retrieval conversion unretrieved included\"}).",
 			"- For Find Arguments retrieval over document chunks, call tool_search({\"namespace\":\"documents\",\"query\":\"find arguments keyword full text chunks\"}).",

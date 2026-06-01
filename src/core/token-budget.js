@@ -171,60 +171,137 @@ var SystematicReviewerTokenBudget = (() => {
 		return next;
 	}
 
+	function sequenceKey(entry = {}) {
+		let sequenceNo = Number(entry?.sequence_no || 0) || 0;
+		if (sequenceNo) {
+			return `seq:${sequenceNo}`;
+		}
+		return [
+			"entry",
+			optionalString(entry?.event_type || ""),
+			optionalString(entry?.created_at || ""),
+			optionalString(entry?.title || ""),
+			optionalString(entry?.role || ""),
+		].join(":");
+	}
+
+	function optionNumber(options = {}, key = "", fallback = 0) {
+		if (!Object.prototype.hasOwnProperty.call(options || {}, key)) {
+			return fallback;
+		}
+		let value = Number(options?.[key] || 0);
+		return Number.isFinite(value) ? value : fallback;
+	}
+
+	function requiredSequenceSet(options = {}) {
+		let source = options.requiredEntrySequenceNos
+			|| options.requiredSequenceNos
+			|| options.activeEntrySequenceNos
+			|| [];
+		let values = Array.isArray(source) ? source : [source];
+		let out = new Set();
+		for (let value of values) {
+			let numberValue = Number(value || 0) || 0;
+			if (numberValue) {
+				out.add(`seq:${numberValue}`);
+			}
+		}
+		return out;
+	}
+
 	function buildTimelineProjection(entries = [], options = {}) {
 		let source = (Array.isArray(entries) ? entries : [])
 			.filter((entry) => !entry?.context_excluded)
 			.map((entry) => cloneEntry(entry));
-		let pinnedStartCount = Math.max(0, Number(options.pinnedStartCount || DEFAULT_PINNED_START_COUNT) || DEFAULT_PINNED_START_COUNT);
+		let pinnedStartCount = Math.max(0, optionNumber(options, "pinnedStartCount", DEFAULT_PINNED_START_COUNT));
 		let headTokens = Math.max(0, Number(options.headTokens || 0) || 0);
+		let activeMemoryTokens = Math.max(0, Number(options.activeMemoryTokens || 0) || 0);
+		let toolSchemaTokens = Math.max(0, Number(options.toolSchemaTokens || options.extraInputTokens || 0) || 0);
 		let budget = Math.max(0, Number(options.inputBudgetTokens || 0) || 0);
+		let targetBudget = Math.max(0, Number(options.targetInputBudgetTokens || 0) || 0);
+		let effectiveBudget = targetBudget || budget;
 		let maxContentChars = Math.max(0, Number(options.maxContentChars || 8000) || 8000);
 		let maxPayloadChars = Math.max(0, Number(options.maxPayloadChars || 6000) || 6000);
 		let notice = optionalString(options.truncationNotice || DEFAULT_TRUNCATION_NOTICE) || DEFAULT_TRUNCATION_NOTICE;
+		let requiredSequences = requiredSequenceSet(options);
+		let rawHistoryTokens = source.reduce((sum, entry) => sum + estimateTimelineEntry(entry), 0);
 
 		let pinned = source.slice(0, pinnedStartCount).map((entry) => truncatedEntry(entry, {
 			maxContentChars,
 			maxPayloadChars,
 		}));
-		let pinnedIDs = new Set(pinned.map((entry) => `${entry.sequence_no || ""}:${entry.event_type || ""}:${entry.created_at || ""}:${entry.title || ""}`));
-		let usedTokens = headTokens + pinned.reduce((sum, entry) => sum + estimateTimelineEntry(entry), 0);
+		let keptIDs = new Set();
+		for (let entry of pinned) {
+			keptIDs.add(sequenceKey(entry));
+		}
+		let required = [];
+		for (let raw of source) {
+			let key = sequenceKey(raw);
+			if (!requiredSequences.has(key) || keptIDs.has(key)) {
+				continue;
+			}
+			let entry = truncatedEntry(raw, {
+				maxContentChars,
+				maxPayloadChars,
+			});
+			required.push(entry);
+			keptIDs.add(key);
+		}
+		let usedTokens = headTokens
+			+ toolSchemaTokens
+			+ pinned.reduce((sum, entry) => sum + estimateTimelineEntry(entry), 0)
+			+ required.reduce((sum, entry) => sum + estimateTimelineEntry(entry), 0);
 		let keptTail = [];
 		let omitted = [];
 
-		for (let index = source.length - 1; index >= pinned.length; index -= 1) {
+		for (let index = source.length - 1; index >= 0; index -= 1) {
 			let raw = source[index];
 			let entry = truncatedEntry(raw, {
 				maxContentChars,
 				maxPayloadChars,
 			});
-			let key = `${entry.sequence_no || ""}:${entry.event_type || ""}:${entry.created_at || ""}:${entry.title || ""}`;
-			if (pinnedIDs.has(key)) {
+			let key = sequenceKey(entry);
+			if (keptIDs.has(key)) {
 				continue;
 			}
 			let estimate = estimateTimelineEntry(entry);
-			if (usedTokens + estimate <= budget) {
+			if (!effectiveBudget || usedTokens + estimate <= effectiveBudget) {
 				keptTail.unshift(entry);
 				usedTokens += estimate;
+				keptIDs.add(key);
 			}
 			else {
 				omitted.unshift(cloneEntry(raw));
 			}
 		}
 
-		if (!keptTail.length && omitted.length) {
-			let fallback = truncatedEntry(omitted.pop(), {
-				maxContentChars: Math.max(1200, maxContentChars),
-				maxPayloadChars,
-			});
-			keptTail.unshift(fallback);
-		}
-
 		let visible = pinned.slice();
-		let truncated = omitted.length > 0;
-		if (truncated) {
-			visible.push({
+			let truncated = omitted.length > 0;
+			let truncationPromptEntry = null;
+			let truncationNoticeTokens = 0;
+			if (truncated) {
+				truncationPromptEntry = {
 				role: "system",
 				event_type: "truncated_context",
+				title: "Truncated Context",
+				content: notice,
+				payload: {
+					truncated_count: omitted.length,
+				},
+				};
+				truncationNoticeTokens = estimateTimelineEntry(truncationPromptEntry);
+				usedTokens += truncationNoticeTokens;
+				while (effectiveBudget && usedTokens > effectiveBudget && keptTail.length) {
+					let removed = keptTail.shift();
+					if (!removed) {
+						break;
+					}
+					usedTokens -= estimateTimelineEntry(removed);
+					omitted.unshift(cloneEntry(removed));
+				}
+				visible.push({
+					role: "system",
+					event_type: "truncated_context",
 				title: "Truncated Context",
 				content: notice,
 				payload: {
@@ -234,29 +311,50 @@ var SystematicReviewerTokenBudget = (() => {
 				synthetic: true,
 			});
 		}
-		visible.push(...keptTail);
+		let remainder = required.concat(keptTail).sort((left, right) => {
+			let leftSeq = Number(left?.sequence_no || 0) || 0;
+			let rightSeq = Number(right?.sequence_no || 0) || 0;
+			return leftSeq - rightSeq;
+		});
+		let visibleKeys = new Set(visible.map((entry) => sequenceKey(entry)));
+		for (let entry of remainder) {
+			let key = sequenceKey(entry);
+			if (!visibleKeys.has(key)) {
+				visible.push(entry);
+				visibleKeys.add(key);
+			}
+		}
 
-		return {
-			truncated,
-			head_tokens: headTokens,
-			used_input_tokens: usedTokens,
-			visible_entries: visible,
-			prompt_entries: visible.map((entry) => entry.event_type == "truncated_context"
-				? {
-					role: "system",
-					event_type: "truncated_context",
-					title: entry.title,
-					content: entry.content,
-					payload: {
-						truncated_count: Number(entry?.payload?.truncated_count || 0) || 0,
-					},
-				}
+			return {
+				truncated,
+				head_tokens: headTokens,
+				active_memory_tokens: activeMemoryTokens,
+				tool_schema_tokens: toolSchemaTokens,
+				truncation_notice_tokens: truncationNoticeTokens,
+				raw_history_tokens: rawHistoryTokens,
+				used_input_tokens: usedTokens,
+				input_budget_tokens: budget,
+				target_input_budget_tokens: effectiveBudget,
+				fits_budget: !effectiveBudget || usedTokens <= effectiveBudget,
+				over_budget_tokens: effectiveBudget && usedTokens > effectiveBudget ? usedTokens - effectiveBudget : 0,
+				visible_entries: visible,
+				prompt_entries: visible.map((entry) => entry.event_type == "truncated_context"
+					? (truncationPromptEntry || {
+						role: "system",
+						event_type: "truncated_context",
+						title: entry.title,
+						content: entry.content,
+						payload: {
+							truncated_count: Number(entry?.payload?.truncated_count || 0) || 0,
+						},
+					})
 				: cloneEntry(entry)),
-			omitted_entries: omitted,
-			kept_tail_entries: keptTail,
-			pinned_entries: pinned,
-			omitted_count: omitted.length,
-		};
+				omitted_entries: omitted,
+				kept_tail_entries: keptTail,
+				pinned_entries: pinned,
+				required_entries: required,
+				omitted_count: omitted.length,
+			};
 	}
 
 	return {

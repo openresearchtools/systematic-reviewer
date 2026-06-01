@@ -1958,20 +1958,21 @@ var SystematicReviewerRuntimeSettings = {
 				model: role.model || effectiveModel,
 			});
 			return {
-				client: this._clonePreparedAPIClient(baseClient || {}, {
-					runtimeType: "local_exec",
-					roleID,
-					baseUrl,
-					streamBaseUrl,
+					client: this._clonePreparedAPIClient(baseClient || {}, {
+						runtimeType: "local_exec",
+						roleID,
+						baseUrl,
+						streamBaseUrl,
 					model: effectiveModel,
 					apiKind: "responses",
 					apiKey: internalServiceToken,
 					timeoutMs: Number(role.timeout_ms || baseClient?.timeoutMs || 120000) || 120000,
-					maxOutputTokens: effectiveMaxOutputTokens,
-					executorID: executor.id,
-					executorPath: executor.binary_path,
-					contextWindow: effectiveContextWindow,
-					stateMode,
+						maxOutputTokens: effectiveMaxOutputTokens,
+						executorID: executor.id,
+						executorPath: executor.binary_path,
+						executorArgs: Array.isArray(executor.args) ? executor.args.slice() : [],
+						contextWindow: effectiveContextWindow,
+						stateMode,
 					parallelRequests,
 					independentResources,
 					reasoningEffort,
@@ -3638,7 +3639,25 @@ var SystematicReviewerRuntimeSettings = {
 			if (!executorID) {
 				return null;
 			}
-			return this._scanInstalledExecutors().find((entry) => entry.id == executorID) || null;
+			let scanned = this._scanInstalledExecutors().find((entry) => entry.id == executorID) || null;
+			let frozenPath = String(role?.executor_path || role?.executorPath || role?.binary_path || role?.binaryPath || "").trim();
+			let frozenArgs = Array.isArray(role?.executor_args)
+				? role.executor_args.slice()
+				: (Array.isArray(role?.executorArgs) ? role.executorArgs.slice() : null);
+			if (!frozenPath && !frozenArgs) {
+				return scanned;
+			}
+			let base = scanned || {
+				id: executorID,
+				label: executorID,
+				command: executorID,
+				installed: !!frozenPath,
+			};
+			return Object.assign({}, base, {
+				binary_path: frozenPath || base.binary_path || "",
+				installed: !!(frozenPath || base.binary_path),
+				...(frozenArgs ? { args: frozenArgs } : {}),
+			});
 		},
 
 		_shellQuote(value = "") {

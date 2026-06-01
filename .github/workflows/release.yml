@@ -1,18 +1,19 @@
-name: Build public XPI release
+name: Build public XPI
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Public release version, for example 0.71"
+        description: "XPI version, for example 0.71"
         required: true
         default: "0.71"
       channel:
-        description: "Release channel"
+        description: "Build channel"
         required: true
         type: choice
         default: "pre-release"
         options:
+          - "artifact-only"
           - "pre-release"
           - "release"
       tag:
@@ -48,7 +49,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Build release XPI
+      - name: Build XPI
         id: build
         shell: bash
         run: |
@@ -120,14 +121,28 @@ jobs:
           PY
           cp "$XPI" "$OUT_DIR/release.xpi"
           SHA256="$(sha256sum "$XPI" | awk '{print $1}')"
+          printf '%s  %s\n' "$SHA256" "$(basename "$XPI")" > "$OUT_DIR/SHA256SUMS.txt"
 
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "xpi=$XPI" >> "$GITHUB_OUTPUT"
           echo "release_xpi=$OUT_DIR/release.xpi" >> "$GITHUB_OUTPUT"
+          echo "sha256_file=$OUT_DIR/SHA256SUMS.txt" >> "$GITHUB_OUTPUT"
           echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
 
+      - name: Upload XPI workflow artifact
+        if: ${{ inputs.channel == 'artifact-only' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: systematic-reviewer-${{ steps.build.outputs.version }}-xpi
+          if-no-files-found: error
+          path: |
+            ${{ steps.build.outputs.xpi }}
+            ${{ steps.build.outputs.release_xpi }}
+            ${{ steps.build.outputs.sha256_file }}
+
       - name: Publish GitHub release assets
+        if: ${{ inputs.channel != 'artifact-only' }}
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -179,6 +194,7 @@ jobs:
           fi
 
       - name: Generate website release index and update manifest
+        if: ${{ inputs.channel != 'artifact-only' }}
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -284,6 +300,7 @@ jobs:
           PY
 
       - name: Commit website release metadata
+        if: ${{ inputs.channel != 'artifact-only' }}
         shell: bash
         run: |
           set -euo pipefail

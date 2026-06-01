@@ -2079,9 +2079,10 @@ var SystematicReviewerNativeEditor = {
 				"Commands:",
 				"- /Autodrive: Keep the agent working for a chosen number of turns with optional reviewer checks.",
 				"- /find: Find Arguments in project markdown chunks using keyword search, or semantic search when full-text embeddings are ready.",
-				"- /explore: Run scoped synthesis over selected Explore columns with @{column_key} placeholders.",
-				"- /status: Show the current project scope and tracked item counts.",
-				"- /help: Show this guide.",
+					"- /explore: Run scoped synthesis over selected Explore columns with @{column_key} placeholders.",
+					"- /memory: Rebuild active-memory.txt from memory.txt for durable session continuation.",
+					"- /status: Show the current project scope and tracked item counts.",
+					"- /help: Show this guide.",
 				"",
 				"The agent can help screen, extract, synthesize tables, search project documents, and revise REPORT.md.",
 			].join("\n");
@@ -2089,26 +2090,35 @@ var SystematicReviewerNativeEditor = {
 		if (lower == "/autodrive" || lower.startsWith("/autodrive ")) {
 			return "Use /Autodrive in Automation chat to choose the turn count, reviewer mode, and per-run prompt before starting.";
 		}
-		if (lower == "/status") {
-			let counts = await this._projectCounts(current.context);
-			return [
+			if (lower == "/status") {
+				let counts = await this._projectCounts(current.context);
+				return [
 				`Collection: ${current.context.collectionName}`,
 				`Project item: ${current.projectItem.key}`,
 				`Collections tracked: ${counts.collections}`,
 				`Items tracked: ${counts.items}`,
 				`Attachments tracked: ${counts.attachments}`,
 				`Project files linked: ${counts.artifacts}`,
-				`Source links: ${counts.source_links}`,
-			].join("\n");
-		}
-		if (lower == "/find" || lower.startsWith("/find ")) {
-			return "Use /find in Automation chat, choose Keyword or Semantic, then type the query in the same composer.";
-		}
+					`Source links: ${counts.source_links}`,
+				].join("\n");
+			}
+			if (lower == "/memory") {
+				let result = await this._rebuildActiveMemory(current, sessionID, {});
+				return [
+					"Memory rebuilt.",
+					`Mode: ${String(result?.mode || "single").trim()}`,
+					`Chunks: ${Number(result?.chunk_count || 0) || 0}`,
+					`Active memory: ${String(result?.active_memory_path || this._activeMemoryPath(current.context) || "").trim()}`,
+				].join("\n");
+			}
+			if (lower == "/find" || lower.startsWith("/find ")) {
+				return "Use /find in Automation chat, choose Keyword or Semantic, then type the query in the same composer.";
+			}
 		if (lower == "/explore" || lower.startsWith("/explore ")) {
 			return "Use /explore in Automation chat with one or more @{column_key} placeholders, then choose the project scope.";
 		}
-		return "Unknown command. Use /help, /Autodrive, /find, /explore, or /status.";
-	},
+			return "Unknown command. Use /help, /Autodrive, /find, /explore, /memory, or /status.";
+		},
 
 		_ensureTrailingEditableParagraph(pageBody) {
 			if (!pageBody) {

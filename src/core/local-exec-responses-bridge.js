@@ -953,10 +953,10 @@ var SystematicReviewerLocalExecResponsesBridge = {
 		};
 	},
 
-	async _localExecResolvedRoleConfig(roleID, payload = {}) {
-		let config = await this._conversionConfig();
-		let runtimeRoles = config?.runtimeRoles || this._defaultRuntimeRoles();
-		let apiConnections = config?.apiConnections || [];
+		async _localExecResolvedRoleConfig(roleID, payload = {}) {
+			let config = await this._conversionConfig();
+			let runtimeRoles = config?.runtimeRoles || this._defaultRuntimeRoles();
+			let apiConnections = config?.apiConnections || [];
 		let requestedPresetID = String(
 			payload?.runtime_preset_id
 			|| payload?.runtimePresetID
@@ -986,9 +986,41 @@ var SystematicReviewerLocalExecResponsesBridge = {
 			apiConnections,
 			requestedPresetID,
 			resolvedPreset,
-			role,
-		};
-	},
+				role,
+			};
+		},
+
+		_localExecRuntimeInvocationSnapshot(payload = {}) {
+			let source = payload?.runtime_invocation_snapshot || payload?.runtimeInvocationSnapshot || null;
+			return source && typeof source == "object" && !Array.isArray(source) ? source : null;
+		},
+
+		_applyLocalExecRuntimeInvocationSnapshot(role = {}, payload = {}) {
+			let snapshot = this._localExecRuntimeInvocationSnapshot(payload);
+			if (!snapshot || String(snapshot?.runtime_type || "").trim() != "local_exec") {
+				return role;
+			}
+			let next = Object.assign({}, role || {});
+			let roleID = String(snapshot?.role_id || payload?.runtime_role_id || payload?.runtimeRoleID || "").trim();
+			next.runtime_type = "local_exec";
+			next.executor_id = String(snapshot?.executor_id || next.executor_id || "").trim();
+			next.executor_path = String(snapshot?.executor_path || next.executor_path || "").trim();
+			next.executor_args = Array.isArray(snapshot?.executor_args) ? snapshot.executor_args.slice() : next.executor_args;
+			next.model = String(snapshot?.model || next.model || "").trim();
+			next.reasoning_effort = String(snapshot?.reasoning_effort || next.reasoning_effort || "").trim();
+			next.timeout_ms = Number(snapshot?.timeout_ms || next.timeout_ms || 0) || next.timeout_ms;
+			next.context_window = Number(snapshot?.context_window || next.context_window || 0) || next.context_window;
+			next.max_output_tokens = Number(snapshot?.max_output_tokens || next.max_output_tokens || 0) || next.max_output_tokens;
+			next.state_mode = "stateless";
+			next.__runtime_invocation_snapshot = {
+				role_id: roleID,
+				preset_id: String(snapshot?.preset_id || "").trim(),
+				model: next.model,
+				executor_id: next.executor_id,
+				executor_path: next.executor_path,
+			};
+			return next;
+		},
 
 	_localExecResponseStoreEntry(responseID = "") {
 		let key = String(responseID || "").trim();
@@ -1176,9 +1208,12 @@ var SystematicReviewerLocalExecResponsesBridge = {
 		}), null, {});
 	},
 
-	async _handleLocalExecResponsesStreamRequest(roleID, payload = {}, handlers = {}, options = {}) {
-		let resolved = await this._localExecResolvedRoleConfig(roleID, payload);
-		let role = resolved.role || this._defaultRuntimeRole(roleID);
+		async _handleLocalExecResponsesStreamRequest(roleID, payload = {}, handlers = {}, options = {}) {
+			let resolved = await this._localExecResolvedRoleConfig(roleID, payload);
+			let role = this._applyLocalExecRuntimeInvocationSnapshot(
+				resolved.role || this._defaultRuntimeRole(roleID),
+				payload
+			);
 		if (role.runtime_type != "local_exec") {
 			throw new Error(`${roleID} is not configured for local executor mode.`);
 		}

@@ -555,11 +555,24 @@ var SystematicReviewerProjectStorage = {
 				softwareCitationItemKey: softwareCitationItem?.key || storedSoftwareCitationItemKey || "",
 			}));
 		}
-		if (!(await this._pathExists(context.logPath))) {
-			await this._writeTextFile(context.logPath, this._defaultWorkflowLogMarkdown(collection, projectType));
-		}
+			if (!(await this._pathExists(context.logPath))) {
+				await this._writeTextFile(context.logPath, this._defaultWorkflowLogMarkdown(collection, projectType));
+			}
+			let memoryPath = this._joinPath(context.projectRoot, "memory.txt");
+			if (!(await this._pathExists(memoryPath))) {
+				await this._writeTextFile(memoryPath, [
+					"# Systematic Reviewer Turn Memory",
+					"",
+					"Append-only chronological turn memory for project inspection and active-memory rebuilds.",
+					"",
+				].join("\n"));
+			}
+			let activeMemoryPath = this._joinPath(context.projectRoot, "active-memory.txt");
+			if (!(await this._pathExists(activeMemoryPath))) {
+				await this._writeTextFile(activeMemoryPath, "");
+			}
 
-		settings.kind = "systematic-reviewer-settings";
+			settings.kind = "systematic-reviewer-settings";
 		settings.version = 1;
 		settings.collection = {
 			library_id: context.libraryID,
@@ -1110,7 +1123,7 @@ var SystematicReviewerProjectStorage = {
 			"",
 			"- This file is the canonical `REPORT.md` for the current collection project.",
 			"- The linked attachment under the `Systematic Reviewer OUTPUTS` item points at this same file.",
-			"- Use `/Autodrive`, `/find`, `/explore`, `/status`, or `/help` in Automation chat for project work.",
+				"- Use `/Autodrive`, `/find`, `/explore`, `/memory`, `/status`, or `/help` in Automation chat for project work.",
 			"",
 		].join("\n");
 	},

@@ -646,40 +646,60 @@ var SystematicReviewerSessions = {
 				available_scopes: availableScopes,
 				transport: nativeTransport ? "native" : "text",
 			});
-			let timeline = await this._loadSessionTimeline(current.context, sessionID);
-			let projection = stateful
-				? SystematicReviewerSlidingContext.buildStatefulProjection({
-					headText,
-					timeline,
-					contextWindow: Number(chatClient?.contextWindow || 0) || 0,
-					maxOutputTokens: Number(chatClient?.maxOutputTokens || 0) || 0,
+				let timeline = await this._loadSessionTimeline(current.context, sessionID);
+				let activeMemoryText = typeof this._readActiveMemoryText == "function"
+					? await this._readActiveMemoryText(current.context)
+					: "";
+				let latestActive = typeof this._latestActiveInstructionEntry == "function"
+					? this._latestActiveInstructionEntry(timeline)
+					: null;
+				let requiredEntrySequenceNos = latestActive?.sequence_no ? [latestActive.sequence_no] : [];
+				let responseTools = typeof this._sessionResponseTools == "function"
+					? this._sessionResponseTools(toolCatalog, {})
+					: [];
+				let projection = stateful
+					? SystematicReviewerSlidingContext.buildStatefulProjection({
+						headText,
+						activeMemoryText,
+						tools: responseTools,
+						timeline,
+						contextWindow: Number(chatClient?.contextWindow || 0) || 0,
+						maxOutputTokens: Number(chatClient?.maxOutputTokens || 0) || 0,
 				})
 				: SystematicReviewerSlidingContext.buildProjection({
 					headText,
+					tools: responseTools,
 					headEntry: {
 						role: "system",
 						event_type: "system_prompt",
 						title: "Pinned Prompt Context",
 						content: headText,
 						synthetic: true,
-					},
-					timeline,
-					contextWindow: Number(chatClient?.contextWindow || 0) || 0,
-					maxOutputTokens: Number(chatClient?.maxOutputTokens || 0) || 0,
-					pinnedStartCount: 4,
-					maxContentChars: 12000,
-					maxPayloadChars: 8000,
-				});
-			return {
+						},
+						timeline,
+						contextWindow: Number(chatClient?.contextWindow || 0) || 0,
+						maxOutputTokens: Number(chatClient?.maxOutputTokens || 0) || 0,
+						activeMemoryText,
+						requiredEntrySequenceNos,
+						pinnedStartCount: 0,
+						maxContentChars: 12000,
+						maxPayloadChars: 8000,
+					});
+				projection.compaction_status = typeof this._memoryCompactionStatus == "function"
+					? this._memoryCompactionStatus(current.context)
+					: null;
+				return {
 				runtime: {
 					chat_preset_id: String(runtimeState?.chat_preset_id || "default").trim() || "default",
 					state_mode: stateful ? "stateful" : "stateless",
 					context_window: Number(chatClient?.contextWindow || 0) || 0,
-					max_output_tokens: Number(chatClient?.maxOutputTokens || 0) || 0,
-				},
-				head_text: headText,
-				projection,
-			};
+						max_output_tokens: Number(chatClient?.maxOutputTokens || 0) || 0,
+					},
+					head_text: projection.head_text || headText,
+					base_head_text: headText,
+					active_memory_text: activeMemoryText,
+					projection,
+				};
 		}
 		finally {
 			await preparedChat?.release?.();
@@ -806,14 +826,29 @@ var SystematicReviewerSessions = {
 			chat_budget: promptState?.projection
 				? {
 					stateful: !!promptState.projection.stateful,
+					synthetic: !!promptState.projection.synthetic,
 					context_window: Number(promptState.projection.context_window || 0) || 0,
-					safe_cap_tokens: Number(promptState.projection.safe_cap_tokens || 0) || 0,
-					max_output_tokens: Number(promptState.projection.max_output_tokens || 0) || 0,
-					input_budget_tokens: Number(promptState.projection.input_budget_tokens || 0) || 0,
-					estimated_input_tokens: Number(promptState.projection.estimated_input_tokens || 0) || 0,
-					truncated: !!promptState.projection.truncated,
-					omitted_count: Number(promptState.projection.omitted_count || 0) || 0,
-					pending_message_count: pending_messages.length,
+						safe_cap_tokens: Number(promptState.projection.safe_cap_tokens || 0) || 0,
+						max_output_tokens: Number(promptState.projection.max_output_tokens || 0) || 0,
+						input_budget_tokens: Number(promptState.projection.input_budget_tokens || 0) || 0,
+						target_input_budget_tokens: Number(promptState.projection.target_input_budget_tokens || 0) || 0,
+						head_tokens: Number(promptState.projection.head_tokens || 0) || 0,
+						active_memory_tokens: Number(promptState.projection.active_memory_tokens || 0) || 0,
+						tool_schema_tokens: Number(promptState.projection.tool_schema_tokens || 0) || 0,
+						truncation_notice_tokens: Number(promptState.projection.truncation_notice_tokens || 0) || 0,
+						raw_history_tokens: Number(promptState.projection.raw_history_tokens || 0) || 0,
+						used_input_tokens: Number(promptState.projection.used_input_tokens || 0) || 0,
+						estimated_input_tokens: Number(promptState.projection.estimated_input_tokens || 0) || 0,
+						fits_budget: promptState.projection.fits_budget !== false,
+						over_budget_tokens: Number(promptState.projection.over_budget_tokens || 0) || 0,
+						truncated: !!promptState.projection.truncated,
+						omitted_count: Number(promptState.projection.omitted_count || 0) || 0,
+						compaction_status: promptState.projection.compaction_status || null,
+						head_text: String(promptState.projection.head_text || ""),
+						active_memory_text: String(promptState.projection.active_memory_text || ""),
+						tool_schema_text: String(promptState.projection.tool_schema_text || ""),
+						prompt_text: String(promptState.projection.prompt_text || ""),
+						pending_message_count: pending_messages.length,
 					pending_message_tokens: pendingTokens,
 					pending_steer_count: steerCount,
 					pending_steer_tokens: pendingSteerTokens,
@@ -862,10 +897,11 @@ var SystematicReviewerSessions = {
 		};
 		let opened = await this._sessionOpen(current, { sessionID, surface });
 		let activeSessionID = opened.session.session_id;
-		await this._appendSessionMessage(current.context, activeSessionID, "user", text, {
-			eventType: "user_message",
-			title: options.origin == "api" ? "API Message" : "",
-		});
+			let userEntry = await this._appendSessionMessage(current.context, activeSessionID, "user", text, {
+				eventType: "user_message",
+				title: options.origin == "api" ? "API Message" : "",
+				payload: options.origin ? { origin: String(options.origin || "").trim() } : null,
+			});
 		if (options.emitProgress) {
 			await this._refreshAllControllers();
 		}
@@ -880,7 +916,11 @@ var SystematicReviewerSessions = {
 				}
 				return this._sessionStatus(current, activeSessionID, { surface });
 			}
-			await this._runSessionAgent(current, activeSessionID, text, options);
+				await this._runSessionAgent(current, activeSessionID, text, Object.assign({}, options || {}, {
+					activeEntrySequenceNo: Number(userEntry?.sequence_no || 0) || 0,
+					activeEntrySequenceNos: [Number(userEntry?.sequence_no || 0) || 0].filter(Boolean),
+					activeInstructionPayload: userEntry?.payload || { origin: options.origin || "ui" },
+				}));
 		}
 		catch (error) {
 			if (isAbortError(error)) {

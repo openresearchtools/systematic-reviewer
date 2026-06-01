@@ -886,13 +886,14 @@ var SystematicReviewerWorkflowServer = (() => {
 			});
 		}
 		catch (error) {
-			await writeSSEEvent(writer, {
-				type: "stream.error",
-				error: {
-					message: error?.message || String(error),
-				},
-			});
-		}
+				await writeSSEEvent(writer, {
+					type: "stream.error",
+					error: {
+						message: error?.message || String(error),
+					},
+					result: error?.automation_result || null,
+				});
+			}
 		finally {
 			closeAsyncWriter(response, writer);
 		}

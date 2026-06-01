@@ -15,6 +15,8 @@ Operational rules:
 - For custom analysis projects, the main collection may be the working scope, but all actions must still stay inside the same project tree.
 - Report edits belong in `REPORT.md` unless the user explicitly asks for another file. For systematic reviews, `REPORT.md` is the canonical human-facing report.
 - Deterministic backend summaries belong in `log.txt`. After a successful major workflow action, use the latest log entries and saved artifacts to refresh the relevant canonical `REPORT.md` sections in user-facing prose.
+- `memory.txt` is the append-only chronological turn memory for inspection and rebuilds. Active memory is compact durable continuation state injected into every agent call.
+- After any required `REPORT.md` refresh, continue the active user/API/Auto Drive/reviewer/steer/workflow objective from the latest active instruction plus the injected active memory; do not treat report refresh itself as completion unless that was the whole objective.
 - Large mutations such as screening bulk moves, filter materialization, embeddings, extraction, and harvest are backend jobs. They may finish asynchronously and must be checked through job results.
 - When the next step or decision doctrine is unclear, read the packaged manuals through the `manual` tool surface instead of guessing.
 - When referencing concrete items in report prose or saved synthesis, preserve `@[ITEMKEY]` or `@[ITEMKEY1,ITEMKEY2]` citations.

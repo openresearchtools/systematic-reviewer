@@ -693,10 +693,64 @@ const AUTOMATION_WORKSPACE_CSS = `
   padding:4px 6px;
   vertical-align:top;
 }
-.sr-workspace-message-explore .mw-explore-citation {
-  color:var(--mw-accent);
-}
-.sr-workspace-message .mw-explore-markdown {
+	.sr-workspace-message-explore .mw-explore-citation {
+	  color:var(--mw-accent);
+	}
+	.sr-workspace-message-model-input {
+	  width:min(100%, 98ch);
+	  max-width:100%;
+	  padding:6px 8px;
+	  border-left:1px solid color-mix(in srgb, var(--mw-accent) 42%, var(--mw-border) 58%);
+	  background:color-mix(in srgb, var(--mw-panel-soft) 97%, var(--mw-panel) 3%);
+	}
+	.sr-model-input-preview-summary {
+	  color:var(--mw-text);
+	}
+	.sr-model-input-preview-meta {
+	  margin:4px 0 6px 12px;
+	  color:var(--mw-muted);
+	  font-size:var(--mw-font-11);
+	  line-height:1.35;
+	  white-space:normal;
+	}
+	.sr-model-input-preview-sections {
+	  display:flex;
+	  flex-direction:column;
+	  gap:6px;
+	  margin-left:12px;
+	}
+	.sr-model-input-preview-section {
+	  border:1px solid var(--mw-border);
+	  border-radius:7px !important;
+	  background:var(--mw-panel);
+	  overflow:hidden;
+	}
+	.sr-model-input-preview-section-summary {
+	  cursor:pointer;
+	  padding:5px 7px;
+	  font-size:var(--mw-font-11);
+	  font-weight:600;
+	  color:var(--mw-text);
+	}
+	.sr-model-input-preview-text {
+	  box-sizing:border-box;
+	  display:block;
+	  width:100%;
+	  min-height:220px;
+	  max-height:460px;
+	  resize:vertical;
+	  border:0;
+	  border-top:1px solid var(--mw-border);
+	  background:var(--mw-control-bg);
+	  color:var(--mw-text);
+	  font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	  font-size:var(--mw-font-11);
+	  line-height:1.35;
+	  padding:8px;
+	  white-space:pre;
+	  overflow:auto;
+	}
+	.sr-workspace-message .mw-explore-markdown {
   display:flex;
   flex-direction:column;
   gap:6px;
@@ -1138,25 +1192,42 @@ const AUTOMATION_WORKSPACE_CSS = `
   align-items:center;
   justify-content:center;
   flex:0 0 auto;
-  min-width:44px;
+  min-width:52px;
   min-height:28px;
-  padding:0 6px;
-  border:0;
-  background:var(--mw-panel-soft);
+  padding:0 8px;
+  border:1px solid var(--mw-border);
+  border-radius:7px !important;
+  background:var(--mw-control-bg);
   color:var(--mw-text);
   cursor:pointer;
   user-select:none;
   white-space:nowrap;
   overflow:visible;
+  gap:4px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.04);
 }
 .sr-chat-token-widget.is-warning {
   border-color: color-mix(in srgb, var(--mw-accent) 65%, var(--mw-border) 35%);
   color: var(--mw-accent);
 }
 .sr-chat-token-widget-label {
-  font-size:var(--mw-font-11);
+  font-size:var(--mw-font-10);
+  color:var(--mw-muted);
   font-weight:600;
   white-space:nowrap;
+}
+.sr-chat-token-widget-percent {
+  font-size:var(--mw-font-12);
+  font-weight:600;
+  line-height:1;
+  color:var(--mw-text);
+  white-space:nowrap;
+}
+.sr-chat-token-widget-sub {
+  font-size:var(--mw-font-10);
+  color:var(--mw-muted);
+  white-space:nowrap;
+  display:none;
 }
 .sr-chat-inline-popover-layer {
   position:absolute;
@@ -1170,9 +1241,9 @@ const AUTOMATION_WORKSPACE_CSS = `
   display:flex;
   flex-direction:column;
   gap:4px;
-  min-width:250px;
-  max-width:min(360px, calc(100% - 16px));
-  padding:8px;
+  min-width:300px;
+  max-width:min(430px, calc(100% - 16px));
+  padding:12px;
   border:1px solid var(--mw-border);
   border-radius:10px !important;
   background:var(--mw-panel);
@@ -1207,9 +1278,88 @@ const AUTOMATION_WORKSPACE_CSS = `
   margin-top:2px;
 }
 .sr-chat-token-tooltip-title {
+  font-size:var(--mw-font-16);
+  font-weight:600;
+  color:var(--mw-text);
+}
+.sr-chat-context-summary {
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  align-items:center;
+  padding:4px 0 8px;
+  border-bottom:1px solid var(--mw-border);
+}
+.sr-chat-context-summary-label {
+  font-size:var(--mw-font-12);
+  color:var(--mw-muted);
+}
+.sr-chat-context-summary-main {
+  font-size:var(--mw-font-18);
+  font-weight:700;
+  color:var(--mw-text);
+}
+.sr-chat-context-summary-sub {
+  font-size:var(--mw-font-12);
+  color:var(--mw-muted);
+}
+.sr-chat-context-meter {
+  width:100%;
+  height:7px;
+  border-radius:999px;
+  background:var(--mw-panel-soft);
+  overflow:hidden;
+  border:1px solid var(--mw-border);
+}
+.sr-chat-context-meter-fill {
+  height:100%;
+  width:0%;
+  background:var(--mw-accent);
+}
+.sr-chat-context-meter-fill.is-warning {
+  background:color-mix(in srgb, var(--mw-accent) 70%, #c45 30%);
+}
+.sr-chat-context-breakdown {
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+.sr-chat-context-payloads {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding-top:4px;
+  border-top:1px solid var(--mw-border);
+}
+.sr-chat-context-payload {
+  border:1px solid var(--mw-border);
+  border-radius:7px !important;
+  background:var(--mw-panel-soft);
+  overflow:hidden;
+}
+.sr-chat-context-payload summary {
+  cursor:pointer;
+  padding:5px 7px;
   font-size:var(--mw-font-11);
   font-weight:600;
   color:var(--mw-text);
+}
+.sr-chat-context-payload-text {
+  box-sizing:border-box;
+  width:100%;
+  min-height:160px;
+  max-height:320px;
+  resize:vertical;
+  border:0;
+  border-top:1px solid var(--mw-border);
+  background:var(--mw-control-bg);
+  color:var(--mw-text);
+  font:inherit;
+  font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size:var(--mw-font-11);
+  line-height:1.35;
+  padding:7px;
+  white-space:pre;
 }
 .sr-chat-token-tooltip-line {
   display:flex;
@@ -1834,18 +1984,32 @@ const AUTOMATION_WORKSPACE_CSS = `
   overflow-wrap:anywhere;
   word-break:break-word;
 }
-.sr-log-surface .mw-explore-citation {
-  overflow-wrap:anywhere;
-  word-break:break-word;
-}
-.sr-log-empty {
-  color:var(--mw-muted);
-  font-size:var(--mw-font-12);
-}
-.sr-rollback-dialog {
-  width:min(1480px, calc(100vw - 24px));
-  max-height:calc(100vh - 24px);
-}
+	.sr-log-surface .mw-explore-citation {
+	  overflow-wrap:anywhere;
+	  word-break:break-word;
+	}
+	.sr-log-empty {
+	  color:var(--mw-muted);
+	  font-size:var(--mw-font-12);
+	}
+	.sr-memory-tabs {
+	  display:flex;
+	  flex-wrap:wrap;
+	  gap:4px;
+	  align-items:center;
+	}
+	.sr-memory-tab {
+	  min-height:28px;
+	}
+	.sr-memory-tab.active {
+	  color:var(--mw-accent);
+	  border-color:color-mix(in srgb, var(--mw-accent) 45%, var(--mw-border) 55%);
+	  background:color-mix(in srgb, var(--mw-accent) 10%, var(--mw-panel) 90%);
+	}
+	.sr-rollback-dialog {
+	  width:min(1480px, calc(100vw - 24px));
+	  max-height:calc(100vh - 24px);
+	}
 .sr-rollback-dialog .sr-dialog-body {
   display:flex;
   flex-direction:column;
@@ -2283,6 +2447,13 @@ function createNode(tag, options = {}) {
       }
     });
   }
+  if (options.style && typeof options.style === "object") {
+    Object.entries(options.style).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        node.style[key] = String(value);
+      }
+    });
+  }
   if (options.children) {
     for (const child of options.children) {
       if (child) {
@@ -2611,17 +2782,20 @@ function messageBodyText(message = {}) {
 
 function renderedChatMessages(messages = [], state = {}) {
   const source = Array.isArray(messages) ? messages.slice() : [];
-  if (state?.optimisticUserMessage) {
+	  if (state?.optimisticUserMessage) {
     const seen = source.some((entry) =>
       String(entry?.role || "") === "user"
       && String(entry?.content || "") === String(state.optimisticUserMessage.content || "")
       && Number(entry?.sequence_no || 0) > Number(state.chatRun?.sequenceBase || 0)
     );
     if (!seen) {
-      source.push({ ...state.optimisticUserMessage });
-    }
-  }
-  if (Array.isArray(state?.liveProgressRows) && state.liveProgressRows.length) {
+	      source.push({ ...state.optimisticUserMessage });
+	    }
+	  }
+	  if (Array.isArray(state?.promptPreviewRows) && state.promptPreviewRows.length) {
+	    source.push(...state.promptPreviewRows.map((entry) => ({ ...entry })));
+	  }
+	  if (Array.isArray(state?.liveProgressRows) && state.liveProgressRows.length) {
     source.push(...state.liveProgressRows.map((entry) => ({ ...entry })));
   }
   if (state?.liveAssistantMessage?.content) {
@@ -2929,11 +3103,12 @@ export async function createAutomationTab(ctx) {
   const toolbarPrismaBtn = createButton("PRISMA", "sr-workspace-btn sr-citation-action");
   const toolbarCiteBtn = createButton("Cite", "sr-workspace-btn sr-citation-action");
   const toolbarBibliographyBtn = createButton("Bibliography", "sr-workspace-btn sr-citation-action");
-  const saveBtn = createButton("Save", "sr-workspace-btn sr-editor-footer-button sr-workspace-btn-primary", { "data-automation-action": "save" });
-  const exportBtn = createButton("Export", "sr-workspace-btn sr-editor-footer-button");
-  const logBtn = createButton("Log", "sr-workspace-btn sr-editor-footer-button");
-  const rollbackBtn = createButton("Rollback", "sr-workspace-btn sr-editor-footer-button");
-  const propertiesBtn = createButton("Properties", "sr-workspace-btn sr-editor-footer-button");
+	  const saveBtn = createButton("Save", "sr-workspace-btn sr-editor-footer-button sr-workspace-btn-primary", { "data-automation-action": "save" });
+	  const exportBtn = createButton("Export", "sr-workspace-btn sr-editor-footer-button");
+	  const logBtn = createButton("Log", "sr-workspace-btn sr-editor-footer-button");
+	  const memoryBtn = createButton("Memory", "sr-workspace-btn sr-editor-footer-button");
+	  const rollbackBtn = createButton("Rollback", "sr-workspace-btn sr-editor-footer-button");
+	  const propertiesBtn = createButton("Properties", "sr-workspace-btn sr-editor-footer-button");
 
   const headingSelect = createSelect("sr-editor-select sr-editor-command-select");
   headingSelect.append(
@@ -3025,12 +3200,13 @@ export async function createAutomationTab(ctx) {
     toolbarBibliographyBtn,
   ].forEach((node) => node.classList?.add?.("sr-mode-native-or-raw"));
   [
-    saveBtn,
-    exportBtn,
-    logBtn,
-    rollbackBtn,
-    propertiesBtn,
-  ].forEach((node) => node.classList?.add?.("sr-mode-always"));
+	    saveBtn,
+	    exportBtn,
+	    logBtn,
+	    memoryBtn,
+	    rollbackBtn,
+	    propertiesBtn,
+	  ].forEach((node) => node.classList?.add?.("sr-mode-always"));
 
   const preview = createNode("div", { className: "sr-workspace-preview", attrs: { "data-automation-surface": "preview" } });
   const nativeEditor = createNode("div", { className: "sr-workspace-native", attrs: { hidden: "hidden", "data-automation-surface": "native" } });
@@ -3357,10 +3533,10 @@ export async function createAutomationTab(ctx) {
         className: "sr-editor-footer-main",
         children: [
           createNode("div", { className: "sr-mode-tabs", children: [modePreviewBtn, modeNativeBtn, modeRawBtn] }),
-          createNode("div", {
-            className: "sr-editor-footer-actions",
-            children: [propertiesBtn, saveBtn, exportBtn, logBtn, rollbackBtn],
-          }),
+	          createNode("div", {
+	            className: "sr-editor-footer-actions",
+	            children: [propertiesBtn, saveBtn, exportBtn, logBtn, memoryBtn, rollbackBtn],
+	          }),
           createNode("div", {
             className: "sr-editor-footer-zoom",
             children: [
@@ -3473,10 +3649,11 @@ export async function createAutomationTab(ctx) {
     queuedDraft: null,
     chatPopover: null,
     chatPopoverTimer: 0,
-    chatStreamAbortController: null,
-    liveAssistantMessage: null,
-    liveProgressRows: [],
-    chatDetailState: new Map(),
+	    chatStreamAbortController: null,
+	    liveAssistantMessage: null,
+	    liveProgressRows: [],
+	    promptPreviewRows: [],
+	    chatDetailState: new Map(),
     previewModeLocked: false,
     previewRefreshTimer: 0,
     previewRefreshToken: 0,
@@ -3508,8 +3685,10 @@ export async function createAutomationTab(ctx) {
     bulletStyleSelect,
     propertiesBtn,
     saveBtn,
-    exportBtn,
-    rollbackBtn,
+	    exportBtn,
+	    logBtn,
+	    memoryBtn,
+	    rollbackBtn,
     sessionSelect,
     pageViewScaleRange,
     pageViewScaleValue,
@@ -4674,15 +4853,24 @@ export async function createAutomationTab(ctx) {
     }
   }
 
-  function clearLiveChatTransientState() {
-    state.liveAssistantMessage = null;
-    state.liveProgressRows = [];
-    state.chatLastPaintYieldMs = 0;
+	  function clearLiveChatTransientState() {
+	    state.liveAssistantMessage = null;
+	    state.liveProgressRows = [];
+	    state.chatLastPaintYieldMs = 0;
     for (const key of Array.from(state.chatDetailState.keys())) {
       if (String(key || "").startsWith("live:")) {
         state.chatDetailState.delete(key);
-      }
-    }
+	    }
+	  }
+
+	  function clearPromptPreviewRows() {
+	    state.promptPreviewRows = [];
+	    for (const key of Array.from(state.chatDetailState.keys())) {
+	      if (String(key || "").startsWith("prompt-preview:")) {
+	        state.chatDetailState.delete(key);
+	      }
+	    }
+	  }
   }
 
   function upsertLiveProgressRow(key, entry = {}) {
@@ -4725,13 +4913,49 @@ export async function createAutomationTab(ctx) {
     removeLiveProgressRows((row) => String(row?._live_key || "") === liveKey);
   }
 
-  function removeLiveToolProgress(callID = "") {
-    const target = String(callID || "").trim();
-    if (!target) {
-      return;
-    }
-    removeLiveProgressRows((row) => String(row?.payload?.call_id || "") === target);
-  }
+	  function removeLiveToolProgress(callID = "") {
+	    const target = String(callID || "").trim();
+	    if (!target) {
+	      return;
+	    }
+	    removeLiveProgressRows((row) => String(row?.payload?.call_id || "") === target);
+	  }
+
+	  function upsertPromptPreviewRow(event = {}) {
+	    const step = Math.max(1, Number(event?.step || 0) || 1);
+	    const liveKey = `prompt-preview:${step}`;
+	    const budget = event?.chat_budget && typeof event.chat_budget === "object" ? event.chat_budget : {};
+	    const row = {
+	      role: "system",
+	      event_type: "model_input_preview",
+	      title: `Model Input Step ${step}`,
+	      content: "Exact model input prepared for this step.",
+	      synthetic: true,
+	      _live_key: liveKey,
+	      payload: {
+	        step,
+	        stateful: !!event?.stateful,
+	        model: String(event?.model || "").trim(),
+	        previous_response_id: String(event?.previous_response_id || "").trim(),
+	        input_text: String(event?.input_text || ""),
+	        instructions_text: String(event?.instructions_text || ""),
+	        head_text: String(event?.head_text || ""),
+	        active_memory_text: String(event?.active_memory_text || ""),
+	        tool_schema_text: String(event?.tool_schema_text || ""),
+	        prompt_text: String(event?.prompt_text || ""),
+	        chat_budget: budget,
+	      },
+	    };
+	    const rows = Array.isArray(state.promptPreviewRows) ? state.promptPreviewRows.slice() : [];
+	    const index = rows.findIndex((entry) => String(entry?._live_key || "") === liveKey);
+	    if (index >= 0) {
+	      rows[index] = row;
+	    }
+	    else {
+	      rows.push(row);
+	    }
+	    state.promptPreviewRows = rows;
+	  }
 
   function applySidebarWidth(widthPx) {
     const shellWidth = Math.max(0, Math.round(shell.getBoundingClientRect().width || 0));
@@ -5166,81 +5390,78 @@ export async function createAutomationTab(ctx) {
     syncChatModelPopoverFields();
   }
 
-  function estimateTextTokens(value = "") {
-    const text = String(value || "").replace(/\s+/g, " ").trim();
-    if (!text) {
-      return 0;
-    }
-    const words = text.split(/\s+/).filter(Boolean).length;
-    const lines = text.split(/\r?\n/).length;
-    return Math.max(1, Math.round((text.length / 4) + (words * 0.12) + (lines * 0.35)));
-  }
+function estimateTextTokens(value = "") {
+	    const text = String(value || "").replace(/\s+/g, " ").trim();
+	    if (!text) {
+	      return 0;
+	    }
+	    const words = text.split(/\s+/).filter(Boolean).length;
+	    const lines = text.split(/\r?\n/).length;
+	    return Math.max(1, Math.round((text.length / 4) + (words * 0.12) + (lines * 0.35)));
+	  }
 
-  function estimatedChatHistoryTokens() {
-    const entries = Array.isArray(state.bootstrap?.chat_history_raw) && state.bootstrap.chat_history_raw.length
-      ? state.bootstrap.chat_history_raw
-      : (Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
-    return entries.reduce((sum, entry) => {
-      if (entry?.context_excluded) {
-        return sum;
-      }
-      return sum + estimateTextTokens(serializeTimelineEntry(entry));
-    }, 0);
-  }
-
-  function fallbackChatBudgetFromSelectedPreset() {
-    const preset = selectedChatPreset();
-    if (!preset) {
-      return null;
-    }
-    const openCodeModel = isOpenCodePreset(preset) ? selectedOpenCodeModel(preset) : null;
-    const contextWindow = Number(openCodeModel?.safe_context_window || preset?.context_window || 0) || 0;
-    const maxOutput = Number(openCodeModel?.safe_max_output_tokens || preset?.max_output_tokens || 0) || 0;
-    if (!contextWindow && !maxOutput) {
-      return null;
-    }
-    const stateful = String(preset?.state_mode || "").trim() === "stateful";
-    const safeCap = stateful || !contextWindow ? 0 : Math.max(0, Math.floor(contextWindow * 0.9));
-    const pending = pendingMessages();
-    const pendingSteer = pending.filter((entry) => String(entry?.mode || "").trim() === "steer");
-    const pendingQueued = pending.filter((entry) => String(entry?.mode || "").trim() !== "steer");
-    return {
-      synthetic: true,
-      stateful,
-      context_window: contextWindow,
-      safe_cap_tokens: safeCap,
-      max_output_tokens: maxOutput,
-      input_budget_tokens: stateful ? 0 : Math.max(0, safeCap - maxOutput),
-      estimated_input_tokens: estimatedChatHistoryTokens(),
-      truncated: false,
-      omitted_count: 0,
-      pending_message_count: pending.length,
-      pending_message_tokens: pendingMessageTokens(pending),
-      pending_steer_count: pendingSteer.length,
-      pending_steer_tokens: pendingMessageTokens(pendingSteer),
-      pending_queued_count: pendingQueued.length,
-      pending_queued_tokens: pendingMessageTokens(pendingQueued),
-    };
-  }
+	  function formatCompactTokens(value) {
+	    const number = Math.max(0, Number(value || 0) || 0);
+	    if (number >= 1000000) {
+	      return `${(number / 1000000).toFixed(number >= 10000000 ? 0 : 1)}m`;
+	    }
+	    if (number >= 1000) {
+	      return `${Math.round(number / 1000)}k`;
+	    }
+	    return String(number);
+	  }
 
   function applyChatBudget(nextBudget = null) {
     if (!nextBudget || typeof nextBudget != "object") {
       return;
     }
+    const hydrated = hydrateChatBudget(nextBudget);
     state.bootstrap = {
       ...(state.bootstrap || {}),
-      chat_budget: nextBudget,
+      chat_budget: hydrated,
     };
     if (state.bootstrap?.current_project) {
-      state.bootstrap.current_project.chat_budget = nextBudget;
+      state.bootstrap.current_project.chat_budget = hydrated;
     }
     renderChatBudget();
   }
 
+  function currentPromptProjection() {
+    return state.bootstrap?.prompt_projection
+      || state.bootstrap?.current_project?.prompt_projection
+      || null;
+  }
+
+  function hydrateChatBudget(budget = null) {
+    if (!budget || typeof budget !== "object") {
+      return budget || null;
+    }
+    const projection = currentPromptProjection();
+    if (!projection || typeof projection !== "object") {
+      return budget;
+    }
+    return {
+      ...budget,
+      head_text: budget.head_text !== undefined ? budget.head_text : String(projection.head_text || ""),
+      active_memory_text: budget.active_memory_text !== undefined ? budget.active_memory_text : String(projection.active_memory_text || ""),
+      tool_schema_text: budget.tool_schema_text !== undefined ? budget.tool_schema_text : String(projection.tool_schema_text || ""),
+      prompt_text: budget.prompt_text !== undefined ? budget.prompt_text : String(projection.prompt_text || ""),
+      head_tokens: Number(budget.head_tokens || projection.head_tokens || 0) || 0,
+      active_memory_tokens: Number(budget.active_memory_tokens || projection.active_memory_tokens || 0) || 0,
+      tool_schema_tokens: Number(budget.tool_schema_tokens || projection.tool_schema_tokens || 0) || 0,
+      truncation_notice_tokens: Number(budget.truncation_notice_tokens || projection.truncation_notice_tokens || 0) || 0,
+      raw_history_tokens: Number(budget.raw_history_tokens || projection.raw_history_tokens || 0) || 0,
+    };
+  }
+
   function currentChatBudget() {
-    return state.bootstrap?.chat_budget
+    const budget = state.bootstrap?.chat_budget
       || state.bootstrap?.current_project?.chat_budget
-      || fallbackChatBudgetFromSelectedPreset();
+      || null;
+    if (!budget || budget.synthetic) {
+      return null;
+    }
+    return hydrateChatBudget(budget);
   }
 
   function pendingMessageTokens(entries = []) {
@@ -5667,6 +5888,16 @@ export async function createAutomationTab(ctx) {
   }
 
   function openChatBudgetPopover(widget, details = {}) {
+    const formatTokens = (value) => {
+      const number = Math.max(0, Number(value || 0) || 0);
+      if (number >= 1000000) {
+        return `${(number / 1000000).toFixed(number >= 10000000 ? 0 : 1)}m`;
+      }
+      if (number >= 1000) {
+        return `${Math.round(number / 1000)}k`;
+      }
+      return String(number);
+    };
     const buildLine = (label, value) => createNode("div", {
       className: "sr-chat-token-tooltip-line",
       children: [
@@ -5674,26 +5905,85 @@ export async function createAutomationTab(ctx) {
         createNode("strong", { textContent: value }),
       ],
     });
-    openChatPopover("budget", widget, () => createNode("div", {
+		    const percent = Math.max(0, Math.min(999, Number(details.percent || 0) || 0));
+		    const meterPercent = Math.max(0, Math.min(100, percent));
+		    const targetPercent = Number(details.targetInputBudget || 0) > 0
+		      ? Math.max(0, Math.min(999, Math.round(((Number(details.usedNextSend || 0) || 0) / (Number(details.targetInputBudget || 0) || 1)) * 100)))
+		      : 0;
+		    const targetRemaining = Math.max(0, (Number(details.targetInputBudget || 0) || 0) - (Number(details.usedNextSend || 0) || 0));
+	    openChatPopover("budget", widget, () => createNode("div", {
       className: "sr-chat-inline-popover-body",
       children: [
         createNode("div", {
-          className: "sr-chat-inline-popover-title",
-          textContent: details.stateful ? "Provider-managed context" : "Prompt budget",
+          className: "sr-chat-context-summary",
+          children: [
+            createNode("div", {
+              className: "sr-chat-context-summary-label",
+              textContent: "Context window",
+            }),
+            createNode("div", {
+              className: "sr-chat-context-summary-main",
+              textContent: details.stateful ? "Provider managed" : `${percent}% full`,
+            }),
+	            createNode("div", {
+	              className: "sr-chat-context-summary-sub",
+	              children: details.stateful
+	                ? [
+	                    createNode("div", { textContent: `${formatTokens(details.usedNextSend || 0)} visible tokens + provider history` }),
+	                  ]
+	                : [
+	                    createNode("div", { textContent: `${formatTokens(details.windowUsedTokens || 0)} / ${formatTokens(details.contextWindow || 0)} total context` }),
+	                    createNode("div", { textContent: `${formatTokens(details.usedNextSend || 0)} / ${formatTokens(details.targetInputBudget || details.inputBudget || 0)} send target` }),
+	                  ],
+	            }),
+            createNode("div", {
+              className: "sr-chat-context-meter",
+              children: [
+                createNode("div", {
+                  className: `sr-chat-context-meter-fill${details.wouldTruncate ? " is-warning" : ""}`,
+                  style: { width: `${meterPercent}%` },
+                }),
+              ],
+            }),
+          ],
         }),
-        buildLine("Prompt now", String(details.promptNow || 0)),
-        buildLine("Draft message", String(details.draftTokens || 0)),
-        buildLine("Steer next", `${details.steerCount || 0} / ${details.steerTokens || 0} tokens`),
-        buildLine("Queued after this", `${details.queuedCount || 0} / ${details.queuedTokens || 0} tokens`),
-        buildLine("Used next send", details.stateful ? "Managed by runtime" : String(details.usedNextSend || 0)),
-        buildLine("Input budget", details.stateful ? "Managed by runtime" : String(details.inputBudget || 0)),
-        buildLine("Reserved output", String(details.maxOutput || 0)),
-        buildLine("Safe cap / window", `${details.safeCap || 0} / ${details.contextWindow || 0}`),
-        buildLine("Middle truncation", details.stateful
-          ? "Managed by runtime"
-          : (details.wouldTruncate
-            ? `Active${details.omittedCount ? ` (${details.omittedCount} hidden)` : ""}`
-            : "Off")),
+        createNode("div", {
+	          className: "sr-chat-context-breakdown",
+	          children: [
+	            buildLine("Context used", details.stateful ? "Provider managed" : `${formatTokens(details.windowUsedTokens || 0)} / ${formatTokens(details.contextWindow || 0)}`),
+	            buildLine("Next send", details.stateful ? "Provider managed" : `${formatTokens(details.usedNextSend || 0)} / ${formatTokens(details.targetInputBudget || details.inputBudget || 0)} target`),
+	            buildLine("System + active memory", `${formatTokens(details.headTokens || 0)} total`),
+            buildLine("Active memory", formatTokens(details.activeMemoryTokens || 0)),
+            buildLine("Tool schemas", formatTokens(details.toolSchemaTokens || 0)),
+	            buildLine("Selected history", formatTokens(details.selectedHistoryTokens || 0)),
+	            buildLine("Truncation notice", formatTokens(details.truncationNoticeTokens || 0)),
+	            buildLine("Raw history", formatTokens(details.rawHistoryTokens || 0)),
+	            buildLine("Draft message", formatTokens(details.draftTokens || 0)),
+	            buildLine("Steer next", `${details.steerCount || 0} / ${formatTokens(details.steerTokens || 0)}`),
+	            buildLine("Queued after this", `${details.queuedCount || 0} / ${formatTokens(details.queuedTokens || 0)}`),
+		            buildLine("Input budget", details.stateful ? "Provider managed" : formatTokens(details.inputBudget || 0)),
+		            !details.stateful ? buildLine("Send target", `${formatTokens(details.targetInputBudget || 0)} (${targetPercent}% used)`) : null,
+	            !details.stateful ? buildLine("Target room", formatTokens(targetRemaining)) : null,
+	            buildLine("Reserved output", formatTokens(details.maxOutput || 0)),
+            buildLine("Safe cap / window", `${formatTokens(details.safeCap || 0)} / ${formatTokens(details.contextWindow || 0)}`),
+            buildLine("Omitted entries", String(details.omittedCount || 0)),
+            buildLine("Memory update", details.compactionStatus || "Idle"),
+            buildLine("Middle truncation", details.stateful
+              ? "Provider managed"
+              : (details.wouldTruncate
+                ? `Active${details.omittedCount ? ` (${details.omittedCount} hidden)` : ""}`
+                : "Off")),
+          ],
+        }),
+	        createNode("div", {
+	          className: "sr-chat-context-payloads",
+	          children: [
+	            createNode("div", {
+	              className: "sr-chat-inline-popover-copy",
+	              textContent: "The exact model input is shown as a Model input block in the chat for the current run.",
+	            }),
+	          ],
+	        }),
       ],
     }), {
       autoClose: true,
@@ -5717,6 +6007,16 @@ export async function createAutomationTab(ctx) {
     const contextWindow = Number(budget.context_window || 0) || 0;
     const maxOutput = Number(budget.max_output_tokens || 0) || 0;
     const safeCap = Number(budget.safe_cap_tokens || 0) || 0;
+    const formatTokens = (value) => {
+      const number = Math.max(0, Number(value || 0) || 0);
+      if (number >= 1000000) {
+        return `${(number / 1000000).toFixed(number >= 10000000 ? 0 : 1)}m`;
+      }
+      if (number >= 1000) {
+        return `${Math.round(number / 1000)}k`;
+      }
+      return String(number);
+    };
     const pendingSteerCount = Number(budget?.pending_steer_count || 0) || pending.filter((entry) => String(entry?.mode || "") === "steer").length;
     const pendingQueuedCount = Number(budget?.pending_queued_count || 0) || pending.filter((entry) => String(entry?.mode || "") !== "steer").length;
     const pendingSteerTokens = Number(budget?.pending_steer_tokens || 0) || pendingMessageTokens(pending.filter((entry) => String(entry?.mode || "") === "steer"));
@@ -5730,22 +6030,33 @@ export async function createAutomationTab(ctx) {
         steerTokens: pendingSteerTokens,
         queuedCount: pendingQueuedCount,
         queuedTokens: pendingQueuedTokens,
-        contextWindow,
-        maxOutput,
-        safeCap,
-        inputBudget: "Managed by runtime",
-        usedNextSend: "Managed by runtime",
+	        contextWindow,
+	        maxOutput,
+	        safeCap,
+	        headTokens: Number(budget.head_tokens || 0) || 0,
+	        activeMemoryTokens: Number(budget.active_memory_tokens || 0) || 0,
+	        toolSchemaTokens: Number(budget.tool_schema_tokens || 0) || 0,
+	        truncationNoticeTokens: Number(budget.truncation_notice_tokens || 0) || 0,
+	        selectedHistoryTokens: Math.max(0, (Number(budget.estimated_input_tokens || 0) || 0) - (Number(budget.head_tokens || 0) || 0) - (Number(budget.tool_schema_tokens || 0) || 0) - (Number(budget.truncation_notice_tokens || 0) || 0)),
+	        rawHistoryTokens: Number(budget.raw_history_tokens || 0) || 0,
+	        compactionStatus: String(budget?.compaction_status?.message || budget?.compaction_status?.status || "Idle").trim() || "Idle",
+		        inputBudget: "Managed by runtime",
+		        usedNextSend: Number(budget.estimated_input_tokens || 0) || 0,
+		        windowUsedTokens: Number(budget.estimated_input_tokens || 0) || 0,
+		        percent: 0,
+	        headText: String(budget.head_text || ""),
+	        activeMemoryText: String(budget.active_memory_text || ""),
+	        toolSchemaText: String(budget.tool_schema_text || ""),
+	        promptText: String(budget.prompt_text || ""),
         wouldTruncate: false,
-        omittedCount: Number(budget.omitted_count || 0) || 0,
-      };
+	        omittedCount: Number(budget.omitted_count || 0) || 0,
+	        targetInputBudget: 0,
+	      };
       const widget = createButton("", "sr-chat-token-widget", {
         "aria-label": "Stateful context widget",
         "data-automation-chat-budget-widget": "true",
       });
-      widget.appendChild(createNode("span", {
-        className: "sr-chat-token-widget-label",
-        textContent: "Stateful",
-      }));
+      widget.appendChild(createNode("span", { className: "sr-chat-token-widget-percent", textContent: "Stateful" }));
       widget.addEventListener("mouseenter", () => openChatBudgetPopover(widget, details));
       widget.addEventListener("mouseleave", () => scheduleChatPopoverClose("budget"));
       widget.addEventListener("focus", () => openChatBudgetPopover(widget, details));
@@ -5761,14 +6072,16 @@ export async function createAutomationTab(ctx) {
       chatBudgetStrip.appendChild(widget);
       return;
     }
-    const currentPromptTokens = Number(budget.estimated_input_tokens || 0) || 0;
-    const estimated = currentPromptTokens + draftTokens + pendingSteerTokens;
-    const inputBudget = Number(budget.input_budget_tokens || 0) || 0;
-    const wouldTruncate = estimated > inputBudget || !!budget.truncated;
-    const percentBase = safeCap > 0 ? safeCap : inputBudget;
-    const percent = percentBase > 0
-      ? Math.max(0, Math.min(999, Math.round((estimated / percentBase) * 100)))
-      : 0;
+	    const currentPromptTokens = Number(budget.estimated_input_tokens || 0) || 0;
+	    const estimated = currentPromptTokens + draftTokens + pendingSteerTokens;
+		    const inputBudget = Number(budget.input_budget_tokens || 0) || 0;
+		    const targetInputBudget = Number(budget.target_input_budget_tokens || 0) || 0;
+		    const wouldTruncate = (targetInputBudget ? estimated > targetInputBudget : estimated > inputBudget) || !!budget.truncated;
+		    const windowUsedTokens = estimated + maxOutput;
+			    const percentBase = contextWindow > 0 ? contextWindow : (safeCap > 0 ? safeCap : inputBudget);
+		    const percent = percentBase > 0
+		      ? Math.max(0, Math.min(999, Math.round((windowUsedTokens / percentBase) * 100)))
+	      : 0;
     const details = {
       stateful: false,
       promptNow: currentPromptTokens,
@@ -5777,22 +6090,33 @@ export async function createAutomationTab(ctx) {
       steerTokens: pendingSteerTokens,
       queuedCount: pendingQueuedCount,
       queuedTokens: pendingQueuedTokens,
-      contextWindow,
-      maxOutput,
-      safeCap,
-      inputBudget,
-      usedNextSend: estimated,
+	      contextWindow,
+	      maxOutput,
+	      safeCap,
+	      headTokens: Number(budget.head_tokens || 0) || 0,
+	      activeMemoryTokens: Number(budget.active_memory_tokens || 0) || 0,
+	      toolSchemaTokens: Number(budget.tool_schema_tokens || 0) || 0,
+	      truncationNoticeTokens: Number(budget.truncation_notice_tokens || 0) || 0,
+	      selectedHistoryTokens: Math.max(0, currentPromptTokens - (Number(budget.head_tokens || 0) || 0) - (Number(budget.tool_schema_tokens || 0) || 0) - (Number(budget.truncation_notice_tokens || 0) || 0)),
+	      rawHistoryTokens: Number(budget.raw_history_tokens || 0) || 0,
+	      compactionStatus: String(budget?.compaction_status?.message || budget?.compaction_status?.status || "Idle").trim() || "Idle",
+		      inputBudget,
+			      targetInputBudget,
+		      usedNextSend: estimated,
+		      windowUsedTokens,
+	      percent,
+      headText: String(budget.head_text || ""),
+      activeMemoryText: String(budget.active_memory_text || ""),
+      toolSchemaText: String(budget.tool_schema_text || ""),
+      promptText: String(budget.prompt_text || ""),
       wouldTruncate,
       omittedCount: Number(budget.omitted_count || 0) || 0,
     };
-    const widget = createButton("", `sr-chat-token-widget${wouldTruncate ? " is-warning" : ""}`, {
-      "aria-label": `${percent}% of the current input budget is in use`,
-      "data-automation-chat-budget-widget": "true",
-    });
-    widget.appendChild(createNode("span", {
-      className: "sr-chat-token-widget-label",
-      textContent: `${percent}%`,
-    }));
+	    const widget = createButton("", `sr-chat-token-widget${wouldTruncate ? " is-warning" : ""}`, {
+		      "aria-label": `${percent}% of the model context window is planned for this send`,
+	      "data-automation-chat-budget-widget": "true",
+	    });
+    widget.appendChild(createNode("span", { className: "sr-chat-token-widget-percent", textContent: `${percent}%` }));
     widget.addEventListener("mouseenter", () => openChatBudgetPopover(widget, details));
     widget.addEventListener("mouseleave", () => scheduleChatPopoverClose("budget"));
     widget.addEventListener("focus", () => openChatBudgetPopover(widget, details));
@@ -5932,12 +6256,19 @@ export async function createAutomationTab(ctx) {
       setChatRun(event.run || null);
       return;
     }
-    if (type === "chat.budget") {
-      applyChatBudget(event?.chat_budget || null);
-      return;
-    }
-    if (type === "model.retry") {
-      const retryIndex = Math.max(1, Number(event?.retry_index || 0) || 1);
+	    if (type === "chat.budget") {
+	      applyChatBudget(event?.chat_budget || null);
+	      return;
+	    }
+	    if (type === "prompt.preview") {
+	      applyChatBudget(event?.chat_budget || null);
+	      upsertPromptPreviewRow(event || {});
+	      renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
+	      await flushChatStreamFrame(true);
+	      return;
+	    }
+		    if (type === "model.retry") {
+	      const retryIndex = Math.max(1, Number(event?.retry_index || 0) || 1);
       const maxRetries = Math.max(1, Number(event?.max_retries || 0) || 5);
       const retryDelayMs = Math.max(0, Number(event?.retry_delay_ms || 0) || 0);
       const delayLabel = retryDelayMs >= 1000 ? ` in ${Math.round(retryDelayMs / 1000)}s` : "";
@@ -5950,11 +6281,50 @@ export async function createAutomationTab(ctx) {
       });
       setStatus(`Retrying model call ${retryIndex}/${maxRetries}${delayLabel}...`, "");
       renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
-      await flushChatStreamFrame(true);
-      return;
-    }
-    if (type === "assistant.delta") {
-      removeLiveProgressRow("model-retry");
+	      await flushChatStreamFrame(true);
+	      return;
+	    }
+			    if (type === "memory.compaction.started" || type === "memory.compaction.retry" || type === "memory.compaction.completed" || type === "memory.compaction.failed" || type === "memory.compaction.warning" || type === "memory.compaction.stopped") {
+			      const memory = event?.memory && typeof event.memory === "object" ? event.memory : {};
+			      const isStarted = type === "memory.compaction.started";
+			      const isRetry = type === "memory.compaction.retry";
+			      const isFailed = type === "memory.compaction.failed";
+		      const isWarning = type === "memory.compaction.warning";
+		      const isStopped = type === "memory.compaction.stopped";
+			      const message = String(memory?.message || (isStarted ? "Updating active memory..." : isRetry ? "Retrying active memory..." : isFailed ? "Active memory update failed" : isWarning ? "Active memory is empty" : isStopped ? "Active memory update stopped" : "Active memory updated")).trim();
+		      const nextBudget = currentChatBudget();
+		      if (nextBudget) {
+		        const activeMemoryTokens = Math.max(0, Number(memory?.active_memory_tokens || 0) || 0);
+		        const previousActiveMemoryTokens = Math.max(0, Number(nextBudget.active_memory_tokens || 0) || 0);
+		        const activeMemoryDelta = activeMemoryTokens > previousActiveMemoryTokens
+		          ? activeMemoryTokens - previousActiveMemoryTokens
+		          : 0;
+		        applyChatBudget({
+		          ...nextBudget,
+		          compaction_status: memory,
+		          ...(activeMemoryTokens ? { active_memory_tokens: activeMemoryTokens } : {}),
+		          ...(activeMemoryDelta ? { head_tokens: (Number(nextBudget.head_tokens || 0) || 0) + activeMemoryDelta } : {}),
+		        });
+		      }
+			      upsertLiveProgressRow("memory-compaction", {
+			        role: "system",
+			        event_type: "assistant_status",
+			        title: isStarted ? "Updating Active Memory" : (isRetry ? "Retrying Active Memory" : (isFailed ? "Active Memory Update Failed" : (isWarning ? "Active Memory Empty" : (isStopped ? "Active Memory Update Stopped" : "Active Memory Updated")))),
+			        content: message,
+			      });
+		      setStatus(message, isFailed ? "error" : "");
+	      renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
+	      await flushChatStreamFrame(true);
+			      if (!isStarted && !isRetry) {
+	        window.setTimeout(() => {
+	          removeLiveProgressRow("memory-compaction");
+	          renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
+	        }, 1800);
+	      }
+	      return;
+	    }
+	    if (type === "assistant.delta") {
+	      removeLiveProgressRow("model-retry");
       const transport = String(event?.transport || "").trim();
       if (transport === "native-structured") {
         state.liveAssistantMessage = null;
@@ -6240,23 +6610,30 @@ export async function createAutomationTab(ctx) {
       if (state.mode === "preview") {
         schedulePreviewRefresh({ force: true });
       }
-      if (resultStatus === "canceled") {
-        setStatus("Session stopped", "ready");
-        return;
-      }
-      const startedQueuedRun = await processNextQueuedMessage({ mode: "queued" });
-      if (!startedQueuedRun) {
-        setStatus("Session updated", "ready");
-      }
-      return;
-    }
-    if (type === "stream.error") {
-      state.optimisticUserMessage = null;
-      clearLiveChatTransientState();
-      setChatRun(null);
-      if (state.mode === "preview") {
-        schedulePreviewRefresh({ force: true });
-      }
+	      if (resultStatus === "canceled") {
+	        setStatus("Session stopped", "ready");
+	        return;
+	      }
+	      if (resultStatus === "error") {
+	        setStatus(event?.result?.run?.error || "Session run failed", "error");
+	        return;
+	      }
+	      const startedQueuedRun = await processNextQueuedMessage({ mode: "queued" });
+	      if (!startedQueuedRun) {
+	        setStatus("Session updated", "ready");
+	      }
+	      return;
+	    }
+	    if (type === "stream.error") {
+	      state.optimisticUserMessage = null;
+	      clearLiveChatTransientState();
+	      if (event?.result) {
+	        applyChatSnapshot(event.result || {});
+	      }
+	      setChatRun(null);
+	      if (state.mode === "preview") {
+	        schedulePreviewRefresh({ force: true });
+	      }
       setStatus(event?.error?.message || "Session run failed", "error");
     }
   }
@@ -6267,10 +6644,11 @@ export async function createAutomationTab(ctx) {
       await beginChatRun(message, options);
       return;
     }
-    await prepareDocumentForChatRun();
-    state.lastCompletedRun = null;
-    closeChatPopover();
-    state.optimisticUserMessage = {
+	    await prepareDocumentForChatRun();
+	    state.lastCompletedRun = null;
+	    closeChatPopover();
+	    clearPromptPreviewRows();
+	    state.optimisticUserMessage = {
       role: "user",
       content: message,
       event_type: "user_message",
@@ -6395,7 +6773,7 @@ export async function createAutomationTab(ctx) {
     return await promise;
   }
 
-  function renderExploreChatMessage(message = {}) {
+	  function renderExploreChatMessage(message = {}) {
     const eventType = String(message?.event_type || "").trim();
     if (!["explore_run", "explore_batch_live"].includes(eventType)) {
       return null;
@@ -6488,10 +6866,106 @@ export async function createAutomationTab(ctx) {
       });
       wrapper.appendChild(batchList);
     }
-    return wrapper;
-  }
+	    return wrapper;
+	  }
 
-  function renderAutodriveMessage(message = {}) {
+	  function promptPreviewTextarea(text = "") {
+	    const textarea = createNode("textarea", {
+	      className: "sr-model-input-preview-text",
+	      attrs: {
+	        readonly: "readonly",
+	        spellcheck: "false",
+	      },
+	    });
+	    textarea.value = String(text || "");
+	    return textarea;
+	  }
+
+	  function promptPreviewSection(label = "", text = "", options = {}) {
+	    const value = String(text || "").trim();
+	    if (!value) {
+	      return null;
+	    }
+	    const details = createNode("details", {
+	      className: "sr-model-input-preview-section",
+	    });
+	    details.open = options.open !== false;
+	    details.appendChild(createNode("summary", {
+	      className: "sr-model-input-preview-section-summary",
+	      textContent: label,
+	    }));
+	    details.appendChild(promptPreviewTextarea(value));
+	    return details;
+	  }
+
+	  function renderModelInputPreviewMessage(message = {}) {
+	    if (String(message?.event_type || "").trim() !== "model_input_preview") {
+	      return null;
+	    }
+	    const payload = message?.payload && typeof message.payload === "object" ? message.payload : {};
+	    const budget = payload?.chat_budget && typeof payload.chat_budget === "object" ? payload.chat_budget : {};
+	    const step = Number(payload?.step || 0) || 0;
+	    const estimated = Number(budget.estimated_input_tokens || budget.used_input_tokens || 0) || 0;
+	    const target = Number(budget.target_input_budget_tokens || 0) || 0;
+	    const inputBudget = Number(budget.input_budget_tokens || 0) || 0;
+	    const over = Math.max(0, Number(budget.over_budget_tokens || 0) || (target && estimated > target ? estimated - target : 0));
+	    const stateful = !!payload.stateful;
+	    const wrapper = createNode("div", {
+	      className: "sr-workspace-message sr-workspace-message-event sr-workspace-message-model-input",
+	    });
+	    const detailsKey = chatMessageKey(message);
+	    const details = createNode("details", {
+	      className: "sr-workspace-message-details sr-model-input-preview",
+	      attrs: {
+	        "data-chat-message-key": detailsKey,
+	      },
+	    });
+	    details.open = state.chatDetailState.has(detailsKey) ? !!state.chatDetailState.get(detailsKey) : true;
+	    details.addEventListener("toggle", () => {
+	      state.chatDetailState.set(detailsKey, !!details.open);
+	    });
+	    details.appendChild(createNode("summary", {
+	      className: "sr-workspace-message-summary sr-model-input-preview-summary",
+	      textContent: [
+	        `Model input${step ? ` step ${step}` : ""}`,
+	        stateful ? "stateful" : "stateless",
+	        target ? `${formatCompactTokens(estimated)} / ${formatCompactTokens(target)} target` : `${formatCompactTokens(estimated)} tokens`,
+	        over ? `${formatCompactTokens(over)} over` : "",
+	      ].filter(Boolean).join(" | "),
+	    }));
+	    details.appendChild(createNode("div", {
+	      className: "sr-model-input-preview-meta",
+	      textContent: [
+	        String(payload?.model || "").trim() ? `Model: ${String(payload.model || "").trim()}` : "",
+	        inputBudget ? `Input budget: ${formatCompactTokens(inputBudget)}` : "",
+	        target ? `Send target: ${formatCompactTokens(target)}` : "",
+	        `System + active memory: ${formatCompactTokens(budget.head_tokens || 0)}`,
+	        `Tool schemas: ${formatCompactTokens(budget.tool_schema_tokens || 0)}`,
+	        `Selected history: ${formatCompactTokens(Math.max(0, estimated - (Number(budget.head_tokens || 0) || 0) - (Number(budget.tool_schema_tokens || 0) || 0) - (Number(budget.truncation_notice_tokens || 0) || 0)))}`,
+	        `Omitted entries: ${Number(budget.omitted_count || 0) || 0}`,
+	      ].filter(Boolean).join(" | "),
+	    }));
+	    const sections = [
+	      promptPreviewSection(
+	        stateful ? "Actual model input payload" : "Actual serialized prompt sent as input",
+	        String(payload?.input_text || payload?.prompt_text || ""),
+	        { open: true }
+	      ),
+	      promptPreviewSection("System instructions plus active memory", String(payload?.head_text || payload?.instructions_text || ""), { open: false }),
+	      promptPreviewSection("Injected active memory only", String(payload?.active_memory_text || ""), { open: false }),
+	      promptPreviewSection("Advertised tool schemas", String(payload?.tool_schema_text || ""), { open: false }),
+	    ].filter(Boolean);
+	    if (sections.length) {
+	      details.appendChild(createNode("div", {
+	        className: "sr-model-input-preview-sections",
+	        children: sections,
+	      }));
+	    }
+	    wrapper.appendChild(details);
+	    return wrapper;
+	  }
+
+	  function renderAutodriveMessage(message = {}) {
     const eventType = String(message?.event_type || "").trim();
     if (!["autodrive_prompt", "autodrive_reviewer"].includes(eventType)) {
       return null;
@@ -6715,13 +7189,13 @@ export async function createAutomationTab(ctx) {
 	      ? messages
 	      : [{
 	          role: "assistant",
-	          content: "Continue the collection session here, use /Autodrive for managed continuation, /find for document arguments, /explore for scoped synthesis, or /status for project state.",
+	          content: "Continue the collection session here, use /Autodrive for managed continuation, /find for document arguments, /explore for scoped synthesis, /memory to rebuild active memory, or /status for project state.",
 	          placeholder: true,
 	          event_type: "assistant_question",
 	        }];
     const list = renderedChatMessages(source, state);
     for (const message of list) {
-      const customNode = renderAutodriveMessage(message) || renderDocumentsFindMessage(message) || renderExploreChatMessage(message);
+	      const customNode = renderModelInputPreviewMessage(message) || renderAutodriveMessage(message) || renderDocumentsFindMessage(message) || renderExploreChatMessage(message);
       if (customNode) {
         chatMessages.appendChild(customNode);
         continue;
@@ -7032,10 +7506,11 @@ export async function createAutomationTab(ctx) {
   }
 
   async function beginChatRun(message, options = {}) {
-    await prepareDocumentForChatRun();
-    state.lastCompletedRun = null;
-    clearLiveChatTransientState();
-    closeChatPopover();
+	    await prepareDocumentForChatRun();
+	    state.lastCompletedRun = null;
+	    clearLiveChatTransientState();
+	    clearPromptPreviewRows();
+	    closeChatPopover();
     state.optimisticUserMessage = {
       role: "user",
       content: message,
@@ -7637,7 +8112,7 @@ export async function createAutomationTab(ctx) {
 	    });
 	  }
 
-  function scheduleGeneratedTOCRefresh(delay = 80) {
+	  function scheduleGeneratedTOCRefresh(delay = 80) {
     if (state.tocRefreshTimer) {
       window.clearTimeout(state.tocRefreshTimer);
       state.tocRefreshTimer = 0;
@@ -15825,11 +16300,158 @@ export async function createAutomationTab(ctx) {
       state.overlay = overlay;
       closeBtn.focus();
     });
-  }
+	  }
 
-  async function showRollbackDialog() {
-    await savePendingDocument({
-      silent: true,
+	  async function showMemoryDialog() {
+	    const result = await ctx.invoke("automation.document.memory.read", {});
+	    closeOverlay();
+	    const overlay = createNode("div", { className: "sr-dialog-backdrop" });
+	    const dialog = createNode("div", {
+	      className: "sr-dialog sr-log-dialog sr-memory-dialog",
+	      attrs: { role: "dialog", "aria-modal": "true" },
+	    });
+	    const closeBtn = createButton("X", "sr-workspace-btn sr-dialog-close", {
+	      type: "button",
+	      "aria-label": "Close memory",
+	    });
+	    const dismissBtn = createButton("Close");
+	    const pathCopy = createNode("div", { className: "sr-dialog-subtitle" });
+	    const footerCopy = createNode("div", { className: "sr-dialog-subtitle" });
+	    const surface = createNode("div", { className: "sr-log-surface" });
+	    const activeTabBtn = createButton("Active memory", "sr-workspace-btn sr-memory-tab active", {
+	      type: "button",
+	      "aria-selected": "true",
+	    });
+	    const fullTabBtn = createButton("Full memory", "sr-workspace-btn sr-memory-tab", {
+	      type: "button",
+	      "aria-selected": "false",
+	    });
+	    const tabs = createNode("div", {
+	      className: "sr-memory-tabs",
+	      attrs: { role: "tablist", "aria-label": "Memory file" },
+	      children: [activeTabBtn, fullTabBtn],
+	    });
+	    let memoryResult = result || {};
+	    const files = {
+	      active: {
+	        button: activeTabBtn,
+	        file: memoryResult?.active || {},
+	        label: "active-memory.txt",
+	        empty: "No active memory has been compacted yet.",
+	      },
+	      full: {
+	        button: fullTabBtn,
+	        file: memoryResult?.full || {},
+	        label: "memory.txt",
+	        empty: "No chronological turn memory entries yet.",
+	      },
+	    };
+	    let activeMemoryTab = "active";
+	    const renderMemoryTab = (key = "active") => {
+	      activeMemoryTab = key;
+	      let selected = files[key] || files.active;
+	      for (let [tabKey, tab] of Object.entries(files)) {
+	        let active = tabKey == key;
+	        tab.button.classList.toggle("active", active);
+	        tab.button.setAttribute("aria-selected", active ? "true" : "false");
+	      }
+	      let file = selected.file || {};
+		      let markdown = String(file.markdown || "");
+		      let headings = Number(file?.headings?.length || 0) || 0;
+		      pathCopy.textContent = String(file.path || selected.label);
+		      let footerText = `${headings} heading${headings === 1 ? "" : "s"} loaded from ${selected.label}; ${Number(file.size || markdown.length || 0) || 0} characters.`;
+		      if (key === "active" && memoryResult?.active_memory_rebuild?.ok === false) {
+		        footerText += ` Automatic rebuild failed: ${String(memoryResult.active_memory_rebuild.error || "unknown error")}`;
+		      }
+		      else if (key === "active" && memoryResult?.active_memory_rebuild?.ok === true) {
+		        footerText += " Active memory was rebuilt automatically.";
+		      }
+		      footerCopy.textContent = footerText;
+	      surface.replaceChildren();
+	      if (markdown.trim()) {
+	        surface.appendChild(renderExploreMarkdown(markdown, {
+	          citations: [],
+	        }, {
+	          showRawCitationTokens: true,
+	        }));
+	      }
+	      else {
+	        surface.appendChild(createNode("div", {
+	          className: "sr-log-empty",
+	          textContent: selected.empty,
+	        }));
+	      }
+	    };
+	    activeTabBtn.addEventListener("click", () => renderMemoryTab("active"));
+	    fullTabBtn.addEventListener("click", () => renderMemoryTab("full"));
+	    renderMemoryTab("active");
+
+	    dialog.append(
+	      createNode("div", {
+	        className: "sr-dialog-header",
+	        children: [
+	          createNode("div", {
+	            className: "sr-dialog-heading",
+	            children: [
+	              createNode("div", { className: "sr-dialog-title", textContent: "Memory" }),
+	              createNode("div", { className: "sr-dialog-subtitle", textContent: "Inspect active-memory.txt and the full chronological memory.txt." }),
+	            ],
+	          }),
+	          closeBtn,
+	        ],
+	      }),
+	      createNode("div", {
+	        className: "sr-dialog-body",
+	        children: [
+	          pathCopy,
+	          tabs,
+	          surface,
+	        ],
+	      }),
+	      createNode("div", {
+	        className: "sr-dialog-footer",
+	        children: [
+	          footerCopy,
+	          createNode("div", { className: "sr-workspace-toolbar", children: [dismissBtn] }),
+	        ],
+	      }),
+	    );
+
+	    return await new Promise((resolve) => {
+	      let settled = false;
+	      const resolveDialog = (value) => {
+	        if (settled) {
+	          return;
+	        }
+	        settled = true;
+	        window.removeEventListener("keydown", keyHandler, true);
+	        closeOverlay();
+	        resolve(value);
+	      };
+	      const keyHandler = (event) => {
+	        if (event.key === "Escape") {
+	          event.preventDefault();
+	          resolveDialog(null);
+	        }
+	      };
+	      closeBtn.addEventListener("click", () => resolveDialog(null), { once: true });
+	      dismissBtn.addEventListener("click", () => resolveDialog(null), { once: true });
+	      overlay.addEventListener("click", (event) => {
+	        if (event.target === overlay) {
+	          resolveDialog(null);
+	        }
+	      });
+	      window.addEventListener("keydown", keyHandler, true);
+	      overlay.appendChild(dialog);
+	      overlayHost.appendChild(overlay);
+	      state.overlay = overlay;
+	      closeBtn.focus();
+	    });
+	  }
+
+	  async function showRollbackDialog() {
+	    await savePendingDocument({
+	      silent: true,
       saveReason: "manual-save",
     });
     const listResult = await ctx.invoke("automation.document.rollback.list", {});
@@ -16250,13 +16872,17 @@ export async function createAutomationTab(ctx) {
       .catch((error) => setStatus(error?.message || String(error), "error"));
   });
 
-  logBtn.addEventListener("click", () => {
-    showLogDialog().catch((error) => setStatus(error?.message || String(error), "error"));
-  });
+	  logBtn.addEventListener("click", () => {
+	    showLogDialog().catch((error) => setStatus(error?.message || String(error), "error"));
+	  });
 
-  rollbackBtn.addEventListener("click", () => {
-    showRollbackDialog().catch((error) => setStatus(error?.message || String(error), "error"));
-  });
+	  memoryBtn.addEventListener("click", () => {
+	    showMemoryDialog().catch((error) => setStatus(error?.message || String(error), "error"));
+	  });
+
+	  rollbackBtn.addEventListener("click", () => {
+	    showRollbackDialog().catch((error) => setStatus(error?.message || String(error), "error"));
+	  });
 
   propertiesBtn.addEventListener("click", () => {
     showPropertiesDialog().catch((error) => setStatus(error?.message || String(error), "error"));

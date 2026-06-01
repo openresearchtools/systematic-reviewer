@@ -56,6 +56,7 @@ Your job during this Auto Drive turn:
 - Prefer real inspection and tool results over speculation. If you need project state, read it. If a job is queued, inspect job status before claiming it completed.
 - Do not ask the user unless a destructive or genuinely unknowable decision blocks safe progress.
 - If full-text retrieval, extraction, embeddings, Explore, or PRISMA has already produced artifacts, use those artifacts instead of rerunning work unnecessarily.
+- If a major workflow action triggers a required REPORT.md refresh, complete the refresh and then continue the Auto Drive objective from the active memory and current project state unless the report refresh itself fully finishes the work.
 - If the review is not complete, keep going with the next meaningful review action.
 
 Report structure markers:

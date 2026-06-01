@@ -812,7 +812,7 @@ var SystematicReviewerMarkdownRendering = {
 		let list = messages && messages.length ? messages : [
 			{
 				role: "assistant",
-				content: "Continue the collection session here, use /find for document arguments, /explore for scoped synthesis, or /status for project state.",
+				content: "Continue the collection session here, use /find for document arguments, /explore for scoped synthesis, /memory to rebuild active memory, or /status for project state.",
 				placeholder: true,
 				event_type: "assistant_question",
 			},

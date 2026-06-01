@@ -521,12 +521,13 @@ var SystematicReviewerWorkflowCommands = (() => {
 	function automationLocalCommands() {
 		return [
 			{ command: "/help", label: "Help", description: "Explain Find Arguments, Explore, Status, and agent tasks." },
-			{ command: "/Autodrive", label: "Auto Drive", description: "Keep the agent working for a chosen number of turns with optional reviewer checks." },
-			{ command: "/explore", label: "Explore", description: "Run scoped table synthesis from selected Explore columns." },
-			{ command: "/status", label: "Status", description: "Show the current project scope and item counts." },
-			{ command: "/find", label: "Find Arguments", description: "Search project full-text chunks with keyword or semantic retrieval." },
-		];
-	}
+				{ command: "/Autodrive", label: "Auto Drive", description: "Keep the agent working for a chosen number of turns with optional reviewer checks." },
+				{ command: "/explore", label: "Explore", description: "Run scoped table synthesis from selected Explore columns." },
+				{ command: "/status", label: "Status", description: "Show the current project scope and item counts." },
+				{ command: "/memory", label: "Memory", description: "Rebuild active-memory.txt from chronological memory.txt." },
+				{ command: "/find", label: "Find Arguments", description: "Search project full-text chunks with keyword or semantic retrieval." },
+			];
+		}
 
 	function cleanupAutomationChatRuns() {
 		let cutoff = Date.now() - (1000 * 60 * 60);
@@ -2199,7 +2200,7 @@ var SystematicReviewerWorkflowCommands = (() => {
 				nextPayload.mode = queueMode;
 			}
 		}
-		await appendAutomationUserMessage(current, sessionID, text, nextPayload, handlers);
+			let activeEntry = await appendAutomationUserMessage(current, sessionID, text, nextPayload, handlers);
 		if (text.startsWith("/")) {
 			let response = await reviewer._handleLocalCommand(current, sessionID, text);
 			if (response) {
@@ -2217,10 +2218,13 @@ var SystematicReviewerWorkflowCommands = (() => {
 				abortSignal: options?.abortSignal || payload?.abortSignal || null,
 			}), handlers || null);
 		}
-		return await reviewer._runSessionAgent(current, sessionID, text, {
-			origin: payload?.origin || options?.origin || "ui",
-			emitProgress: false,
-			abortSignal: options?.abortSignal || payload?.abortSignal || null,
+			return await reviewer._runSessionAgent(current, sessionID, text, {
+				origin: payload?.origin || options?.origin || "ui",
+				activeEntrySequenceNo: Number(activeEntry?.sequence_no || 0) || 0,
+				activeEntrySequenceNos: [Number(activeEntry?.sequence_no || 0) || 0].filter(Boolean),
+				activeInstructionPayload: activeEntry?.payload || nextPayload || null,
+				emitProgress: false,
+				abortSignal: options?.abortSignal || payload?.abortSignal || null,
 			progress: handlers
 				? {
 					onEvent: async (event) => {
@@ -2307,12 +2311,16 @@ var SystematicReviewerWorkflowCommands = (() => {
 					canceled: true,
 				}, await automationChatState(current, sessionID, run));
 			}
-			await appendAutomationErrorEntries(current, sessionID, error, handlers);
-			run.status = "error";
-			run.error = error?.message || String(error);
-			run.finishedAt = new Date().toISOString();
-			throw error;
-		}
+				await appendAutomationErrorEntries(current, sessionID, error, handlers);
+				run.status = "error";
+				run.error = error?.message || String(error);
+				run.finishedAt = new Date().toISOString();
+				try {
+					error.automation_result = await automationChatState(current, sessionID, run);
+				}
+				catch (_stateError) {}
+				throw error;
+			}
 		return await automationChatState(current, sessionID, run);
 	}
 
@@ -2429,6 +2437,40 @@ var SystematicReviewerWorkflowCommands = (() => {
 		await reviewer._updateSessionState(current.context, reviewerSessionID, {
 			title,
 		});
+		let mainRuntime = await reviewer._loadSessionRuntimeState(current.context, mainSessionID).catch(() => null);
+		let reviewerMeta = await reviewer._loadSessionMeta(current.context, reviewerSessionID, { create: true }).catch(() => null);
+		let reviewerRuntime = await reviewer._loadSessionRuntimeState(current.context, reviewerSessionID).catch(() => null);
+		let runtimeMarker = reviewerMeta?.summary?.autodrive_reviewer_runtime && typeof reviewerMeta.summary.autodrive_reviewer_runtime == "object"
+			? reviewerMeta.summary.autodrive_reviewer_runtime
+			: {};
+		let inheritedFromMain = String(runtimeMarker?.inherited_from || "").trim() == String(mainSessionID || "").trim();
+		let reviewerDefaultRuntime =
+			String(reviewerRuntime?.chat_preset_id || "default").trim() == "default"
+			&& !String(reviewerRuntime?.chat_model_override || "").trim()
+			&& !String(reviewerRuntime?.chat_reasoning_effort || "").trim();
+		let reviewerMatchesMain =
+			String(reviewerRuntime?.chat_preset_id || "default").trim() == String(mainRuntime?.chat_preset_id || "default").trim()
+			&& String(reviewerRuntime?.chat_model_override || "").trim() == String(mainRuntime?.chat_model_override || "").trim()
+			&& String(reviewerRuntime?.chat_reasoning_effort || "").trim() == String(mainRuntime?.chat_reasoning_effort || "").trim();
+		if (mainRuntime && (!existing || inheritedFromMain || reviewerDefaultRuntime || reviewerMatchesMain)) {
+			await reviewer._updateSessionRuntimeState(current.context, reviewerSessionID, {
+				chat_preset_id: mainRuntime.chat_preset_id || "default",
+				chat_previous_response_id: "",
+				chat_reasoning_effort: mainRuntime.chat_reasoning_effort || "",
+				chat_model_override: mainRuntime.chat_model_override || "",
+			});
+			await reviewer._updateSessionState(current.context, reviewerSessionID, {
+				summaryPatch: {
+					autodrive_reviewer_runtime: {
+						inherited_from: String(mainSessionID || "").trim(),
+						inherited_at: new Date().toISOString(),
+						chat_preset_id: mainRuntime.chat_preset_id || "default",
+						chat_reasoning_effort: mainRuntime.chat_reasoning_effort || "",
+						chat_model_override: mainRuntime.chat_model_override || "",
+					},
+				},
+			});
+		}
 		return reviewerSessionID;
 	}
 
@@ -3871,11 +3913,11 @@ var SystematicReviewerWorkflowCommands = (() => {
 		return Object.assign({ ok: true }, bootstrap);
 	}
 
-	async function automationLogRead(current) {
-		let logPath = automationOptionalString(current?.context?.logPath || "");
-		if (!logPath) {
-			throw new Error("Project log path is unavailable.");
-		}
+		async function automationLogRead(current) {
+			let logPath = automationOptionalString(current?.context?.logPath || "");
+			if (!logPath) {
+				throw new Error("Project log path is unavailable.");
+			}
 		if (!(await reviewer._pathExists(logPath))) {
 			let seedMarkdown = typeof reviewer._defaultWorkflowLogMarkdown == "function"
 				? reviewer._defaultWorkflowLogMarkdown(current?.collection, current?.projectType || "")
@@ -3889,13 +3931,55 @@ var SystematicReviewerWorkflowCommands = (() => {
 			markdown,
 			size: markdown.length,
 			content_hash: reviewer._simpleContentHash(markdown),
-			headings: SystematicReviewerTextFileTools.extractMarkdownHeadings(markdown),
-		};
-	}
+				headings: SystematicReviewerTextFileTools.extractMarkdownHeadings(markdown),
+			};
+		}
 
-	async function automationSaveMarkdown(current, payload = {}) {
-		let markdown = await automationMarkdown(current, payload || {});
-		let settings = await automationProjectSettings(current);
+		async function automationMemoryRead(current) {
+			let projectRoot = automationOptionalString(current?.context?.projectRoot || "");
+			if (!projectRoot) {
+				throw new Error("Project root is unavailable.");
+			}
+			let activePath = typeof reviewer._activeMemoryPath == "function"
+				? reviewer._activeMemoryPath(current.context)
+				: reviewer._joinPath(projectRoot, "active-memory.txt");
+			let memoryPath = typeof reviewer._memoryPath == "function"
+				? reviewer._memoryPath(current.context)
+				: reviewer._joinPath(projectRoot, "memory.txt");
+			if (!(await reviewer._pathExists(activePath))) {
+				await reviewer._writeTextFile(activePath, "");
+			}
+				if (!(await reviewer._pathExists(memoryPath))) {
+					await reviewer._writeTextFile(memoryPath, [
+						"# Systematic Reviewer Turn Memory",
+						"",
+						"Append-only chronological turn memory for project inspection and active-memory rebuilds.",
+						"",
+					].join("\n"));
+				}
+						let activeMarkdown = reviewer._readActiveMemoryText
+							? await reviewer._readActiveMemoryText(current.context)
+							: await reviewer._readFileText(activePath);
+						let fullMarkdown = await reviewer._readFileText(memoryPath);
+						let rebuildStatus = null;
+					let filePayload = (path, markdown) => ({
+					path,
+					markdown,
+					size: String(markdown || "").length,
+					content_hash: reviewer._simpleContentHash(markdown || ""),
+				headings: SystematicReviewerTextFileTools.extractMarkdownHeadings(markdown || ""),
+			});
+			return {
+					ok: true,
+					active: filePayload(activePath, activeMarkdown),
+					full: filePayload(memoryPath, fullMarkdown),
+					active_memory_rebuild: rebuildStatus,
+				};
+			}
+
+		async function automationSaveMarkdown(current, payload = {}) {
+			let markdown = await automationMarkdown(current, payload || {});
+			let settings = await automationProjectSettings(current);
 		let editorSettings = automationEditorSettings(settings, payload || {});
 		let persisted = await automationPersistMarkdown(current, markdown, editorSettings, payload || {});
 		let surface = String(payload?.surface || payload?.mode || "").trim().toLowerCase();
@@ -4926,9 +5010,9 @@ var SystematicReviewerWorkflowCommands = (() => {
 			},
 		});
 
-		define({
-			id: "automation.chat.runtime.set",
-			description: "Set the chat model preset for the active Automation session.",
+			define({
+				id: "automation.chat.runtime.set",
+				description: "Set the chat model preset for the active Automation session.",
 			tab: "automation",
 			execute: async (payload = {}) => {
 				let current = await requireCurrentProject(payload || {});
@@ -5003,15 +5087,28 @@ var SystematicReviewerWorkflowCommands = (() => {
 							: String(currentState?.chat_reasoning_effort || "").trim().toLowerCase())
 						: requestedReasoningEffort;
 				}
-				await reviewer._updateSessionRuntimeState(current.context, sessionID, {
-					chat_preset_id: presetID,
-					chat_previous_response_id: samePreset && String(currentState?.chat_model_override || "").trim() == nextModelOverride
-						? currentState?.chat_previous_response_id || ""
-						: "",
-					chat_reasoning_effort: nextReasoningEffort,
-					chat_model_override: nextModelOverride,
-				});
-				return {
+					await reviewer._updateSessionRuntimeState(current.context, sessionID, {
+						chat_preset_id: presetID,
+						chat_previous_response_id: samePreset && String(currentState?.chat_model_override || "").trim() == nextModelOverride
+							? currentState?.chat_previous_response_id || ""
+							: "",
+						chat_reasoning_effort: nextReasoningEffort,
+						chat_model_override: nextModelOverride,
+					});
+					if (
+						/-autodrive-reviewer$/.test(String(sessionID || ""))
+						&& !payload?.inherit_autodrive_reviewer_runtime
+					) {
+						await reviewer._updateSessionState(current.context, sessionID, {
+							summaryPatch: {
+								autodrive_reviewer_runtime: {
+									explicit: true,
+									updated_at: new Date().toISOString(),
+								},
+							},
+						});
+					}
+					return {
 					ok: true,
 					session_id: sessionID,
 					runtime_state: await reviewer._loadSessionRuntimeState(current.context, sessionID),
@@ -5020,11 +5117,25 @@ var SystematicReviewerWorkflowCommands = (() => {
 					selected_preset: nextPreset,
 					runtime_options: await automationRuntimeOptions(current),
 				};
-			},
-		});
+				},
+			});
 
-		define({
-			id: "automation.chat.queue.add",
+			define({
+				id: "automation.memory.rebuild",
+				description: "Rebuild active-memory.txt from the project's chronological memory.txt.",
+				tab: "automation",
+				execute: async (payload = {}) => {
+					let current = await requireCurrentProject(payload || {});
+					let sessionID = String(payload?.session_id || payload?.sessionID || current?.sessionID || "").trim()
+						|| await reviewer._ensureActiveSession(current.context);
+					await reviewer._activateSessionContext(current, sessionID);
+					current.sessionID = sessionID;
+					return await reviewer._rebuildActiveMemory(current, sessionID, {});
+				},
+			});
+
+			define({
+				id: "automation.chat.queue.add",
 			description: "Add one pending queued or steer message for the active Automation session.",
 			tab: "automation",
 			execute: async (payload = {}) => {
@@ -5443,19 +5554,29 @@ var SystematicReviewerWorkflowCommands = (() => {
 			},
 		});
 
-		define({
-			id: "automation.document.log.read",
-			description: "Load the project workflow log markdown from log.txt for the Automation workspace.",
-			tab: "automation",
-			execute: async (payload = {}) => {
-				let current = await requireCurrentProject(payload || {});
-				return await automationLogRead(current);
-			},
-		});
+			define({
+				id: "automation.document.log.read",
+				description: "Load the project workflow log markdown from log.txt for the Automation workspace.",
+				tab: "automation",
+				execute: async (payload = {}) => {
+					let current = await requireCurrentProject(payload || {});
+					return await automationLogRead(current);
+				},
+			});
 
-		define({
-			id: "automation.document.rollback.list",
-			description: "List REPORT.md rollback snapshots for the current project.",
+			define({
+				id: "automation.document.memory.read",
+				description: "Load active-memory.txt and memory.txt for the Automation workspace.",
+				tab: "automation",
+				execute: async (payload = {}) => {
+					let current = await requireCurrentProject(payload || {});
+					return await automationMemoryRead(current);
+				},
+			});
+
+			define({
+				id: "automation.document.rollback.list",
+				description: "List REPORT.md rollback snapshots for the current project.",
 			tab: "automation",
 			execute: async (payload = {}) => {
 				let current = await requireCurrentProject(payload || {});

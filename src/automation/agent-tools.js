@@ -3266,9 +3266,9 @@ var SystematicReviewerAgentTools = (() => {
 			},
 		});
 
-		define({
-			id: "sr.sessionStatus",
-			description: "Get session state, transcript, and timeline.",
+			define({
+				id: "sr.sessionStatus",
+				description: "Get session state, transcript, and timeline.",
 			inputShape: {
 				root: "current_or_last_project | current_project | last_project",
 				session_id: "optional session id, defaults to the active session",
@@ -3285,11 +3285,31 @@ var SystematicReviewerAgentTools = (() => {
 					root: serializeScope(scope),
 					...result,
 				};
-			},
-		});
+				},
+			});
 
-		define({
-			id: "sr.sessionMessage",
+			define({
+				id: "sr.memoryRebuild",
+				description: "Rebuild active-memory.txt from chronological memory.txt for the current project so future agent calls continue from durable project memory.",
+				inputShape: {
+					root: "current_or_last_project | current_project | last_project",
+					session_id: "optional session id for status metadata",
+				},
+				execute: async (args = {}) => {
+					let { scope, runtime } = await resolveProjectRuntime(args, { defaultRoot: "current_or_last_project" });
+					let sessionID = String(args.session_id || args.sessionID || runtime.sessionID || "").trim()
+						|| await reviewer._ensureActiveSession(runtime.context);
+					let result = await reviewer._rebuildActiveMemory(runtime, sessionID, {});
+					return {
+						ok: true,
+						root: serializeScope(scope),
+						...result,
+					};
+				},
+			});
+
+			define({
+				id: "sr.sessionMessage",
 			description: "Send one message through the shared session router.",
 			inputShape: {
 				root: "current_or_last_project | current_project | last_project",

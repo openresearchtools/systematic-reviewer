@@ -3056,6 +3056,7 @@ var SystematicReviewerPDFMarkdown = (() => {
 
 	async function convertSource(options) {
 		let { inputPath, mode, client, runtime, pdfPrompt, imagePrompt, hooks, outputDir, attachmentItemID } = options;
+		let normalizedMode = String(mode || "fast_with_vlm_fallback").trim().toLowerCase();
 		let ext = String(inputPath).toLowerCase().replace(/^.*(\.[^.]+)$/, "$1");
 		let isPdf = ext === ".pdf";
 		let outputs = conversionOutputPaths(inputPath, outputDir || null);
@@ -3077,7 +3078,7 @@ var SystematicReviewerPDFMarkdown = (() => {
 			};
 		}
 
-		if (mode === "fast") {
+		if (normalizedMode === "fast") {
 			let fast = await extractFastPdfMarkdown(inputPath, hooks, attachmentItemID || null);
 			let markdown = sanitizeOuterMarkdownFence(fast.markdown);
 			await Zotero.File.putContentsAsync(
@@ -3092,7 +3093,7 @@ var SystematicReviewerPDFMarkdown = (() => {
 			};
 		}
 
-		if (mode === "vlm") {
+		if (normalizedMode === "vlm") {
 			let markdown = await runPdfVlm(
 				inputPath,
 				outputs.vlmOutputPath,
@@ -3126,11 +3127,14 @@ var SystematicReviewerPDFMarkdown = (() => {
 		}
 		catch (error) {
 			let message = error instanceof Error ? error.message : String(error);
-			if (!fastErrorLooksNonMachineReadable(message)) {
-				throw new Error(`FAST extraction failed: ${message}`);
-			}
 			if (hooks?.onLog) {
-				await hooks.onLog("info", `FAST path rejected as non-machine-readable, falling back to VLM: ${message}`);
+				let nonMachineReadable = fastErrorLooksNonMachineReadable(message);
+				await hooks.onLog(
+					"info",
+					nonMachineReadable
+						? `FAST path rejected as non-machine-readable, falling back to VLM: ${message}`
+						: `FAST extraction failed, falling back to VLM: ${message}`
+				);
 			}
 		}
 
