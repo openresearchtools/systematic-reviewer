@@ -399,6 +399,25 @@ var SystematicReviewerRuntimeSettings = {
 			runtimeType = defaults.runtime_type;
 		}
 		let requestedConnectionID = String(merged.connection_id || merged.connectionID || "").trim();
+		let executorID = runtimeType == "local_exec"
+			? String(merged.executor_id || merged.executorID || "").trim()
+			: "";
+		let executorPath = runtimeType == "local_exec" && this._isWindowsPlatform()
+			? String(merged.executor_path || merged.executorPath || merged.binary_path || merged.binaryPath || "").trim()
+			: "";
+		let executorArgs = runtimeType == "local_exec" && this._isWindowsPlatform()
+			? (Array.isArray(merged.executor_args)
+				? merged.executor_args.slice()
+				: (Array.isArray(merged.executorArgs) ? merged.executorArgs.slice() : []))
+					.map((entry) => String(entry || "").trim())
+					.filter(Boolean)
+			: [];
+		if (!executorPath && runtimeType == "local_exec" && this._isWindowsPlatform() && executorID) {
+			let detectedExecutor = this._scanInstalledExecutors()
+				.find((entry) => String(entry?.id || "").trim() == executorID) || null;
+			executorPath = String(detectedExecutor?.binary_path || "").trim();
+			executorArgs = Array.isArray(detectedExecutor?.args) ? detectedExecutor.args.slice() : executorArgs;
+		}
 		let resolvedConnection = ["local_api", "external_api"].includes(runtimeType)
 			? this._findConnectionByID(apiConnections, requestedConnectionID) || null
 			: null;
@@ -409,9 +428,9 @@ var SystematicReviewerRuntimeSettings = {
 			connection_id: ["local_api", "external_api"].includes(runtimeType)
 				? String(resolvedConnection?.id || "").trim()
 				: "",
-			executor_id: runtimeType == "local_exec"
-				? String(merged.executor_id || merged.executorID || "").trim()
-				: "",
+			executor_id: executorID,
+			executor_path: executorPath,
+			executor_args: executorArgs,
 			model: String(merged.model || merged.custom_model || merged.customModel || "").trim(),
 			api_kind: this._normalizeRuntimeRoleAPIKind(
 				roleID,
@@ -479,6 +498,16 @@ var SystematicReviewerRuntimeSettings = {
 			runtime_type: String(source.runtime_type || defaults.runtime_type).trim() || defaults.runtime_type,
 			connection_id: String(source.connection_id || "").trim(),
 			executor_id: String(source.executor_id || "").trim(),
+			executor_path: this._isWindowsPlatform()
+				? String(source.executor_path || source.executorPath || source.binary_path || source.binaryPath || "").trim()
+				: "",
+			executor_args: this._isWindowsPlatform()
+				? (Array.isArray(source.executor_args)
+					? source.executor_args.slice()
+					: (Array.isArray(source.executorArgs) ? source.executorArgs.slice() : []))
+						.map((entry) => String(entry || "").trim())
+						.filter(Boolean)
+				: [],
 			model: String(source.model || "").trim(),
 			api_kind: this._normalizeRuntimeRoleAPIKind(
 				roleID,
@@ -1097,6 +1126,22 @@ var SystematicReviewerRuntimeSettings = {
 				defaults.context_window || 0
 			);
 		let executorID = String(merged.executor_id || merged.executorID || "").trim();
+		let executorPath = runtimeType == "local_exec" && this._isWindowsPlatform()
+			? String(merged.executor_path || merged.executorPath || merged.binary_path || merged.binaryPath || "").trim()
+			: "";
+		let executorArgs = runtimeType == "local_exec" && this._isWindowsPlatform()
+			? (Array.isArray(merged.executor_args)
+				? merged.executor_args.slice()
+				: (Array.isArray(merged.executorArgs) ? merged.executorArgs.slice() : []))
+					.map((entry) => String(entry || "").trim())
+					.filter(Boolean)
+			: [];
+		if (!executorPath && runtimeType == "local_exec" && this._isWindowsPlatform() && executorID) {
+			let detectedExecutor = this._scanInstalledExecutors()
+				.find((entry) => String(entry?.id || "").trim() == executorID) || null;
+			executorPath = String(detectedExecutor?.binary_path || "").trim();
+			executorArgs = Array.isArray(detectedExecutor?.args) ? detectedExecutor.args.slice() : executorArgs;
+		}
 		return {
 			runtime_type: runtimeType,
 			connection_id: ["local_api", "external_api"].includes(runtimeType)
@@ -1115,6 +1160,8 @@ var SystematicReviewerRuntimeSettings = {
 				? this._normalizeReasoningEffort(merged.reasoning_effort ?? merged.reasoningEffort, { allowCustom: true })
 				: "",
 			executor_id: executorID,
+			executor_path: executorPath,
+			executor_args: executorArgs,
 			agent_runtime_id: String(merged.agent_runtime_id || merged.agentRuntimeID || defaults.agent_runtime_id || "").trim(),
 			context_window: contextWindow,
 			max_output_tokens: roleID == "embeddings"
@@ -3705,7 +3752,9 @@ var SystematicReviewerRuntimeSettings = {
 				let cache = this._normalizeOpenCodeModelCache(caches.opencode || null);
 				out.models_cache = cache.models;
 				out.models_scanned_at = cache.scanned_at;
-				out.models_error = cache.error;
+				out.models_error = out.installed && cache.error == "OpenCode is not installed."
+					? ""
+					: cache.error;
 			}
 			return out;
 			});
@@ -3717,10 +3766,15 @@ var SystematicReviewerRuntimeSettings = {
 				return null;
 			}
 			let scanned = this._scanInstalledExecutors().find((entry) => entry.id == executorID) || null;
-			let frozenPath = String(role?.executor_path || role?.executorPath || role?.binary_path || role?.binaryPath || "").trim();
-			let frozenArgs = Array.isArray(role?.executor_args)
-				? role.executor_args.slice()
-				: (Array.isArray(role?.executorArgs) ? role.executorArgs.slice() : null);
+			let useFrozenExecutor = this._isWindowsPlatform();
+			let frozenPath = useFrozenExecutor
+				? String(role?.executor_path || role?.executorPath || role?.binary_path || role?.binaryPath || "").trim()
+				: "";
+			let frozenArgs = useFrozenExecutor
+				? (Array.isArray(role?.executor_args)
+					? role.executor_args.slice()
+					: (Array.isArray(role?.executorArgs) ? role.executorArgs.slice() : null))
+				: null;
 			if (!frozenPath && !frozenArgs) {
 				return scanned;
 			}

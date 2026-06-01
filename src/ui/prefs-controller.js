@@ -1463,8 +1463,12 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 			let choice = String(value || "").trim();
 			if (choice.startsWith("exec:")) {
 				let executorID = choice.slice(5).trim();
+				let executor = (this.state.detectedExecutors || [])
+					.find((entry) => String(entry?.id || "").trim() == executorID) || null;
 				role.runtime_type = "local_exec";
 				role.executor_id = executorID;
+				role.executor_path = String(executor?.binary_path || "").trim();
+				role.executor_args = Array.isArray(executor?.args) ? executor.args.slice() : [];
 				role.connection_id = "";
 				role.model = "";
 				role.reasoning_effort = "";
@@ -1483,6 +1487,8 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 					role.model = "";
 				}
 				role.executor_id = "";
+				delete role.executor_path;
+				delete role.executor_args;
 				role.connection_id = connectionID;
 				role.runtime_type = connection?.runtime_type || "local_api";
 				role.api_kind = "responses";
@@ -1495,6 +1501,8 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 			}
 			else {
 				role.executor_id = "";
+				delete role.executor_path;
+				delete role.executor_args;
 				role.connection_id = "";
 				role.model = "";
 				role.runtime_type = "local_api";
@@ -2231,6 +2239,8 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 		for (let role of Object.values(this.state.runtimeRoles || {})) {
 			if (role?.runtime_type == "local_exec" && String(role?.executor_id || "").trim() == id) {
 				role.executor_id = "";
+				delete role.executor_path;
+				delete role.executor_args;
 				role.model = "";
 				role.runtime_type = "local_api";
 			}
@@ -2500,6 +2510,8 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 		}
 		role.runtime_type = "local_exec";
 		role.executor_id = executor.id;
+		role.executor_path = String(executor?.binary_path || "").trim();
+		role.executor_args = Array.isArray(executor?.args) ? executor.args.slice() : [];
 		this._clearRoleTestResult(roleID);
 		this._markDirty(true);
 		this._renderAll();
@@ -2612,6 +2624,8 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 				runtime_type: role.runtime_type || "local_api",
 				connection_id: role.connection_id || "",
 				executor_id: role.executor_id || "",
+				executor_path: role.executor_path || "",
+				executor_args: Array.isArray(role.executor_args) ? role.executor_args.slice() : [],
 				model: role.model || "",
 				api_kind: "responses",
 				timeout_ms: role.timeout_ms || 1200000,
@@ -2641,6 +2655,10 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 
 	_syncRolePresetWithConnections(roleID, preset) {
 		if (!preset || !preset.connection_id) {
+			if (preset && preset.runtime_type != "local_exec") {
+				delete preset.executor_path;
+				delete preset.executor_args;
+			}
 			return;
 		}
 		let connection = this._findConnection(preset.connection_id);
@@ -2651,7 +2669,28 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 		}
 		if (preset.runtime_type != "local_exec") {
 			preset.runtime_type = connection.runtime_type;
+			delete preset.executor_path;
+			delete preset.executor_args;
 		}
+	},
+
+	_syncRolePresetWithExecutors(roleID, preset) {
+		if (!preset || preset.runtime_type != "local_exec") {
+			return;
+		}
+		let executorID = String(preset.executor_id || "").trim();
+		if (!executorID) {
+			delete preset.executor_path;
+			delete preset.executor_args;
+			return;
+		}
+		let executor = (this.state.detectedExecutors || [])
+			.find((entry) => String(entry?.id || "").trim() == executorID) || null;
+		if (!executor?.binary_path) {
+			return;
+		}
+		preset.executor_path = String(executor.binary_path || "").trim();
+		preset.executor_args = Array.isArray(executor.args) ? executor.args.slice() : [];
 	},
 
 	_syncRolesWithConnections() {
@@ -2661,8 +2700,10 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 				continue;
 			}
 			this._syncRolePresetWithConnections(roleDef.id, role);
+			this._syncRolePresetWithExecutors(roleDef.id, role);
 			for (let preset of Array.isArray(role?.model_presets) ? role.model_presets : []) {
 				this._syncRolePresetWithConnections(roleDef.id, preset);
+				this._syncRolePresetWithExecutors(roleDef.id, preset);
 			}
 		}
 	},
