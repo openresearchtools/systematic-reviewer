@@ -770,17 +770,38 @@ var SystematicReviewerRuntimeSettings = {
 
 	_defaultExecutorCatalog() {
 		let opencodePaths = [];
+		let codexPaths = [];
 		let home = this._environmentValue("HOME") || this._environmentValue("USERPROFILE");
+		let localAppData = this._environmentValue("LOCALAPPDATA");
+		let appData = this._environmentValue("APPDATA");
 		if (home) {
 			opencodePaths.push(this._joinPath(home, ".opencode", "bin", this._isWindowsPlatform() ? "opencode.exe" : "opencode"));
 			opencodePaths.push(this._joinPath(home, ".opencode", "bin", this._isWindowsPlatform() ? "opencode.cmd" : "opencode"));
+		}
+		if (this._isWindowsPlatform()) {
+			if (appData) {
+				codexPaths.push(this._joinPath(appData, "npm", "codex.cmd"));
+				codexPaths.push(this._joinPath(appData, "npm", "codex.exe"));
+				opencodePaths.push(this._joinPath(appData, "npm", "opencode.cmd"));
+				opencodePaths.push(this._joinPath(appData, "npm", "opencode.exe"));
+			}
+			if (localAppData) {
+				codexPaths.push(this._joinPath(localAppData, "OpenAI", "Codex", "bin", "codex.exe"));
+				codexPaths.push(...this._windowsNestedExecutablePaths(
+					this._joinPath(localAppData, "OpenAI", "Codex", "bin"),
+					"codex.exe"
+				));
+			}
 		}
 		return [
 			{
 				id: "codex",
 				label: "Codex CLI",
 				command: "codex",
-				absolute_paths: ["/Applications/Codex.app/Contents/Resources/codex"],
+				absolute_paths: [
+					...codexPaths,
+					"/Applications/Codex.app/Contents/Resources/codex",
+				],
 				args: ["exec", "--skip-git-repo-check"],
 			},
 			{
@@ -1753,7 +1774,7 @@ var SystematicReviewerRuntimeSettings = {
 
 	_isLoopbackHost(hostname = "") {
 		let host = String(hostname || "").trim().toLowerCase();
-		return ["127.0.0.1", "localhost", "0.0.0.0", "::1"].includes(host);
+		return ["127.0.0.1", "localhost", "0.0.0.0", "::1", "[::1]"].includes(host);
 	},
 
 	_connectionIsLMStudio(connection) {
@@ -1819,6 +1840,23 @@ var SystematicReviewerRuntimeSettings = {
 		catch (_error) {}
 		let host = this._isLoopbackHost(parsed.host) ? "loopback" : String(parsed.host || "").toLowerCase();
 		return `${host}:${Number(parsed.port || 0) || 0}:${path.replace(/\/+$/, "") || "/"}::${String(candidate?.api_kind || "auto")}`;
+	},
+
+	_scanCandidateProbeKey(candidate = {}) {
+		if (!this._isWindowsPlatform()) {
+			return this._scanCandidateDedupKey(candidate);
+		}
+		let baseURL = this._normalizeURLValue(candidate?.base_url || "");
+		let parsed = this._parseEndpointURL(baseURL);
+		if (!parsed) {
+			return `${baseURL}::${String(candidate?.api_kind || "auto")}`;
+		}
+		let path = "/";
+		try {
+			path = new URL(baseURL).pathname || "/";
+		}
+		catch (_error) {}
+		return `${String(parsed.host || "").toLowerCase()}:${Number(parsed.port || 0) || 0}:${path.replace(/\/+$/, "") || "/"}::${String(candidate?.api_kind || "auto")}`;
 	},
 
 	async _postJSONWithTimeout(url, payload, timeoutMs = 30000, headers = {}, errorLabel = "Request") {
@@ -2485,7 +2523,9 @@ var SystematicReviewerRuntimeSettings = {
 	},
 
 	_localModelScanCandidates() {
-		let hosts = ["127.0.0.1", "localhost", "0.0.0.0"];
+		let hosts = this._isWindowsPlatform()
+			? ["127.0.0.1", "localhost", "[::1]"]
+			: ["127.0.0.1", "localhost", "0.0.0.0"];
 		let candidates = [];
 		let addOpenAICompatible = (provider, ports, basePaths) => {
 			for (let host of hosts) {
@@ -3087,7 +3127,7 @@ var SystematicReviewerRuntimeSettings = {
 		let candidates = [];
 		let seen = new Set();
 		for (let candidate of [...configuredCandidates, ...discoveredCandidates]) {
-			let key = this._scanCandidateDedupKey(candidate);
+			let key = this._scanCandidateProbeKey(candidate);
 			if (!candidate.base_url || seen.has(key)) {
 				continue;
 			}
@@ -3142,6 +3182,7 @@ var SystematicReviewerRuntimeSettings = {
 		}));
 		let out = [];
 		let seenResults = new Set();
+		let configuredResultAliases = new Set();
 		let scanErrors = [];
 		for (let outcome of outcomes) {
 			let result = outcome?.result || null;
@@ -3156,6 +3197,10 @@ var SystematicReviewerRuntimeSettings = {
 					}
 					continue;
 				}
+			let aliasKey = this._scanCandidateDedupKey(outcome?.candidate || result);
+			if (result.source == "discovered" && configuredResultAliases.has(aliasKey)) {
+				continue;
+			}
 			let modelKey = (result.models || []).map((model) => model.id).join("|");
 			let key = result.connection_id
 				? `configured::${result.connection_id}::${modelKey}`
@@ -3166,6 +3211,9 @@ var SystematicReviewerRuntimeSettings = {
 				continue;
 			}
 			seenResults.add(key);
+			if (result.source == "configured") {
+				configuredResultAliases.add(aliasKey);
+			}
 			out.push(result);
 		}
 		out.sort((a, b) => {
@@ -3201,7 +3249,7 @@ var SystematicReviewerRuntimeSettings = {
 		let dedupedCandidates = [];
 		let seenCandidates = new Set();
 		for (let candidate of candidates) {
-			let key = this._scanCandidateDedupKey(candidate);
+			let key = this._scanCandidateProbeKey(candidate);
 			if (!candidate.base_url || seenCandidates.has(key)) {
 				continue;
 			}
@@ -3284,12 +3332,19 @@ var SystematicReviewerRuntimeSettings = {
 			if (this._isWindowsPlatform()) {
 				let dirs = [];
 				let localAppData = this._environmentValue("LOCALAPPDATA");
+				let appData = this._environmentValue("APPDATA");
 				let userProfile = this._environmentValue("USERPROFILE");
+				if (appData) {
+					dirs.push(this._joinPath(appData, "npm"));
+					dirs.push(this._joinPath(appData, "pnpm"));
+				}
 				if (localAppData) {
 					dirs.push(this._joinPath(localAppData, "Microsoft", "WindowsApps"));
+					dirs.push(this._joinPath(localAppData, "pnpm"));
 				}
 				if (userProfile) {
 					dirs.push(this._joinPath(userProfile, ".cargo", "bin"));
+					dirs.push(this._joinPath(userProfile, ".bun", "bin"));
 				}
 				return dirs;
 			}
@@ -3347,6 +3402,34 @@ var SystematicReviewerRuntimeSettings = {
 				out.push(ext);
 			}
 		}
+		return out;
+	},
+
+	_windowsNestedExecutablePaths(rootPath = "", executableName = "") {
+		if (!this._isWindowsPlatform()) {
+			return [];
+		}
+		let root = String(rootPath || "").trim();
+		let leaf = String(executableName || "").trim();
+		if (!root || !leaf) {
+			return [];
+		}
+		let out = [];
+		try {
+			let rootFile = this._nsIFile(root);
+			if (!rootFile.exists() || !rootFile.isDirectory()) {
+				return [];
+			}
+			let entries = rootFile.directoryEntries;
+			while (entries.hasMoreElements()) {
+				let entry = entries.getNext().QueryInterface(Components.interfaces.nsIFile);
+				if (!entry?.isDirectory?.()) {
+					continue;
+				}
+				out.push(this._joinPath(entry.path, leaf));
+			}
+		}
+		catch (_err) {}
 		return out;
 	},
 
