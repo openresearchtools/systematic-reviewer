@@ -34,6 +34,8 @@ run-name: Build ${{ inputs.channel }} ${{ inputs.version }}
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: public-xpi-release
@@ -192,6 +194,46 @@ jobs:
             fi
           fi
 
+      - name: Wait for GitHub release asset
+        if: ${{ inputs.channel != 'artifact-only' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ steps.build.outputs.version }}"
+          TAG="${{ steps.build.outputs.tag }}"
+          ASSET_NAME="systematic-reviewer-$VERSION.xpi"
+          RELEASE_JSON="$RUNNER_TEMP/release-visible.json"
+
+          for attempt in {1..30}; do
+            if gh api "repos/${{ github.repository }}/releases/tags/$TAG" > "$RELEASE_JSON" 2>/dev/null; then
+              if python3 - "$RELEASE_JSON" "$ASSET_NAME" <<'PY'
+          import json
+          import sys
+
+          release_path, asset_name = sys.argv[1], sys.argv[2]
+          with open(release_path, encoding="utf-8") as handle:
+            release = json.load(handle)
+          for asset in release.get("assets") or []:
+            if asset.get("name") == asset_name and asset.get("browser_download_url"):
+              raise SystemExit(0)
+          raise SystemExit(1)
+          PY
+              then
+                echo "Release asset is visible: $TAG/$ASSET_NAME"
+                exit 0
+              fi
+            fi
+            echo "Waiting for GitHub release asset visibility ($attempt/30): $TAG/$ASSET_NAME"
+            sleep 2
+          done
+
+          echo "GitHub release asset did not become visible: $TAG/$ASSET_NAME" >&2
+          gh release view "$TAG" --json tagName,isPrerelease,assets >&2 || true
+          exit 1
+
       - name: Generate website release index and update manifest
         if: ${{ inputs.channel != 'artifact-only' }}
         env:
@@ -312,3 +354,13 @@ jobs:
             git commit -m "Update public release metadata"
             git push
           fi
+
+      - name: Upload website Pages artifact
+        if: ${{ inputs.channel != 'artifact-only' }}
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: website
+
+      - name: Deploy website to GitHub Pages
+        if: ${{ inputs.channel != 'artifact-only' }}
+        uses: actions/deploy-pages@v5

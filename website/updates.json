@@ -1,7 +1,18 @@
 {
   "addons": {
     "openresearchtools@gmail.com": {
-      "updates": []
+      "updates": [
+        {
+          "version": "0.73",
+          "update_link": "https://github.com/openresearchtools/systematic-reviewer/releases/download/v0.73/systematic-reviewer-0.73.xpi",
+          "applications": {
+            "zotero": {
+              "strict_min_version": "7.0",
+              "strict_max_version": "9.*"
+            }
+          }
+        }
+      ]
     }
   }
 }
