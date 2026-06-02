@@ -929,8 +929,10 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 		if (!service?.scanPreferencePaneEndpoints) {
 			return;
 		}
-		try {
-			let payload = await service.scanPreferencePaneEndpoints(this._collectSettings());
+			try {
+				let payload = await service.scanPreferencePaneEndpoints(Object.assign({}, this._collectSettings(), {
+					include_executor_models: this._savedExecutorIDs().includes("opencode") && !this._openCodeModelCacheHasModels(),
+				}));
 			this.state.scanResults = Array.isArray(payload?.api_results) ? this._clone(payload.api_results) : [];
 			this.state.scanErrors = Array.isArray(payload?.api_errors) ? this._clone(payload.api_errors) : [];
 			if (payload?.runtime_preferences?.executor_model_cache) {
@@ -953,10 +955,70 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 				}
 				catch (_consoleErr) {}
 			}
-		}
-	},
+			}
+		},
 
-	async save(options = {}) {
+		_openCodeModelCacheHasModels() {
+			let cache = this.state.runtimePreferences?.executor_model_cache?.opencode || null;
+			return Array.isArray(cache?.models) && cache.models.length > 0;
+		},
+
+		async _refreshOpenCodeModelsIfMissing(options = {}) {
+			let executorID = String(options?.executorID || "opencode").trim();
+			let force = options?.force === true;
+			if (executorID != "opencode" || (!force && this._openCodeModelCacheHasModels())) {
+				return;
+			}
+			let service = this._service();
+			if (!service?.scanPreferencePaneEndpoints) {
+				return;
+			}
+			if (this.state.loading || this.state.saving || this.state.scanning || !!this.state.testingRole) {
+				return;
+			}
+			this.state.scanning = true;
+			this._renderToolbarState();
+			this._setStatus(String(options?.statusMessage || "Loading OpenCode models.").trim() || "Loading OpenCode models.");
+			try {
+				let previousRuntimePreferences = JSON.stringify(this.state.runtimePreferences?.executor_model_cache || {});
+				let payload = await service.scanPreferencePaneEndpoints(Object.assign({}, this._collectSettings(), {
+					include_executor_models: true,
+				}));
+				this.state.scanResults = Array.isArray(payload?.api_results) ? this._clone(payload.api_results) : [];
+				this.state.scanErrors = Array.isArray(payload?.api_errors) ? this._clone(payload.api_errors) : [];
+				if (payload?.runtime_preferences?.executor_model_cache) {
+					this.state.runtimePreferences.executor_model_cache = this._clone(payload.runtime_preferences.executor_model_cache || {});
+				}
+				this.state.detectedExecutors = Array.isArray(payload?.detected_executors)
+					? this._clone(payload.detected_executors).filter((entry) => entry.installed)
+					: [];
+				this._syncConnectionsFromScanResults(this.state.scanResults);
+				this._syncRoleEditors(true);
+				this._renderAll();
+				if (previousRuntimePreferences != JSON.stringify(this.state.runtimePreferences?.executor_model_cache || {})) {
+					this._markDirty(true);
+				}
+				let executor = (this.state.detectedExecutors || []).find((entry) => String(entry?.id || "").trim() == "opencode") || null;
+				let count = Array.isArray(executor?.models_cache) ? executor.models_cache.length : 0;
+				let error = String(executor?.models_error || "").trim();
+				this._setStatus(
+					error || `Loaded ${count} OpenCode model${count == 1 ? "" : "s"}.`,
+					error ? "error" : "ready"
+				);
+			}
+			catch (error) {
+				this._reportError(error);
+			}
+			finally {
+				this.state.scanning = false;
+				this._renderToolbarState();
+				if (this.state.dirty) {
+					this._scheduleAutosave();
+				}
+			}
+		},
+
+		async save(options = {}) {
 		let service = this._service();
 		if (!service?.savePreferencePaneSettings) {
 			throw new Error("Systematic Reviewer preference service is not available");
@@ -1160,11 +1222,17 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 			this._addDiscoveredConnection(Number(button.dataset.resultIndex || -1));
 			return;
 		}
-		if (action == "add-saved-executor") {
-			this._addSavedExecutor(String(button.dataset.executorId || ""));
-			this._setStatus("Added detected CLI runtime.", "ready");
-			return;
-		}
+			if (action == "add-saved-executor") {
+				let executorID = String(button.dataset.executorId || "");
+				this._addSavedExecutor(executorID);
+				this._refreshOpenCodeModelsIfMissing({
+					executorID,
+					force: true,
+					statusMessage: "Loading OpenCode models.",
+				}).catch((error) => this._reportError(error));
+				this._setStatus("Added detected CLI runtime.", "ready");
+				return;
+			}
 		if (action == "remove-saved-executor") {
 			this._removeSavedExecutor(String(button.dataset.executorId || ""));
 			this._setStatus("Removed saved CLI runtime.", "ready");
@@ -1473,13 +1541,18 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 				role.model = "";
 				role.reasoning_effort = "";
 				role.api_kind = "responses";
-				if (editor) {
-					editor.model_mode = "select";
-					editor.reasoning_mode = "";
-					editor.custom_reasoning = "";
+					if (editor) {
+						editor.model_mode = "select";
+						editor.reasoning_mode = "";
+						editor.custom_reasoning = "";
+					}
+					this._addSavedExecutor(executorID);
+					this._refreshOpenCodeModelsIfMissing({
+						executorID,
+						force: true,
+						statusMessage: "Loading OpenCode models for selected runtime.",
+					}).catch((error) => this._reportError(error));
 				}
-				this._addSavedExecutor(executorID);
-			}
 			else if (choice.startsWith("api:")) {
 				let connectionID = choice.slice(4).trim();
 				let connection = this._findConnection(connectionID);
@@ -2510,13 +2583,18 @@ var SystematicReviewerSharedSettingsControllerPrototype = {
 		}
 		role.runtime_type = "local_exec";
 		role.executor_id = executor.id;
-		role.executor_path = String(executor?.binary_path || "").trim();
-		role.executor_args = Array.isArray(executor?.args) ? executor.args.slice() : [];
-		this._clearRoleTestResult(roleID);
-		this._markDirty(true);
-		this._renderAll();
-		this._setStatus(`${executor.label} set as the default for ${this._roleLabel(roleID)}.`, "ready");
-	},
+			role.executor_path = String(executor?.binary_path || "").trim();
+			role.executor_args = Array.isArray(executor?.args) ? executor.args.slice() : [];
+			this._clearRoleTestResult(roleID);
+			this._markDirty(true);
+			this._renderAll();
+			this._refreshOpenCodeModelsIfMissing({
+				executorID,
+				force: true,
+				statusMessage: "Loading OpenCode models for selected runtime.",
+			}).catch((error) => this._reportError(error));
+			this._setStatus(`${executor.label} set as the default for ${this._roleLabel(roleID)}.`, "ready");
+		},
 
 	async testRole(roleID) {
 		let requestedRoleID = String(roleID || "").trim();
