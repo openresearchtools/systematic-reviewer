@@ -4067,9 +4067,6 @@ var SystematicReviewerRuntimeSettings = {
 				OPENCODE_DISABLE_LSP_DOWNLOAD: "1",
 				OPENCODE_CLIENT: "systematic-reviewer",
 			};
-			if (!this._isWindowsPlatform()) {
-				out.OPENCODE_DISABLE_DEFAULT_PLUGINS = "1";
-			}
 			return out;
 		},
 
