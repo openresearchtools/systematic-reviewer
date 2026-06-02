@@ -152,7 +152,6 @@ jobs:
           VERSION="${{ steps.build.outputs.version }}"
           TAG="${{ steps.build.outputs.tag }}"
           XPI="${{ steps.build.outputs.xpi }}"
-          RELEASE_XPI="${{ steps.build.outputs.release_xpi }}"
           CHANNEL="${{ inputs.channel }}"
           IS_PRERELEASE="false"
           if [[ "$CHANNEL" == "pre-release" ]]; then
@@ -175,7 +174,7 @@ jobs:
           } > "$NOTES"
 
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$XPI" "$RELEASE_XPI" --clobber
+            gh release upload "$TAG" "$XPI" --clobber
             if [[ "$IS_PRERELEASE" == "true" ]]; then
               gh release edit "$TAG" --title "$RELEASE_TITLE" --notes-file "$NOTES" --prerelease
             elif [[ "${{ inputs.make_latest }}" == "true" ]]; then
@@ -185,11 +184,11 @@ jobs:
             fi
           else
             if [[ "$IS_PRERELEASE" == "true" ]]; then
-              gh release create "$TAG" "$XPI" "$RELEASE_XPI" --title "$RELEASE_TITLE" --notes-file "$NOTES" --prerelease
+              gh release create "$TAG" "$XPI" --title "$RELEASE_TITLE" --notes-file "$NOTES" --prerelease
             elif [[ "${{ inputs.make_latest }}" == "true" ]]; then
-              gh release create "$TAG" "$XPI" "$RELEASE_XPI" --title "$RELEASE_TITLE" --notes-file "$NOTES" --latest
+              gh release create "$TAG" "$XPI" --title "$RELEASE_TITLE" --notes-file "$NOTES" --latest
             else
-              gh release create "$TAG" "$XPI" "$RELEASE_XPI" --title "$RELEASE_TITLE" --notes-file "$NOTES"
+              gh release create "$TAG" "$XPI" --title "$RELEASE_TITLE" --notes-file "$NOTES"
             fi
           fi
 
