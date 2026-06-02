@@ -7583,6 +7583,11 @@ function estimateTextTokens(value = "") {
     }
     let running = isAutomationChatRunActive(state.chatRun);
     let startingRun = running && !wasRunning;
+    let clearedPromptPreviews = false;
+    if (wasRunning && !running) {
+      clearPromptPreviewRows();
+      clearedPromptPreviews = true;
+    }
     updateChatRunStatus();
     renderChatBudget();
     if (startingRun) {
@@ -7615,6 +7620,9 @@ function estimateTextTokens(value = "") {
     newSessionBtn.disabled = false;
     updateModeControlAvailability();
     updateChatModelControls();
+    if (clearedPromptPreviews) {
+      renderChat(Array.isArray(state.bootstrap?.chat_history) ? state.bootstrap.chat_history : []);
+    }
   }
 
   async function pollChatRun(runID = "") {
