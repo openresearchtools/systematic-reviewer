@@ -3,12 +3,12 @@
     "openresearchtools@gmail.com": {
       "updates": [
         {
-          "version": "0.73",
-          "update_link": "https://github.com/openresearchtools/systematic-reviewer/releases/download/v0.73/systematic-reviewer-0.73.xpi",
+          "version": "0.74",
+          "update_link": "https://github.com/openresearchtools/systematic-reviewer/releases/download/v0.74/systematic-reviewer-0.74.xpi",
           "applications": {
             "zotero": {
               "strict_min_version": "7.0",
-              "strict_max_version": "9.*"
+              "strict_max_version": "10.0.*"
             }
           }
         }
