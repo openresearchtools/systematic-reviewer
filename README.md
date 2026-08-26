@@ -47,6 +47,21 @@ Use the website for downloads and installation instructions:
 - [Jobs](https://systematicreviewer.com/manual/jobs/)
 - [Troubleshooting](https://systematicreviewer.com/manual/troubleshooting/)
 
+## Zotero compatibility
+
+The current codebase supports Zotero 7 through Zotero 10. Where Zotero has
+replaced an internal API, the plugin uses capability detection and keeps a
+fallback for older supported releases.
+
+Zotero requires plugins with access to its internal APIs to declare the latest
+minor release they have tested (for example, `10.0.*`) instead of claiming
+unbounded compatibility. When a new Zotero major version is released, verify
+the changes in Zotero's developer notes and update `strict_max_version` in
+`src/manifest.json`. The release workflow copies that tested range into the
+public update manifest. If compatibility requires code changes, publish a new
+XPI; if no code changes are needed, the public update manifest alone can extend
+compatibility for the existing XPI.
+
 ## Research Preview
 
 Current builds are tested mostly on macOS Zotero. Windows and Linux are supported goals, but they have had less testing, so expect bugs. The software is made available in the hope that it will be useful for the purposes users choose, but it comes without assurances or warranties.

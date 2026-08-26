@@ -256,6 +256,11 @@ jobs:
           repository = sys.argv[2]
           releases = json.loads(api_path.read_text(encoding="utf-8"))
 
+          plugin_manifest = json.loads(Path("src/manifest.json").read_text(encoding="utf-8"))
+          zotero_compatibility = plugin_manifest["applications"]["zotero"]
+          strict_min_version = zotero_compatibility["strict_min_version"]
+          strict_max_version = zotero_compatibility["strict_max_version"]
+
           def version_from_tag(tag):
             raw = str(tag or "")
             return raw[1:] if raw.startswith("v") else raw
@@ -326,8 +331,8 @@ jobs:
                       "update_link": update_release["xpi_url"],
                       "applications": {
                         "zotero": {
-                          "strict_min_version": "7.0",
-                          "strict_max_version": "9.*",
+                          "strict_min_version": strict_min_version,
+                          "strict_max_version": strict_max_version,
                         }
                       },
                     }

@@ -137,8 +137,24 @@ var SystematicReviewerProjectEntry = {
 	},
 
 	_selectedCollectionTreeRow(win) {
+		let pane = win?.ZoteroPane;
+		if (!pane) {
+			return null;
+		}
+		// Zotero 10 removed the singular getter after adding multi-row selection.
+		// Prefer the plural API when available, but retain the legacy fallback so
+		// the same build continues to work on Zotero 7-9.
+		if (typeof pane.getCollectionTreeRows == "function") {
+			try {
+				let rows = pane.getCollectionTreeRows() || [];
+				return rows.length == 1 ? rows[0] : null;
+			}
+			catch (_err) {
+				return null;
+			}
+		}
 		try {
-			return win?.ZoteroPane?.getCollectionTreeRow?.() || null;
+			return pane.getCollectionTreeRow?.() || null;
 		}
 		catch (_err) {
 			return null;

@@ -14,7 +14,7 @@
       "id": "openresearchtools@gmail.com",
       "update_url": "https://127.0.0.1:8877/updates.json",
       "strict_min_version": "7.0",
-      "strict_max_version": "9.*"
+      "strict_max_version": "10.0.*"
     }
   }
 }
