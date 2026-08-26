@@ -99,8 +99,20 @@ var SystematicReviewerWindowHost = {
 			submenu.append(systematicItem, customItem, importItem, mergeHarvestItem);
 			menu.appendChild(submenu);
 
-			let popupHandler = () => {
-				this._updateCollectionMenuState(win).catch((error) => this.log(`failed to update collection menu state: ${error}`));
+			let popupHandler = (event) => {
+				// popupshowing bubbles from the Systematic Reviewer submenu. Only
+				// recalculate state for Zotero's top-level collection popup; otherwise
+				// opening our submenu can race the parent menu and hide it on Linux.
+				if (event.target !== event.currentTarget) {
+					return;
+				}
+				let state = this.windowState.get(win) || {};
+				let updateID = Number(state.collectionMenuUpdateID || 0) + 1;
+				this.windowState.set(win, Object.assign({}, state, {
+					collectionMenuUpdateID: updateID,
+				}));
+				this._updateCollectionMenuState(win, updateID)
+					.catch((error) => this.log(`failed to update collection menu state: ${error}`));
 			};
 			popup.addEventListener("popupshowing", popupHandler);
 			popup.appendChild(separator);
@@ -154,7 +166,12 @@ var SystematicReviewerWindowHost = {
 			submenu.append(autoItem, fastItem, vlmItem, jobsItem);
 			menu.appendChild(submenu);
 
-			let itemPopupHandler = () => this._updateItemMenuState(win);
+			let itemPopupHandler = (event) => {
+				if (event.target !== event.currentTarget) {
+					return;
+				}
+				this._updateItemMenuState(win);
+			};
 			itemPopup.addEventListener("popupshowing", itemPopupHandler);
 			itemPopup.appendChild(separator);
 			itemPopup.appendChild(menu);
@@ -196,7 +213,12 @@ var SystematicReviewerWindowHost = {
 				submenu.append(lightItem, darkItem);
 				menu.appendChild(submenu);
 
-				let viewPopupHandler = () => this._updateViewMenuState(win);
+				let viewPopupHandler = (event) => {
+					if (event.target !== event.currentTarget) {
+						return;
+					}
+					this._updateViewMenuState(win);
+				};
 				viewPopup.addEventListener("popupshowing", viewPopupHandler);
 				viewPopup.appendChild(separator);
 				viewPopup.appendChild(menu);

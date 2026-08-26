@@ -43,7 +43,7 @@ var SystematicReviewerProjectEntry = {
 		return "Configured (FAST -> VLM)";
 	},
 
-	async _updateCollectionMenuState(win) {
+	async _updateCollectionMenuState(win, updateID = null) {
 		let item = win.document.getElementById(this.collectionMenuId);
 		let separator = win.document.getElementById(this.collectionMenuSeparatorId);
 		let systematicItem = win.document.getElementById(this.collectionMenuSystematicId);
@@ -51,6 +51,9 @@ var SystematicReviewerProjectEntry = {
 		let importItem = win.document.getElementById(this.collectionMenuImportId);
 		let mergeHarvestItem = win.document.getElementById(this.collectionMenuMergeHarvestId);
 		let selection = await this._selectedCollectionMenuContext(win);
+		if (updateID !== null && this.windowState.get(win)?.collectionMenuUpdateID !== updateID) {
+			return;
+		}
 		let visible = !!(
 			selection?.isPersonalLibraryRoot
 			|| selection?.projectAvailable
