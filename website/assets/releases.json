@@ -1,14 +1,14 @@
 {
   "repository": "openresearchtools/systematic-reviewer",
-  "updated_at": "2026-08-26T20:02:24Z",
+  "updated_at": "2026-08-26T20:30:56Z",
   "latest_release": {
-    "version": "0.74",
-    "tag": "v0.74",
-    "name": "Systematic Reviewer 0.74",
+    "version": "0.75",
+    "tag": "v0.75",
+    "name": "Systematic Reviewer 0.75",
     "prerelease": false,
-    "published_at": "2026-08-26T20:02:22Z",
-    "html_url": "https://github.com/openresearchtools/systematic-reviewer/releases/tag/v0.74",
-    "xpi_url": "https://github.com/openresearchtools/systematic-reviewer/releases/download/v0.74/systematic-reviewer-0.74.xpi"
+    "published_at": "2026-08-26T20:30:55Z",
+    "html_url": "https://github.com/openresearchtools/systematic-reviewer/releases/tag/v0.75",
+    "xpi_url": "https://github.com/openresearchtools/systematic-reviewer/releases/download/v0.75/systematic-reviewer-0.75.xpi"
   },
   "latest_prerelease": {
     "version": "0.72",
@@ -20,6 +20,15 @@
     "xpi_url": "https://github.com/openresearchtools/systematic-reviewer/releases/download/v0.72/systematic-reviewer-0.72.xpi"
   },
   "releases": [
+    {
+      "version": "0.75",
+      "tag": "v0.75",
+      "name": "Systematic Reviewer 0.75",
+      "prerelease": false,
+      "published_at": "2026-08-26T20:30:55Z",
+      "html_url": "https://github.com/openresearchtools/systematic-reviewer/releases/tag/v0.75",
+      "xpi_url": "https://github.com/openresearchtools/systematic-reviewer/releases/download/v0.75/systematic-reviewer-0.75.xpi"
+    },
     {
       "version": "0.74",
       "tag": "v0.74",
