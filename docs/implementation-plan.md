@@ -52,7 +52,7 @@ old assumptions about where data must live or how an agent must perform work.
       security/compatibility notes.
 - [x] Run offline tests, syntax/resource checks, Pi discovery and office smoke
       tests; record exactly what was validated and what still needs Zotero.
-- [ ] Commit and publish `V3` without changing `main` or any V2 branch.
+- [x] Commit and publish `V3` without changing `main` or any V2 branch.
 
 ## Explicit non-goals
 
@@ -92,6 +92,14 @@ legacy project databases; migration, if requested later, is a separate adapter.
   Embedded CSL itemData, canonical URIs, locator metadata, preference chunks and
   a live bibliography range are retained. Initial cached citation typography is
   plain text; the standard Zotero integration performs rich-text Refresh.
+
+### Publication
+
+`V3` was published to `openresearchtools/systematic-reviewer` from the empty root
+commit `0199132`; it has no inherited `main` history. The implementation commit
+is `4207c7c`. The remote `main` remained at `859824b`; no V2 branch was touched.
+The inactive CI template is included in the published tree, not installed as an
+Actions workflow. The original workflow-containing commit was never published.
 
 ### Checks actually run
 
